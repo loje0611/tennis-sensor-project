@@ -1,0 +1,52 @@
+# Built application files
+*.apk
+*.aab
+*.ap_
+*.dex
+
+# Java / Kotlin class files (if ever outside build/)
+*.class
+
+# Local configuration (SDK path, secrets — never commit)
+local.properties
+
+# Gradle
+.gradle/
+build/
+
+# Android Studio / IntelliJ
+*.iml
+.idea/caches/
+.idea/libraries/
+.idea/modules.xml
+.idea/workspace.xml
+.idea/navEditor.xml
+.idea/assetWizardSettings.xml
+.idea/deploymentTargetSelector.xml
+.idea/deploymentTargetDropDown.xml
+.idea/appInsightsSettings.xml
+
+# NDK / CMake native build output
+.externalNativeBuild/
+.cxx/
+
+# Profiling, memory dumps, captures
+/captures/
+*.hprof
+
+# Kotlin 2.x compiler / incremental cache
+.kotlin/
+
+# Logs
+*.log
+
+# Signing keystores (never commit)
+*.jks
+*.keystore
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# Merge / backup
+*.orig

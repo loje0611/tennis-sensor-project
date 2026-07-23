@@ -1,0 +1,7 @@
+smart-network-switcher/config.json
+
+
+# Data Logger
+data-logger-dashboard/data/
+**/__pycache__/
+data-logger-dashboard/venv/

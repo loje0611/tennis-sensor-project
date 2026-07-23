@@ -1,0 +1,62 @@
+<resources>
+    <string name="app_name">SwingSenseAI</string>
+    <string name="notification_channel_name">스윙 분석</string>
+    <string name="notification_title">SwingSenseAI</string>
+    <string name="notification_text">스윙 분석이 실행 중입니다</string>
+
+    <!-- Practice Screen -->
+    <string name="ready_for_swing">Ready for swing…</string>
+    <string name="connect_sensor">Connect Sensor</string>
+    <string name="stop_session">Stop Session</string>
+    <string name="scanning">Scanning…</string>
+    <string name="permission_notice">알림·위치·블루투스 권한을 허용해 주세요. (백그라운드 분석 알림에 필요합니다)</string>
+    <string name="cancel_scan_title">스캔 취소</string>
+    <string name="cancel_scan_message">센서 검색을 취소하시겠습니까?</string>
+    <string name="yes">예</string>
+    <string name="no">아니오</string>
+
+    <!-- BLE Error Messages -->
+    <string name="error_bt_off">블루투스가 꺼져 있습니다. 설정에서 켜 주세요.</string>
+    <string name="error_permission_denied">블루투스 권한이 필요합니다. 설정에서 허용해 주세요.</string>
+    <string name="error_scan_failed">센서 스캔에 실패했습니다. 다시 시도해 주세요.</string>
+    <string name="error_connection_timeout">센서 연결이 시간 초과되었습니다.</string>
+    <string name="error_max_reconnect">재연결에 실패했습니다. 센서를 확인해 주세요.</string>
+
+    <!-- History Screen -->
+    <string name="history_title">History</string>
+    <string name="total_swings_format">%d Total Swings</string>
+
+    <!-- Session Detail -->
+    <string name="delete_title">기록 삭제</string>
+    <string name="delete_message">이 훈련 기록을 영구적으로 삭제하시겠습니까? 삭제된 데이터는 복구할 수 없습니다.</string>
+    <string name="delete_confirm">삭제</string>
+    <string name="cancel">취소</string>
+    <string name="session_deleted">기록이 삭제되었습니다.</string>
+    <string name="session_not_found">세션을 찾을 수 없습니다.</string>
+    <string name="category_hint">구종을 선택하면 상세 분석을 볼 수 있습니다</string>
+    <string name="no_analysis_data">아직 분석 데이터가 없습니다.</string>
+    <string name="coach_note">Coach\'s Note</string>
+    <string name="today_label">Today</string>
+    <string name="alltime_avg_label">All-time Avg</string>
+
+    <!-- Settings -->
+    <string name="settings_title">Settings</string>
+    <string name="dark_mode">Dark Mode</string>
+    <string name="sensor_calibration">Sensor Calibration</string>
+    <string name="calibration_title">센서 영점 조절</string>
+    <string name="calibration_idle_message">라켓을 평평한 바닥에 가만히 내려놓은 상태에서 \'시작\'을 눌러주세요.</string>
+    <string name="calibration_connecting">센서를 찾고 연결하는 중…</string>
+    <string name="calibration_in_progress">영점 조절 중… 라켓을 바닥에 가만히 두세요.</string>
+    <string name="calibration_success">Sensor Calibration이 성공적으로 완료되었습니다.</string>
+    <string name="calibration_failure">응답 없음: 연결 혹은 전송에 실패했습니다.</string>
+    <string name="start">시작</string>
+    <string name="abort">중단</string>
+
+    <!-- Radar Chart Labels -->
+    <string name="axis_power">파워</string>
+    <string name="axis_spin">스핀</string>
+    <string name="axis_timing">타이밍</string>
+    <string name="axis_smoothness">부드러움</string>
+    <string name="axis_stability">안정성</string>
+    <string name="axis_consistency">일관성</string>
+</resources>

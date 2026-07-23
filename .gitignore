@@ -1,0 +1,21 @@
+# Build & IDE artifacts
+.pio/
+.vscode/
+.idea/
+__pycache__/
+*.pyc
+*.pyo
+.DS_Store
+
+# Android build
+SwingSenseAI/.gradle/
+SwingSenseAI/build/
+SwingSenseAI/app/build/
+SwingSenseAI/captures/
+*.apk
+*.aar
+*.keystore
+
+# Temporary files
+*.tmp
+*.log
