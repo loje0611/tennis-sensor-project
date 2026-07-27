@@ -59,6 +59,17 @@ usbc_z    = shelf_z + 1.0;
 // ---- Switch bay ----
 sw_wall_t = 1.0;
 
+// ---- Shutter rail guides on -Y wall ----
+sh_d       = 2.0;
+sh_w       = usbc_w + 4.0;    // 13.5mm shutter width
+sh_h       = usbc_h + 3.0;    // 6.5mm shutter height
+rail_h     = 0.8;             // shutter rail height
+rail_d     = 0.8;             // shutter rail depth
+rail_gap   = 0.2;             // clearance per side
+guide_w    = 25.5;            // max flat width on front wall
+hook_th    = 0.8;             // thickness of guide rail walls
+shutter_z  = usbc_z - 1.0;    // 2.0mm — shutter Z origin in cover coords
+
 // ---- Board orientation (ROTATED 90°) ----
 //   MPU-6050 sensor Y-axis → case Y → racket handle direction
 //   brd_l (18mm, short edge with USB-C) → X axis
@@ -74,6 +85,12 @@ board_y_center = (board_y_front + board_y_back) / 2;  // -5.5
 // ---- Bracket ----
 bracket_lip   = 2.0;
 bracket_rib_w = 2.0;
+
+// ---- Overlap for shell merging (prevents separate shells in STL) ----
+// eps_x must exceed lip rebate depth (1.15mm) but be < side_wall_w (3.25mm)
+eps_x = 1.5; 
+// eps_y just needs to penetrate the Y wall (> 0) but be < side_wall_l (1.5mm)
+eps_y = 0.5;
 
 // ============================================================
 // SHAPE HELPERS
@@ -173,14 +190,20 @@ module board_brackets() {
     ];
     for (c = corners) {
         xw = c[0]; yp = c[1]; xd = c[2]; yd = c[3];
-        translate([
-            xd > 0 ? xw : xw - bw,
-            yd > 0 ? yp : yp - bw, 0
-        ]) cube([bw, bw, shelf_z + shelf_thick]);
-        translate([
-            xd > 0 ? xw : xw - bl,
-            yd > 0 ? yp : yp - bw, shelf_z
-        ]) cube([bl, bw, shelf_thick]);
+        // xd=-1 means bracket is at +X wall (xw=+11), extend +X into wall
+        // xd=+1 means bracket is at -X wall (xw=-11), extend -X into wall
+        // yd=-1 means bracket is at +Y edge, yd=+1 at -Y edge
+        
+        // Rib: extend eps_x outward into the shell wall
+        rib_x = (xd > 0 ? xw - eps_x : xw - bw);  // extend toward wall
+        rib_y = (yd > 0 ? yp        : yp - bw);
+        rib_w = bw + eps_x;  // wider to penetrate wall
+        translate([rib_x, rib_y, 0])
+            cube([rib_w, bw, shelf_z + shelf_thick]);
+        // Lip: extend eps_x outward into the shell wall
+        lip_x = (xd > 0 ? xw - eps_x : xw - bl);  // extend toward wall
+        translate([lip_x, rib_y, shelf_z])
+            cube([bl + eps_x, bw, shelf_thick]);
     }
 }
 
@@ -188,39 +211,70 @@ module switch_bay_walls() {
     by = board_y_back;
     t  = sw_wall_t;
     h  = brd_h * 0.7;
-    translate([-sw_w/2 - t, by,     shelf_z]) cube([t, sw_bay_depth, h]);
-    translate([ sw_w/2,     by,     shelf_z]) cube([t, sw_bay_depth, h]);
+    // Extend side walls eps_y into the +Y outer wall so they merge with the shell
+    translate([-sw_w/2 - t, by,     shelf_z]) cube([t, sw_bay_depth + eps_y, h]);
+    translate([ sw_w/2,     by,     shelf_z]) cube([t, sw_bay_depth + eps_y, h]);
     translate([-sw_w/2 - t, by - t, shelf_z]) cube([sw_w + 2*t, t, h]);
 }
 
 module cover_final() {
     color(case_color)
-    difference() {
-        union() {
-            cover_shell();
-            board_brackets();
-            switch_bay_walls();
-        }
-
-        // Clip to dome
+    union() {
         difference() {
-            cube([200, 200, 200], center=true);
-            box_fillet_top(outer_w, outer_l, cover_h, fillet);
+            union() {
+                cover_shell();
+                board_brackets();
+                switch_bay_walls();
+            }
+
+            // Clip to dome
+            difference() {
+                cube([200, 200, 200], center=true);
+                box_fillet_top(outer_w, outer_l, cover_h, fillet);
+            }
+
+            // Switch toggle hole — +Y rear wall ONLY
+            sw_hz = shelf_z + brd_h/2 - sw_hole_h/2;
+            translate([-sw_hole_w/2, inner_l/2 - 1, sw_hz])
+                cube([sw_hole_w, side_wall_l + 2, sw_hole_h]);
+
+            // USB-C port — -Y front wall ONLY (board USB-C end)
+            translate([-usbc_w/2, -outer_l/2 - 0.5, usbc_z])
+                cube([usbc_w, side_wall_l + 1, usbc_h]);
+
+            // Switch bay floor open
+            translate([-sw_w/2, board_y_back, -0.01])
+                cube([sw_w, sw_bay_depth + side_wall_l + 1, shelf_z + 0.02]);
         }
-
-        // Switch toggle hole — +Y rear wall ONLY
-        sw_hz = shelf_z + brd_h/2 - sw_hole_h/2;
-        translate([-sw_hole_w/2, inner_l/2 - 1, sw_hz])
-            cube([sw_hole_w, side_wall_l + 2, sw_hole_h]);
-
-        // USB-C port — -Y front wall ONLY (board USB-C end)
-        translate([-usbc_w/2, -outer_l/2 - 0.5, usbc_z])
-            cube([usbc_w, side_wall_l + 1, usbc_h]);
-
-        // Switch bay floor open
-        translate([-sw_w/2, board_y_back, -0.01])
-            cube([sw_w, sw_bay_depth + side_wall_l + 1, shelf_z + 0.02]);
+        
+        // Add protruding shutter guides to the -Y exterior wall
+        shutter_guides();
     }
+}
+
+module shutter_guides() {
+    // Top guide (hooks over top rail)
+    top_base_z = shutter_z + sh_h + rail_h + rail_gap;
+    top_lip_z = shutter_z + sh_h + 0.2;
+    
+    // Base
+    translate([-guide_w/2, -outer_l/2 - rail_d - rail_gap - hook_th, top_base_z])
+        cube([guide_w, rail_d + rail_gap + hook_th + 0.1, hook_th]);
+    // Lip
+    translate([-guide_w/2, -outer_l/2 - rail_d - rail_gap - hook_th, top_lip_z])
+        cube([guide_w, hook_th, top_base_z - top_lip_z]);
+
+    // Bottom guide (hooks under bottom rail)
+    bot_base_z = shutter_z - rail_h - rail_gap - hook_th;
+    bot_lip_z = shutter_z - rail_h - rail_gap;
+    bot_lip_top = shutter_z - rail_gap;
+    
+    // Base
+    translate([-guide_w/2, -outer_l/2 - rail_d - rail_gap - hook_th, bot_base_z])
+        cube([guide_w, rail_d + rail_gap + hook_th + 0.1, hook_th]);
+    // Lip
+    translate([-guide_w/2, -outer_l/2 - rail_d - rail_gap - hook_th, bot_lip_z])
+        cube([guide_w, hook_th, bot_lip_top - bot_lip_z]);
 }
 
 // ============================================================
@@ -228,11 +282,7 @@ module cover_final() {
 // ============================================================
 module shutter() {
     color(case_color) {
-        sh_d = 2.0;
-        sh_w = usbc_w + 4.0;
-        sh_h = usbc_h + 3.0;
-        rail_h = 0.8;
-        rail_d = 0.8;
+        // Uses global: sh_d, sh_w, sh_h, rail_h, rail_d
 
         difference() {
             translate([-sh_w/2, -outer_l/2 - sh_d, 0])
