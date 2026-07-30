@@ -46,17 +46,35 @@ def detect_impact_frame(pose_data, fps=30, hand='right'):
     if len(velocities) == 0:
         return None, velocities
         
-    # 관절을 놓쳐서 발생한 결측치(NaN)는 0으로 치환하여 피크 분석에 방해되지 않도록 처리
+    # 관절을 놓쳐서 발생한 결측치(NaN)는 0으로 치환
     velocities_clean = np.nan_to_num(velocities, nan=0.0)
     
-    # 노이즈를 방지하기 위해 SciPy의 find_peaks를 사용하여 유의미한 피크들을 찾음
+    # 1. 노이즈 제거를 위해 가우시안 스무딩 적용 (튀는 좌표로 인한 가짜 피크 방지)
+    try:
+        from scipy.ndimage import gaussian_filter1d
+        velocities_smooth = gaussian_filter1d(velocities_clean, sigma=2)
+    except ImportError:
+        velocities_smooth = velocities_clean
+        
+    # 2. 피크 감지 파라미터 상향 조정
     # height: 최대 속도의 40% 이상인 지점들만 피크로 간주
-    # distance: 최소 10 프레임 이상 떨어져 있어야 새로운 스윙으로 간주
-    min_peak_height = np.max(velocities_clean) * 0.4
+    # distance: 최소 1.5초(fps * 1.5) 이상 떨어져 있어야 새로운 스윙으로 간주 (테니스 랠리 특성 반영)
+    # prominence: 주변보다 최소 20% 이상 확실하게 솟아오른 뚜렷한 피크만 감지
+    max_vel = np.max(velocities_smooth)
+    min_peak_height = max_vel * 0.4
+    min_prominence = max_vel * 0.2
+    
     if min_peak_height == 0:
         return [0], velocities
         
-    peaks, properties = find_peaks(velocities_clean, height=min_peak_height, distance=10)
+    distance_frames = int(fps * 1.5)
+    
+    peaks, properties = find_peaks(
+        velocities_smooth, 
+        height=min_peak_height, 
+        distance=distance_frames,
+        prominence=min_prominence
+    )
     
     if len(peaks) > 0:
         # 감지된 모든 유의미한 피크(임팩트) 프레임 반환
