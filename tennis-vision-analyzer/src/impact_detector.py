@@ -54,7 +54,7 @@ def detect_impact_frame(pose_data, fps=30, hand='right'):
     # distance: 최소 10 프레임 이상 떨어져 있어야 새로운 스윙으로 간주
     min_peak_height = np.max(velocities_clean) * 0.4
     if min_peak_height == 0:
-        return 0, velocities
+        return [0], velocities
         
     peaks, properties = find_peaks(velocities_clean, height=min_peak_height, distance=10)
     
@@ -81,6 +81,6 @@ if __name__ == "__main__":
             # 타격 이후 감속 또는 정지 상태 가정
             dummy_pose[i, 16, :3] = [0.01 * 100, 0.5, 0.0]
             
-    impact_frame, vels = detect_impact_frame(dummy_pose)
-    print(f"Calculated Impact Frame: {impact_frame} (Expected around 35)")
-    print(f"Max Velocity at Impact: {vels[impact_frame]:.4f}")
+    impact_frames, vels = detect_impact_frame(dummy_pose)
+    print(f"Calculated Impact Frames: {impact_frames} (Expected around 35)")
+    print(f"Max Velocity at Impact: {vels[impact_frames[0]]:.4f}")

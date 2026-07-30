@@ -37,10 +37,10 @@ class TestImpactDetector(unittest.TestCase):
             else:
                 self.dummy_pose[i, 16, :3] = [(i-1) * 0.1 + 0.5 + (i-5)*0.1, 0.0, 0.0]
                 
-        impact_frame, vels = detect_impact_frame(self.dummy_pose, fps=30, hand='right')
+        impact_frames, vels = detect_impact_frame(self.dummy_pose, fps=30, hand='right')
         
         # 5번 프레임에서 속도 피크가 발생해야 함
-        self.assertEqual(impact_frame, 5)
+        self.assertEqual(impact_frames[0], 5)
 
 if __name__ == '__main__':
     unittest.main()
