@@ -17,6 +17,15 @@ from angle_calculator import get_joint_angles_from_pose
 
 st.set_page_config(page_title="Tennis Vision Analyzer", layout="wide")
 
+# 세로 영상 재생 시 세로 스크롤 길어짐 방지 CSS
+st.markdown("""
+    <style>
+        video {
+            max-height: 65vh; /* 화면 높이의 65%까지만 렌더링 */
+        }
+    </style>
+""", unsafe_allow_html=True)
+
 st.title("🎾 테니스 비전 AI 스윙 분석기")
 st.markdown("스마트폰으로 촬영한 테니스 스윙 영상을 업로드하면 AI가 자세와 운동 역학을 분석합니다.")
 
@@ -72,10 +81,42 @@ if uploaded_file is not None:
                 
             chain_data = analyze_kinetic_chain(pose_data, fps=fps, hand='right')
             
+            # 단계 4.5: 오토 일시정지 및 툴팁용 피드백 데이터 생성
+            swing_feedbacks = {}
+            for i, frame in enumerate(impact_frames):
+                stype = swing_types[i]
+                arm_angle = arm_angles[frame] if frame < len(arm_angles) else 0
+                feedbacks = []
+                
+                if chain_data:
+                    vels = chain_data["velocities"]
+                    start_f = max(0, int(frame - fps * 1.0))
+                    end_f = min(len(vels['hip']), int(frame + fps * 0.5))
+                    if start_f < end_f:
+                        peak_hip = start_f + np.argmax(vels['hip'][start_f:end_f])
+                        peak_shoulder = start_f + np.argmax(vels['shoulder'][start_f:end_f])
+                        peak_wrist = start_f + np.argmax(vels['wrist'][start_f:end_f])
+                        
+                        if peak_hip >= peak_shoulder:
+                            feedbacks.append({"text": "Use Hip First", "target_joint": 24}) # 24: right hip
+                        elif peak_shoulder >= peak_wrist:
+                            feedbacks.append({"text": "Late Wrist", "target_joint": 16}) # 16: right wrist
+                            
+                if arm_angle < 120:
+                    feedbacks.append({"text": f"Arm Bent({arm_angle:.0f})", "target_joint": 14}) # 14: right elbow
+                    
+                if stype in ['Flat', 'Slice']:
+                    feedbacks.append({"text": "Low Path", "target_joint": 16})
+                    
+                if not feedbacks:
+                    feedbacks.append({"text": "Good Swing!", "target_joint": 12})
+                    
+                swing_feedbacks[frame] = feedbacks
+            
             # 단계 5: 스켈레톤 영상 렌더링
-            st.text("5. 스켈레톤 영상 렌더링 중...")
+            st.text("5. 스켈레톤 영상 렌더링 및 툴팁 합성 중...")
             output_video_path = video_path.replace(".mp4", "_analyzed.mp4")
-            render_overlay(video_path, pose_data, impact_frames=impact_frames, output_path=output_video_path)
+            render_overlay(video_path, pose_data, impact_frames=impact_frames, swing_feedbacks=swing_feedbacks, output_path=output_video_path)
             
             # h264 변환 (Streamlit 웹 호환성)
             h264_video_path = video_path.replace(".mp4", "_analyzed_h264.mp4")
@@ -90,9 +131,11 @@ if uploaded_file is not None:
             st.success("분석이 성공적으로 완료되었습니다!")
             
             # ---------------------------------------------------------
-            # 분석 결과 메인 화면 출력
+            # 분석 결과 메인 화면 출력 (UI 재구성)
             # ---------------------------------------------------------
             st.markdown("---")
+            
+            # 레이아웃 분할: 좌측 영상(1), 우측 분석(1)
             col1, col2 = st.columns([1, 1])
             
             with col1:
@@ -103,77 +146,131 @@ if uploaded_file is not None:
                     st.video(output_video_path)
                     
             with col2:
-                st.subheader(f"📊 스윙 핵심 지표 (감지된 스윙: {len(impact_frames)}회)")
+                st.subheader("🤖 AI 스윙 정밀 분석")
                 
-                # 여러 번의 스윙 결과를 요약 표시
-                if len(impact_frames) > 0:
-                    types_str = ", ".join(swing_types)
-                    times_str = ", ".join([f"{f/fps:.2f}초" for f in impact_frames])
-                    st.info(f"**감지된 샷 유형:** {types_str}")
-                    st.info(f"**임팩트 시점:** {times_str}")
+                if len(impact_frames) == 0:
+                    st.warning("유의미한 임팩트(스윙)를 감지하지 못했습니다. 전신이 잘 나오게 촬영된 영상인지 확인해 주세요.")
                 else:
-                    st.warning("유의미한 임팩트(스윙)를 감지하지 못했습니다.")
-                
-                if chain_data:
-                    is_correct = "✅ 올바름" if chain_data["is_correct_chain"] else "⚠️ 주의 (순서 꼬임)"
-                    st.metric("운동 체인 (Kinetic Chain)", is_correct)
-                    st.metric("하체->어깨 에너지 전달", f"{chain_data['timing_ms']['hip_to_shoulder']:.1f} ms")
-                    st.caption("*참고: 운동 체인 값은 영상 내 가장 강한 스윙 하나를 기준으로 분석된 요약 결과입니다.")
+                    st.success(f"총 {len(impact_frames)}번의 스윙이 감지되었습니다.")
                     
-            st.markdown("---")
-            st.subheader("📈 상세 역학 그래프 (시간 기준)")
-            
-            chart_col1, chart_col2 = st.columns(2)
-            
-            # x축을 프레임에서 초(Second) 단위 시간으로 변환
-            times_x = [i / fps for i in range(len(arm_angles))]
-            
-            # 1. 관절 각도 그래프 (Plotly)
-            with chart_col1:
-                st.markdown("**1. 영상 전체 관절 펴짐/굽힘 (Angles)**")
-                
-                fig_angle = go.Figure()
-                fig_angle.add_trace(go.Scatter(x=times_x, y=arm_angles, mode='lines', name='팔 펴짐 각도 (어깨-팔꿈치-손목)'))
-                fig_angle.add_trace(go.Scatter(x=times_x, y=knee_angles, mode='lines', name='무릎 굽힘 각도 (골반-무릎-발목)'))
-                
-                # 모든 임팩트 지점에 수직선 표시
-                for idx, frame in enumerate(impact_frames):
-                    impact_time = frame / fps
-                    fig_angle.add_vline(x=impact_time, line_dash="dash", line_color="red", 
-                                        annotation_text=f"Impact {idx+1}")
+                    correct_chain_count = 0
+                    all_problems = []
                     
-                fig_angle.update_layout(xaxis_title="Time (Seconds)", yaxis_title="Angle (Degrees)", height=350, margin=dict(l=0, r=0, t=30, b=0))
-                st.plotly_chart(fig_angle, use_container_width=True)
-                
-            # 2. 운동 체인 (속도 피크) 그래프
-            with chart_col2:
-                st.markdown("**2. 관절별 운동 체인 속도 전이 (Kinetic Chain)**")
-                if chain_data:
-                    fig_chain = go.Figure()
-                    vel_hip = chain_data["velocities"]["hip"]
-                    vel_shoulder = chain_data["velocities"]["shoulder"]
-                    vel_wrist = chain_data["velocities"]["wrist"]
-                    
-                    fig_chain.add_trace(go.Scatter(x=times_x, y=vel_hip, mode='lines', name='1. 하체 (Hip)'))
-                    fig_chain.add_trace(go.Scatter(x=times_x, y=vel_shoulder, mode='lines', name='2. 몸통 (Shoulder)'))
-                    fig_chain.add_trace(go.Scatter(x=times_x, y=vel_wrist, mode='lines', name='3. 팔 (Wrist)'))
-                    
-                    # 가장 강한 피크 지점 마킹 (Kinetic chain은 단일 이벤트 기준으로 추출됨)
-                    peaks = chain_data["peak_frames"]
-                    fig_chain.add_trace(go.Scatter(
-                        x=[peaks["hip"]/fps, peaks["shoulder"]/fps, peaks["wrist"]/fps],
-                        y=[vel_hip[peaks["hip"]], vel_shoulder[peaks["shoulder"]], vel_wrist[peaks["wrist"]]],
-                        mode='markers', marker=dict(size=10, symbol='star'), name='Peak (Max Velocity)'
-                    ))
-                    
-                    # 모든 임팩트 지점 마킹 (참고용 회색선)
-                    for idx, frame in enumerate(impact_frames):
-                        impact_time = frame / fps
-                        fig_chain.add_vline(x=impact_time, line_dash="dot", line_color="gray", opacity=0.5)
+                    # 각 스윙별 로컬 분석
+                    for i, frame in enumerate(impact_frames):
+                        st.markdown(f"#### 🎾 스윙 {i+1} ({(frame/fps):.2f}초)")
                         
-                    fig_chain.update_layout(xaxis_title="Time (Seconds)", yaxis_title="Velocity (Relative)", height=350, margin=dict(l=0, r=0, t=30, b=0))
-                    st.plotly_chart(fig_chain, use_container_width=True)
-                else:
-                    st.warning("데이터가 부족하여 운동 체인을 시각화할 수 없습니다.")
+                        stype = swing_types[i]
+                        arm_angle = arm_angles[frame] if frame < len(arm_angles) else 0
+                        
+                        problems = []
+                        is_local_correct = False
+                        
+                        if chain_data:
+                            vels = chain_data["velocities"]
+                            # 스윙 주변 프레임 추출 (임팩트 전 1초 ~ 후 0.5초)
+                            start_f = max(0, int(frame - fps * 1.0))
+                            end_f = min(len(vels['hip']), int(frame + fps * 0.5))
+                            
+                            if start_f < end_f:
+                                peak_hip = start_f + np.argmax(vels['hip'][start_f:end_f])
+                                peak_shoulder = start_f + np.argmax(vels['shoulder'][start_f:end_f])
+                                peak_wrist = start_f + np.argmax(vels['wrist'][start_f:end_f])
+                                
+                                is_local_correct = (peak_hip < peak_shoulder < peak_wrist)
+                                if is_local_correct:
+                                    correct_chain_count += 1
+                                    
+                                if peak_hip >= peak_shoulder:
+                                    problems.append("**운동 체인 붕괴 (Use Hip First)**: 하체보다 상체(어깨)가 먼저 또는 동시에 회전하고 있습니다. 하체 회전 후 상체가 따라오는 꼬임(Separation)을 만들어야 합니다.")
+                                    all_problems.append("운동 체인(하체->상체 순서)")
+                                elif peak_shoulder >= peak_wrist:
+                                    problems.append("**손목 릴리스 지연 (Late Wrist)**: 팔(손목)의 가속이 어깨 회전과 분리되지 않았습니다. 임팩트 직전 라켓 헤드를 던지듯 뿌려주세요.")
+                                    all_problems.append("팔/손목 가속")
+                        
+                        if arm_angle < 120:
+                            problems.append(f"**타점 오류 (Arm Bent)**: 타격 시 팔이 너무 구부러져 있습니다 (각도 {arm_angle:.1f}도). 타점이 몸에 너무 가깝거나 타이밍이 늦습니다. 타점을 앞에서 잡으세요.")
+                            all_problems.append("타점(팔 각도)")
+                            
+                        if stype in ['Flat', 'Slice']:
+                            problems.append(f"**스윙 궤적 (Low Path)**: 상향 스윙(Low-to-High) 궤적이 부족하여 네트에 걸리거나 아웃될 위험이 큽니다. 라켓을 더 아래로 떨어뜨렸다가(Drop) 올려치세요.")
+                            all_problems.append("상향 스윙 궤적")
+                            
+                        # 결과 출력
+                        st.write(f"- **구질 분석**: {stype}")
+                        
+                        if not problems:
+                            st.info("💡 **AI 피드백**: 훌륭한 스윙입니다! 운동 체인과 타점, 궤적이 모두 양호합니다.")
+                        else:
+                            for p in problems:
+                                st.warning(f"⚠️ {p}")
+                                
+                    st.markdown("---")
+                    st.subheader("🎯 최종 평가 및 처방")
+                    if correct_chain_count == len(impact_frames) and len(all_problems) == 0:
+                        st.success("모든 스윙에서 완벽한 운동 역학을 보여주고 있습니다! 현재의 폼을 유지하는 데 집중하세요.")
+                    else:
+                        st.error(f"전체 스윙 {len(impact_frames)}번 중 운동 체인이 올바르게 작동한 횟수는 {correct_chain_count}번입니다.")
+                        
+                        if all_problems:
+                            from collections import Counter
+                            most_common_problem = Counter(all_problems).most_common(1)[0][0]
+                            st.markdown(f"**🚨 가장 시급히 개선해야 할 포인트: `{most_common_problem}`**")
+                            
+                            if most_common_problem == "운동 체인(하체->상체 순서)":
+                                st.write("✅ **개선 방법**: 메디신 볼 던지기 연습이나, 라켓을 놓고 빈손으로 허리(골반)를 먼저 돌린 후 팔이 튕겨져 나오는 느낌을 찾는 빈스윙 연습을 추천합니다.")
+                            elif most_common_problem == "팔/손목 가속":
+                                st.write("✅ **개선 방법**: 그립을 너무 꽉 쥐고 있지 않은지 확인하세요. 라켓 무게를 느끼며 손목에 힘을 빼고 헤드가 먼저 돌아나가도록(Whip) 스윙해야 합니다.")
+                            elif most_common_problem == "타점(팔 각도)":
+                                st.write("✅ **개선 방법**: 스텝을 더 빨리 밟아 공과의 거리를 미리 확보하세요. 앞발(왼발) 앞쪽에서 타격이 이루어지도록 의식해야 합니다.")
+                            elif most_common_problem == "상향 스윙 궤적":
+                                st.write("✅ **개선 방법**: 테이크백 후 라켓 헤드를 공보다 아래로 충분히 떨어뜨린(Drop) 후, 와이퍼 스윙(Wiper Swing)을 통해 공을 긁어올리는 연습을 하세요.")
+            
+            # ---------------------------------------------------------
+            # 상세 역학 그래프 (하단으로 이동)
+            # ---------------------------------------------------------
+            with st.expander("📊 상세 역학 그래프 보기 (참고사항)", expanded=False):
+                chart_col1, chart_col2 = st.columns(2)
+                
+                times_x = [i / fps for i in range(len(arm_angles))]
+                
+                with chart_col1:
+                    st.markdown("**1. 영상 전체 관절 펴짐/굽힘 (Angles)**")
+                    fig_angle = go.Figure()
+                    fig_angle.add_trace(go.Scatter(x=times_x, y=arm_angles, mode='lines', name='팔 펴짐 각도 (어깨-팔꿈치-손목)'))
+                    fig_angle.add_trace(go.Scatter(x=times_x, y=knee_angles, mode='lines', name='무릎 굽힘 각도 (골반-무릎-발목)'))
+                    
+                    for idx, frame in enumerate(impact_frames):
+                        fig_angle.add_vline(x=frame/fps, line_dash="dash", line_color="red", annotation_text=f"Impact {idx+1}")
+                        
+                    fig_angle.update_layout(xaxis_title="Time (Seconds)", yaxis_title="Angle (Degrees)", height=350, margin=dict(l=0, r=0, t=30, b=0))
+                    st.plotly_chart(fig_angle, use_container_width=True)
+                    
+                with chart_col2:
+                    st.markdown("**2. 관절별 운동 체인 속도 전이 (Kinetic Chain)**")
+                    if chain_data:
+                        fig_chain = go.Figure()
+                        vel_hip = chain_data["velocities"]["hip"]
+                        vel_shoulder = chain_data["velocities"]["shoulder"]
+                        vel_wrist = chain_data["velocities"]["wrist"]
+                        
+                        fig_chain.add_trace(go.Scatter(x=times_x, y=vel_hip, mode='lines', name='1. 하체 (Hip)'))
+                        fig_chain.add_trace(go.Scatter(x=times_x, y=vel_shoulder, mode='lines', name='2. 몸통 (Shoulder)'))
+                        fig_chain.add_trace(go.Scatter(x=times_x, y=vel_wrist, mode='lines', name='3. 팔 (Wrist)'))
+                        
+                        peaks = chain_data["peak_frames"]
+                        fig_chain.add_trace(go.Scatter(
+                            x=[peaks["hip"]/fps, peaks["shoulder"]/fps, peaks["wrist"]/fps],
+                            y=[vel_hip[peaks["hip"]], vel_shoulder[peaks["shoulder"]], vel_wrist[peaks["wrist"]]],
+                            mode='markers', marker=dict(size=10, symbol='star'), name='Overall Peak'
+                        ))
+                        
+                        for idx, frame in enumerate(impact_frames):
+                            fig_chain.add_vline(x=frame/fps, line_dash="dot", line_color="gray", opacity=0.5)
+                            
+                        fig_chain.update_layout(xaxis_title="Time (Seconds)", yaxis_title="Velocity (Relative)", height=350, margin=dict(l=0, r=0, t=30, b=0))
+                        st.plotly_chart(fig_chain, use_container_width=True)
+                    else:
+                        st.warning("데이터가 부족하여 시각화할 수 없습니다.")
 else:
     st.info("👈 좌측 사이드바에서 테니스 스윙 영상(.mp4)을 업로드해 주세요.")

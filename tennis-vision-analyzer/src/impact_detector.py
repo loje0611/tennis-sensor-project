@@ -56,18 +56,18 @@ def detect_impact_frame(pose_data, fps=30, hand='right'):
     except ImportError:
         velocities_smooth = velocities_clean
         
-    # 2. 피크 감지 파라미터 상향 조정
-    # height: 최대 속도의 40% 이상인 지점들만 피크로 간주
-    # distance: 최소 1.5초(fps * 1.5) 이상 떨어져 있어야 새로운 스윙으로 간주 (테니스 랠리 특성 반영)
-    # prominence: 주변보다 최소 20% 이상 확실하게 솟아오른 뚜렷한 피크만 감지
+    # 2. 피크 감지 파라미터 상향 조정 (거짓 스윙 감지 방지)
+    # height: 최대 속도의 50% 이상인 지점들만 피크로 간주
+    # distance: 최소 2.0초(fps * 2.0) 이상 떨어져 있어야 새로운 스윙으로 간주 (테니스 랠리 특성 반영)
+    # prominence: 주변보다 최소 30% 이상 확실하게 솟아오른 뚜렷한 피크만 감지
     max_vel = np.max(velocities_smooth)
-    min_peak_height = max_vel * 0.4
-    min_prominence = max_vel * 0.2
+    min_peak_height = max_vel * 0.5
+    min_prominence = max_vel * 0.3
     
     if min_peak_height == 0:
         return [0], velocities
         
-    distance_frames = int(fps * 1.5)
+    distance_frames = int(fps * 2.0)
     
     peaks, properties = find_peaks(
         velocities_smooth, 
