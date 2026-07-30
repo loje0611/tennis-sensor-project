@@ -129,7 +129,7 @@ tennis-sensor-project/
   - Z축 변화율에 따라 탑스핀/플랫/슬라이스로 라벨링하는 조건식(if/else 로직) 작성.
 
 ### **[모듈 3] 시각화 및 UI 통합 (4시간)**
-- [ ] **Task 7: 스켈레톤 영상 렌더링 (1.5시간)** (`overlay_renderer.py`)
+- [x] **Task 7: 스켈레톤 영상 렌더링 (1.5시간)** (`overlay_renderer.py`)
   - MediaPipe `draw_landmarks`를 활용해 원본 영상 프레임 위에 관절선 드로잉.
   - 임팩트 프레임에서는 화면에 붉은색 테두리나 "IMPACT!" 텍스트 오버레이 추가.
   - OpenCV `VideoWriter`로 결과 영상(MP4) 저장 로직 구현.
