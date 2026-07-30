@@ -133,7 +133,7 @@ tennis-sensor-project/
   - MediaPipe `draw_landmarks`를 활용해 원본 영상 프레임 위에 관절선 드로잉.
   - 임팩트 프레임에서는 화면에 붉은색 테두리나 "IMPACT!" 텍스트 오버레이 추가.
   - OpenCV `VideoWriter`로 결과 영상(MP4) 저장 로직 구현.
-- [ ] **Task 8: Streamlit 대시보드 뼈대 구성 (1.5시간)** (`app.py`)
+- [x] **Task 8: Streamlit 대시보드 뼈대 구성 (1.5시간)** (`app.py`)
   - Streamlit 사이드바(파일 업로드)와 메인 화면(동영상 플레이어) 레이아웃 구성.
   - 업로드된 영상 ➔ [모듈 1, 2] 로직 수행 ➔ [모듈 3] 렌더링 ➔ 브라우저 재생 플로우 연동.
 - [ ] **Task 9: 데이터 차트 시각화 및 통합 테스트 (1시간)**
