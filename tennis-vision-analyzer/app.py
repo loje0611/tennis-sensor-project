@@ -75,9 +75,11 @@ if uploaded_file is not None:
             # h264 변환 (Streamlit 웹 호환성)
             h264_video_path = video_path.replace(".mp4", "_analyzed_h264.mp4")
             try:
-                from moviepy.editor import VideoFileClip
+                # MoviePy v2.x 이후로는 moviepy.editor 대신 moviepy에서 직접 임포트합니다.
+                from moviepy import VideoFileClip
                 clip = VideoFileClip(output_video_path)
                 clip.write_videofile(h264_video_path, codec="libx264", audio=False, logger=None)
+                clip.close()
             except Exception as e:
                 st.warning(f"Video conversion failed: {e}")
             
