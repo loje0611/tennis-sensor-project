@@ -107,12 +107,12 @@ tennis-sensor-project/
 알고리즘의 빠른 검증을 위해 1시간 단위로 집중할 수 있는 태스크 단위로 분할했습니다. (총 10시간 예상)
 
 ### **[모듈 1] 환경 구성 및 데이터 추출 (2시간)**
-- [ ] **Task 1: 환경 세팅 및 영상 로딩 (1시간)**
+- [x] **Task 1: 환경 세팅 및 영상 로딩 (1시간)**
   - `tennis-vision-analyzer` 폴더 및 venv 생성, `requirements.txt` 패키지 설치.
   - `cv2.VideoCapture`를 이용해 샘플 테니스 MP4 영상 프레임 단위 읽기 구현.
-- [ ] **Task 2: MediaPipe 포즈 랜드마크 추출 (1시간)** (`pose_extractor.py`)
-  - `mediapipe.solutions.pose` 모듈 연동.
-  - 매 프레임의 33개 관절 좌표(x, y, z)를 추출하여 NumPy 배열(또는 Pandas DataFrame)로 저장.
+- [x] **Task 2: MediaPipe 포즈 랜드마크 추출 (1시간)** (`pose_extractor.py`)
+  - `mediapipe.tasks.vision.PoseLandmarker` 모듈 연동 (최신 API 적용).
+  - 매 프레임의 33개 관절 좌표(x, y, z)를 추출하여 NumPy 배열(`.npy`)로 저장.
 
 ### **[모듈 2] 코어 알고리즘 구현 (4시간)**
 - [ ] **Task 3: 3D 관절 각도 계산기 (1시간)** (`angle_calculator.py`)
