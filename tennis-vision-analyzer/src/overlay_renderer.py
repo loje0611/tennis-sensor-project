@@ -12,7 +12,7 @@ POSE_CONNECTIONS = [
     (29, 31), (30, 32), (27, 31), (28, 32)
 ]
 
-def render_overlay(video_path, pose_data, impact_frame=None, output_path=None):
+def render_overlay(video_path, pose_data, impact_frames=None, output_path=None):
     """
     원본 영상 위에 3D 스켈레톤 포즈를 오버레이하여 새로운 영상으로 저장합니다.
     임팩트 프레임이 주어지면 붉은색 테두리와 'IMPACT!' 텍스트 효과를 추가합니다.
@@ -76,7 +76,7 @@ def render_overlay(video_path, pose_data, impact_frame=None, output_path=None):
                             cv2.line(frame, points[idx1], points[idx2], (255, 255, 255), 2)
                             
         # 임팩트 효과 렌더링
-        if impact_frame is not None and current_frame == impact_frame:
+        if impact_frames is not None and current_frame in impact_frames:
             # 붉은 테두리
             cv2.rectangle(frame, (0, 0), (width, height), (0, 0, 255), 15)
             # 텍스트

@@ -4,6 +4,7 @@ import sys
 import tempfile
 import cv2
 import plotly.graph_objects as go
+import numpy as np
 
 # 내부 모듈 임포트
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), 'src')))
@@ -48,15 +49,19 @@ if uploaded_file is not None:
                 fps = cap.get(cv2.CAP_PROP_FPS)
             cap.release()
             
-            # 단계 2: 임팩트 감지
+            # 단계 2: 임팩트 감지 (다중 스윙 지원)
             st.text("2. 임팩트 프레임 감지 중...")
-            impact_frame, _ = detect_impact_frame(pose_data, fps=fps, hand='right')
+            # detect_impact_frame은 이제 impact_frames 리스트를 반환합니다.
+            impact_frames, _ = detect_impact_frame(pose_data, fps=fps, hand='right')
             
             # 단계 3: 샷 궤적 분류
             st.text("3. 스윙 궤적 분류 중...")
-            swing_type = classify_swing_path(pose_data, impact_frame, hand='right')
+            swing_types = []
+            for frame in impact_frames:
+                stype = classify_swing_path(pose_data, frame, hand='right')
+                swing_types.append(stype)
             
-            # 단계 4: 운동 체인 및 각도 추출
+            # 단계 4: 관절 각도 및 운동 체인 역학 계산
             st.text("4. 관절 각도 및 운동 체인 역학 계산 중...")
             arm_angles = []
             knee_angles = []
@@ -70,12 +75,11 @@ if uploaded_file is not None:
             # 단계 5: 스켈레톤 영상 렌더링
             st.text("5. 스켈레톤 영상 렌더링 중...")
             output_video_path = video_path.replace(".mp4", "_analyzed.mp4")
-            render_overlay(video_path, pose_data, impact_frame=impact_frame, output_path=output_video_path)
+            render_overlay(video_path, pose_data, impact_frames=impact_frames, output_path=output_video_path)
             
             # h264 변환 (Streamlit 웹 호환성)
             h264_video_path = video_path.replace(".mp4", "_analyzed_h264.mp4")
             try:
-                # MoviePy v2.x 이후로는 moviepy.editor 대신 moviepy에서 직접 임포트합니다.
                 from moviepy import VideoFileClip
                 clip = VideoFileClip(output_video_path)
                 clip.write_videofile(h264_video_path, codec="libx264", audio=False, logger=None)
@@ -86,7 +90,7 @@ if uploaded_file is not None:
             st.success("분석이 성공적으로 완료되었습니다!")
             
             # ---------------------------------------------------------
-            # 분석 결과 메인 화면 출력 (Task 9)
+            # 분석 결과 메인 화면 출력
             # ---------------------------------------------------------
             st.markdown("---")
             col1, col2 = st.columns([1, 1])
@@ -99,36 +103,46 @@ if uploaded_file is not None:
                     st.video(output_video_path)
                     
             with col2:
-                st.subheader("📊 스윙 핵심 지표 (Key Metrics)")
+                st.subheader(f"📊 스윙 핵심 지표 (감지된 스윙: {len(impact_frames)}회)")
                 
-                # 핵심 지표를 카드 형태로 표시
-                metric_col1, metric_col2 = st.columns(2)
-                metric_col1.metric("감지된 샷 유형", swing_type)
-                metric_col2.metric("임팩트 프레임", f"{impact_frame} 프레임")
+                # 여러 번의 스윙 결과를 요약 표시
+                if len(impact_frames) > 0:
+                    types_str = ", ".join(swing_types)
+                    times_str = ", ".join([f"{f/fps:.2f}초" for f in impact_frames])
+                    st.info(f"**감지된 샷 유형:** {types_str}")
+                    st.info(f"**임팩트 시점:** {times_str}")
+                else:
+                    st.warning("유의미한 임팩트(스윙)를 감지하지 못했습니다.")
                 
                 if chain_data:
                     is_correct = "✅ 올바름" if chain_data["is_correct_chain"] else "⚠️ 주의 (순서 꼬임)"
-                    metric_col1.metric("운동 체인 (Kinetic Chain)", is_correct)
-                    metric_col2.metric("하체->어깨 에너지 전달", f"{chain_data['timing_ms']['hip_to_shoulder']:.1f} ms")
+                    st.metric("운동 체인 (Kinetic Chain)", is_correct)
+                    st.metric("하체->어깨 에너지 전달", f"{chain_data['timing_ms']['hip_to_shoulder']:.1f} ms")
+                    st.caption("*참고: 운동 체인 값은 영상 내 가장 강한 스윙 하나를 기준으로 분석된 요약 결과입니다.")
                     
             st.markdown("---")
-            st.subheader("📈 상세 역학 그래프")
+            st.subheader("📈 상세 역학 그래프 (시간 기준)")
             
             chart_col1, chart_col2 = st.columns(2)
             
+            # x축을 프레임에서 초(Second) 단위 시간으로 변환
+            times_x = [i / fps for i in range(len(arm_angles))]
+            
             # 1. 관절 각도 그래프 (Plotly)
             with chart_col1:
-                st.markdown("**1. 임팩트 시점의 관절 펴짐/굽힘 (Angles)**")
-                frames_x = list(range(len(arm_angles)))
+                st.markdown("**1. 영상 전체 관절 펴짐/굽힘 (Angles)**")
                 
                 fig_angle = go.Figure()
-                fig_angle.add_trace(go.Scatter(x=frames_x, y=arm_angles, mode='lines', name='팔 펴짐 각도 (어깨-팔꿈치-손목)'))
-                fig_angle.add_trace(go.Scatter(x=frames_x, y=knee_angles, mode='lines', name='무릎 굽힘 각도 (골반-무릎-발목)'))
+                fig_angle.add_trace(go.Scatter(x=times_x, y=arm_angles, mode='lines', name='팔 펴짐 각도 (어깨-팔꿈치-손목)'))
+                fig_angle.add_trace(go.Scatter(x=times_x, y=knee_angles, mode='lines', name='무릎 굽힘 각도 (골반-무릎-발목)'))
                 
-                if impact_frame is not None:
-                    fig_angle.add_vline(x=impact_frame, line_dash="dash", line_color="red", annotation_text="IMPACT")
+                # 모든 임팩트 지점에 수직선 표시
+                for idx, frame in enumerate(impact_frames):
+                    impact_time = frame / fps
+                    fig_angle.add_vline(x=impact_time, line_dash="dash", line_color="red", 
+                                        annotation_text=f"Impact {idx+1}")
                     
-                fig_angle.update_layout(xaxis_title="Frame", yaxis_title="Angle (Degrees)", height=350, margin=dict(l=0, r=0, t=30, b=0))
+                fig_angle.update_layout(xaxis_title="Time (Seconds)", yaxis_title="Angle (Degrees)", height=350, margin=dict(l=0, r=0, t=30, b=0))
                 st.plotly_chart(fig_angle, use_container_width=True)
                 
             # 2. 운동 체인 (속도 피크) 그래프
@@ -140,19 +154,24 @@ if uploaded_file is not None:
                     vel_shoulder = chain_data["velocities"]["shoulder"]
                     vel_wrist = chain_data["velocities"]["wrist"]
                     
-                    fig_chain.add_trace(go.Scatter(x=frames_x, y=vel_hip, mode='lines', name='1. 하체 (Hip)'))
-                    fig_chain.add_trace(go.Scatter(x=frames_x, y=vel_shoulder, mode='lines', name='2. 몸통 (Shoulder)'))
-                    fig_chain.add_trace(go.Scatter(x=frames_x, y=vel_wrist, mode='lines', name='3. 팔 (Wrist)'))
+                    fig_chain.add_trace(go.Scatter(x=times_x, y=vel_hip, mode='lines', name='1. 하체 (Hip)'))
+                    fig_chain.add_trace(go.Scatter(x=times_x, y=vel_shoulder, mode='lines', name='2. 몸통 (Shoulder)'))
+                    fig_chain.add_trace(go.Scatter(x=times_x, y=vel_wrist, mode='lines', name='3. 팔 (Wrist)'))
                     
-                    # 피크 지점 마킹
+                    # 가장 강한 피크 지점 마킹 (Kinetic chain은 단일 이벤트 기준으로 추출됨)
                     peaks = chain_data["peak_frames"]
                     fig_chain.add_trace(go.Scatter(
-                        x=[peaks["hip"], peaks["shoulder"], peaks["wrist"]],
+                        x=[peaks["hip"]/fps, peaks["shoulder"]/fps, peaks["wrist"]/fps],
                         y=[vel_hip[peaks["hip"]], vel_shoulder[peaks["shoulder"]], vel_wrist[peaks["wrist"]]],
                         mode='markers', marker=dict(size=10, symbol='star'), name='Peak (Max Velocity)'
                     ))
                     
-                    fig_chain.update_layout(xaxis_title="Frame", yaxis_title="Velocity (Relative)", height=350, margin=dict(l=0, r=0, t=30, b=0))
+                    # 모든 임팩트 지점 마킹 (참고용 회색선)
+                    for idx, frame in enumerate(impact_frames):
+                        impact_time = frame / fps
+                        fig_chain.add_vline(x=impact_time, line_dash="dot", line_color="gray", opacity=0.5)
+                        
+                    fig_chain.update_layout(xaxis_title="Time (Seconds)", yaxis_title="Velocity (Relative)", height=350, margin=dict(l=0, r=0, t=30, b=0))
                     st.plotly_chart(fig_chain, use_container_width=True)
                 else:
                     st.warning("데이터가 부족하여 운동 체인을 시각화할 수 없습니다.")

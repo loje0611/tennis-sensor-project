@@ -59,13 +59,13 @@ def detect_impact_frame(pose_data, fps=30, hand='right'):
     peaks, properties = find_peaks(velocities_clean, height=min_peak_height, distance=10)
     
     if len(peaks) > 0:
-        # 여러 피크 중 가장 속도가 높은(강한) 피크를 메인 임팩트 프레임으로 선택
-        impact_frame = int(peaks[np.argmax(properties['peak_heights'])])
+        # 감지된 모든 유의미한 피크(임팩트) 프레임 반환
+        impact_frames = [int(p) for p in peaks]
     else:
         # 피크를 찾지 못한 경우 단순 최대값 프레임 반환
-        impact_frame = int(np.argmax(velocities_clean))
+        impact_frames = [int(np.argmax(velocities_clean))]
         
-    return impact_frame, velocities
+    return impact_frames, velocities
 
 if __name__ == "__main__":
     print("--- 임팩트 프레임 감지 테스트 ---")
