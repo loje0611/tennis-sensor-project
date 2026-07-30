@@ -1,0 +1,7 @@
+mediapipe
+opencv-python
+numpy
+scipy
+plotly
+streamlit
+moviepy
