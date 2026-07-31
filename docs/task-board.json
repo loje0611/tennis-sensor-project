@@ -1,0 +1,128 @@
+{
+  "tasks": [
+    {
+      "id": "TASK-000",
+      "title": "TEMPLATE_DO_NOT_PROCESS",
+      "raw_request": "This is a structural template. Agents MUST ignore this item.",
+      "spec_path": "",
+      "status": "TEMPLATE",
+      "retry_count": 0,
+      "created_at": "2026-01-01T00:00:00Z",
+      "updated_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "TASK-001",
+      "title": "Pose extraction (MediaPipe)",
+      "raw_request": "MediaPipe로 프레임당 33개 3D 관절 랜드마크 추출 → pose_data(Frames,33,4)",
+      "target_project": "tennis-vision-analyzer",
+      "depends_on": [],
+      "spec_path": "docs/specs/TASK-001-pose-extraction.md",
+      "status": "SPEC_READY",
+      "retry_count": 0,
+      "created_at": "2026-07-31T06:08:58Z",
+      "updated_at": "2026-07-31T06:08:58Z"
+    },
+    {
+      "id": "TASK-002",
+      "title": "Joint angle calculation",
+      "raw_request": "세 관절점 3D 내적 각도 계산(팔 펴짐/무릎 굽힘)",
+      "target_project": "tennis-vision-analyzer",
+      "depends_on": [],
+      "spec_path": "docs/specs/TASK-002-joint-angle-calculation.md",
+      "status": "SPEC_READY",
+      "retry_count": 0,
+      "created_at": "2026-07-31T06:08:58Z",
+      "updated_at": "2026-07-31T06:08:58Z"
+    },
+    {
+      "id": "TASK-003",
+      "title": "Impact detection (multi-swing)",
+      "raw_request": "손목 속도 기반 다중 스윙 임팩트 감지 및 False Positive 필터링, calculate_velocity 제공",
+      "target_project": "tennis-vision-analyzer",
+      "depends_on": [],
+      "spec_path": "docs/specs/TASK-003-impact-detection.md",
+      "status": "SPEC_READY",
+      "retry_count": 0,
+      "created_at": "2026-07-31T06:08:58Z",
+      "updated_at": "2026-07-31T06:08:58Z"
+    },
+    {
+      "id": "TASK-004",
+      "title": "Swing path classification",
+      "raw_request": "임팩트 주변 손목 Y궤적 기울기로 Topspin/Flat/Slice 분류",
+      "target_project": "tennis-vision-analyzer",
+      "depends_on": [],
+      "spec_path": "docs/specs/TASK-004-swing-path-classification.md",
+      "status": "SPEC_READY",
+      "retry_count": 0,
+      "created_at": "2026-07-31T06:08:58Z",
+      "updated_at": "2026-07-31T06:08:58Z"
+    },
+    {
+      "id": "TASK-005",
+      "title": "Kinetic chain analysis",
+      "raw_request": "골반→어깨→손목 가속 순서 분석(calculate_velocity 재사용)",
+      "target_project": "tennis-vision-analyzer",
+      "depends_on": [
+        "TASK-003"
+      ],
+      "spec_path": "docs/specs/TASK-005-kinetic-chain-analysis.md",
+      "status": "SPEC_READY",
+      "retry_count": 0,
+      "created_at": "2026-07-31T06:08:58Z",
+      "updated_at": "2026-07-31T06:08:58Z"
+    },
+    {
+      "id": "TASK-006",
+      "title": "Swing diagnosis & feedback generation",
+      "raw_request": "각도/구질/운동체인 → 진단 태그·swing_feedbacks 생성(단일 진단 소스, app.py에서 추출)",
+      "target_project": "tennis-vision-analyzer",
+      "depends_on": [
+        "TASK-002",
+        "TASK-004",
+        "TASK-005"
+      ],
+      "spec_path": "docs/specs/TASK-006-swing-diagnosis.md",
+      "status": "SPEC_READY",
+      "retry_count": 0,
+      "created_at": "2026-07-31T06:08:58Z",
+      "updated_at": "2026-07-31T06:08:58Z"
+    },
+    {
+      "id": "TASK-007",
+      "title": "Skeleton overlay & tooltip rendering",
+      "raw_request": "스켈레톤/IMPACT/오토 일시정지/툴팁 렌더링(mp4v)",
+      "target_project": "tennis-vision-analyzer",
+      "depends_on": [
+        "TASK-001",
+        "TASK-003",
+        "TASK-006"
+      ],
+      "spec_path": "docs/specs/TASK-007-overlay-rendering.md",
+      "status": "SPEC_READY",
+      "retry_count": 0,
+      "created_at": "2026-07-31T06:08:58Z",
+      "updated_at": "2026-07-31T06:08:58Z"
+    },
+    {
+      "id": "TASK-008",
+      "title": "App orchestration, result UI & graphs",
+      "raw_request": "업로드·파이프라인 조율·H.264 변환·좌우 1:1 결과 UI·진단 텍스트/처방·역학 그래프",
+      "target_project": "tennis-vision-analyzer",
+      "depends_on": [
+        "TASK-001",
+        "TASK-002",
+        "TASK-003",
+        "TASK-004",
+        "TASK-005",
+        "TASK-006",
+        "TASK-007"
+      ],
+      "spec_path": "docs/specs/TASK-008-app-orchestration-ui.md",
+      "status": "SPEC_READY",
+      "retry_count": 0,
+      "created_at": "2026-07-31T06:08:58Z",
+      "updated_at": "2026-07-31T06:08:58Z"
+    }
+  ]
+}
