@@ -13,7 +13,7 @@ If `"next_agent": "tester"`, extract the `task_id`. Then read `docs/task-board.j
    - Determine the test execution command from `{target_project}/AI_README.md` (the per-sub-project context file). If that file is missing, fall back to the **Testing Instructions** section of the spec.
    - If the sub-project has no automated test harness (e.g., a docs-only or hardware/mechanical project where `AI_README.md` declares no test command), skip test execution and instead verify each **Acceptance Criteria** item by direct review, recording the outcome in the QA report.
    - Execute the resolved command from within the `{target_project}/` directory.
-   - Create or overwrite the QA report at `docs/qa/{TASK-ID}-report.md`.
+   - Record results in the QA report at `docs/qa/{TASK-ID}-report.md`. If the report already exists (a retry, or a re-run after a PM spec amendment), **append a new `## Run N (spec vN)` section instead of overwriting it**, so prior verification history is preserved. Take the spec revision from the spec's `Revision History` table.
 
 2. **Evaluation & Handoff**
    
@@ -35,4 +35,6 @@ If `"next_agent": "tester"`, extract the `task_id`. Then read `docs/task-board.j
 ## Rules
 - Do NOT fix implementation bugs directly in `src/`. Report them in the QA report instead.
 - Base tests strictly on the Acceptance Criteria from the specification file.
+- Test the **observable behavior** described by each criterion. Do NOT assert on the contents of source files (e.g., reading `src/*.py` and matching literals such as `"font_scale = 1.6"`); such tests are tautological — they pass whenever the source is unchanged, even if the feature is visibly broken. If a criterion appears to be checkable only by reading the source, treat it as a spec defect and report it in the QA report so the PM can amend the spec.
+- Never revert a terminal status (`DONE`/`BLOCKED`). Only the PM reopens a completed task.
 - Always ensure `docs/task-board.json` and `docs/turn.json` remain valid JSON. Do NOT overwrite files with raw text generation. Instead, use a CLI tool like `jq` or a Python script (`python -c "import json..."`) to safely parse and update the JSON file to prevent syntax errors.

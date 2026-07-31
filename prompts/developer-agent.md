@@ -21,12 +21,13 @@ If `"next_agent": "developer"`, extract the `task_id`. Then read `docs/task-boar
 
 3. **Status: `QA_PASSED`**
    - Stage the full change set so nothing is lost: `git add -A` (this captures the PM spec under `docs/specs/`, source under `{target_project}/src/`, tests under `{target_project}/tests/`, and the QA report under `docs/qa/`).
-   - Execute `git commit -m "feat: complete {TASK-ID} implementation"`.
+   - Execute `git commit -m "feat: complete {TASK-ID} implementation"`. If this cycle implemented an amended spec (the spec's `Revision History` shows a revision above `v1`), use `git commit -m "fix: amend {TASK-ID} spec vN implementation"` instead, so amendment cycles are distinguishable from the original implementation.
    - Execute `git push` to upload changes.
    - Change task `status` to `DONE` and update `updated_at` in `docs/task-board.json`.
    - **Handoff**: Safely update `docs/turn.json` to `{"next_agent": "none", "task_id": ""}` to mark the task processing cycle as complete.
 
 ## Rules
 - Do NOT directly edit files inside `tests/` unless explicitly instructed.
-- Strictly adhere to the architecture defined in `spec_path`.
+- Strictly adhere to the architecture defined in `spec_path`. A task may be re-assigned with `SPEC_READY` after the PM amends its spec — always re-read `spec_path` at the start of a cycle rather than relying on a previous reading.
+- Never revert a terminal status (`DONE`/`BLOCKED`). Only the PM reopens a completed task.
 - Always ensure `docs/task-board.json` and `docs/turn.json` remain valid JSON. Do NOT overwrite files with raw text generation. Instead, use a CLI tool like `jq` or a Python script (`python -c "import json..."`) to safely parse and update the JSON file to prevent syntax errors.

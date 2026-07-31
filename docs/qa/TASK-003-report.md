@@ -9,7 +9,7 @@
 
 ```bash
 cd tennis-vision-analyzer
-source venv/bin/activate && python -m unittest tests/test_impact_detector.py -v
+source .venv/bin/activate && python -m unittest tests/test_impact_detector.py -v
 ```
 
 - Suite: 10 tests, 0 failures, 0 errors

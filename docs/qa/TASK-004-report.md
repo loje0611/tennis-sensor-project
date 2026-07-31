@@ -9,7 +9,7 @@
 
 ```bash
 cd tennis-vision-analyzer
-source venv/bin/activate && python -m unittest tests/test_swing_path.py -v
+source .venv/bin/activate && python -m unittest tests/test_swing_path.py -v
 ```
 
 - Suite: 9 tests, 0 failures, 0 errors
