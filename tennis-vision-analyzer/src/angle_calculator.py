@@ -56,7 +56,7 @@ def get_joint_angles_from_pose(pose_frame):
                      현재는 팔과 무릎 각도만 우선 반환합니다.
     """
     if len(pose_frame) < 33:
-        return {"right_arm": np.nan, "right_knee": np.nan}
+        return {"right_arm_angle": np.nan, "right_knee_angle": np.nan}
         
     # 오른손잡이 기준 인덱스 (향후 좌/우 설정 가능하도록 확장 가능)
     R_SHOULDER = 12

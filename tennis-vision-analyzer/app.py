@@ -12,6 +12,7 @@ from pose_extractor import process_video
 from impact_detector import detect_impact_frame
 from kinetic_chain import analyze_kinetic_chain
 from swing_path import classify_swing_path
+from swing_diagnosis import build_swing_feedbacks
 from overlay_renderer import render_overlay
 from angle_calculator import get_joint_angles_from_pose
 
@@ -82,36 +83,8 @@ if uploaded_file is not None:
             chain_data = analyze_kinetic_chain(pose_data, fps=fps, hand='right')
             
             # 단계 4.5: 오토 일시정지 및 툴팁용 피드백 데이터 생성
-            swing_feedbacks = {}
-            for i, frame in enumerate(impact_frames):
-                stype = swing_types[i]
-                arm_angle = arm_angles[frame] if frame < len(arm_angles) else 0
-                feedbacks = []
-                
-                if chain_data:
-                    vels = chain_data["velocities"]
-                    start_f = max(0, int(frame - fps * 1.0))
-                    end_f = min(len(vels['hip']), int(frame + fps * 0.5))
-                    if start_f < end_f:
-                        peak_hip = start_f + np.argmax(vels['hip'][start_f:end_f])
-                        peak_shoulder = start_f + np.argmax(vels['shoulder'][start_f:end_f])
-                        peak_wrist = start_f + np.argmax(vels['wrist'][start_f:end_f])
-                        
-                        if peak_hip >= peak_shoulder:
-                            feedbacks.append({"text": "Use Hip First", "target_joint": 24}) # 24: right hip
-                        elif peak_shoulder >= peak_wrist:
-                            feedbacks.append({"text": "Late Wrist", "target_joint": 16}) # 16: right wrist
-                            
-                if arm_angle < 120:
-                    feedbacks.append({"text": f"Arm Bent({arm_angle:.0f})", "target_joint": 14}) # 14: right elbow
-                    
-                if stype in ['Flat', 'Slice']:
-                    feedbacks.append({"text": "Low Path", "target_joint": 16})
-                    
-                if not feedbacks:
-                    feedbacks.append({"text": "Good Swing!", "target_joint": 12})
-                    
-                swing_feedbacks[frame] = feedbacks
+            chain_velocities = chain_data["velocities"] if chain_data else None
+            swing_feedbacks, _ = build_swing_feedbacks(impact_frames, swing_types, arm_angles, chain_velocities, fps)
             
             # 단계 5: 스켈레톤 영상 렌더링
             st.text("5. 스켈레톤 영상 렌더링 및 툴팁 합성 중...")
@@ -154,47 +127,34 @@ if uploaded_file is not None:
                     st.success(f"총 {len(impact_frames)}번의 스윙이 감지되었습니다.")
                     
                     correct_chain_count = 0
-                    all_problems = []
+                    chain_velocities = chain_data["velocities"] if chain_data else None
+                    _, all_problems = build_swing_feedbacks(impact_frames, swing_types, arm_angles, chain_velocities, fps)
                     
                     # 각 스윙별 로컬 분석
                     for i, frame in enumerate(impact_frames):
                         st.markdown(f"#### 🎾 스윙 {i+1} ({(frame/fps):.2f}초)")
                         
                         stype = swing_types[i]
-                        arm_angle = arm_angles[frame] if frame < len(arm_angles) else 0
+                        feedbacks = swing_feedbacks[frame]
                         
                         problems = []
-                        is_local_correct = False
+                        has_chain_problem = False
                         
-                        if chain_data:
-                            vels = chain_data["velocities"]
-                            # 스윙 주변 프레임 추출 (임팩트 전 1초 ~ 후 0.5초)
-                            start_f = max(0, int(frame - fps * 1.0))
-                            end_f = min(len(vels['hip']), int(frame + fps * 0.5))
-                            
-                            if start_f < end_f:
-                                peak_hip = start_f + np.argmax(vels['hip'][start_f:end_f])
-                                peak_shoulder = start_f + np.argmax(vels['shoulder'][start_f:end_f])
-                                peak_wrist = start_f + np.argmax(vels['wrist'][start_f:end_f])
+                        for fb in feedbacks:
+                            if fb["text"] == "Use Hip First":
+                                problems.append("**운동 체인 붕괴 (Use Hip First)**: 하체보다 상체(어깨)가 먼저 또는 동시에 회전하고 있습니다. 하체 회전 후 상체가 따라오는 꼬임(Separation)을 만들어야 합니다.")
+                                has_chain_problem = True
+                            elif fb["text"] == "Late Wrist":
+                                problems.append("**손목 릴리스 지연 (Late Wrist)**: 팔(손목)의 가속이 어깨 회전과 분리되지 않았습니다. 임팩트 직전 라켓 헤드를 던지듯 뿌려주세요.")
+                                has_chain_problem = True
+                            elif fb["text"].startswith("Arm Bent"):
+                                arm_angle = float(fb["text"].split("(")[1].split(")")[0])
+                                problems.append(f"**타점 오류 (Arm Bent)**: 타격 시 팔이 너무 구부러져 있습니다 (각도 {arm_angle:.1f}도). 타점이 몸에 너무 가깝거나 타이밍이 늦습니다. 타점을 앞에서 잡으세요.")
+                            elif fb["text"] == "Low Path":
+                                problems.append(f"**스윙 궤적 (Low Path)**: 상향 스윙(Low-to-High) 궤적이 부족하여 네트에 걸리거나 아웃될 위험이 큽니다. 라켓을 더 아래로 떨어뜨렸다가(Drop) 올려치세요.")
                                 
-                                is_local_correct = (peak_hip < peak_shoulder < peak_wrist)
-                                if is_local_correct:
-                                    correct_chain_count += 1
-                                    
-                                if peak_hip >= peak_shoulder:
-                                    problems.append("**운동 체인 붕괴 (Use Hip First)**: 하체보다 상체(어깨)가 먼저 또는 동시에 회전하고 있습니다. 하체 회전 후 상체가 따라오는 꼬임(Separation)을 만들어야 합니다.")
-                                    all_problems.append("운동 체인(하체->상체 순서)")
-                                elif peak_shoulder >= peak_wrist:
-                                    problems.append("**손목 릴리스 지연 (Late Wrist)**: 팔(손목)의 가속이 어깨 회전과 분리되지 않았습니다. 임팩트 직전 라켓 헤드를 던지듯 뿌려주세요.")
-                                    all_problems.append("팔/손목 가속")
-                        
-                        if arm_angle < 120:
-                            problems.append(f"**타점 오류 (Arm Bent)**: 타격 시 팔이 너무 구부러져 있습니다 (각도 {arm_angle:.1f}도). 타점이 몸에 너무 가깝거나 타이밍이 늦습니다. 타점을 앞에서 잡으세요.")
-                            all_problems.append("타점(팔 각도)")
-                            
-                        if stype in ['Flat', 'Slice']:
-                            problems.append(f"**스윙 궤적 (Low Path)**: 상향 스윙(Low-to-High) 궤적이 부족하여 네트에 걸리거나 아웃될 위험이 큽니다. 라켓을 더 아래로 떨어뜨렸다가(Drop) 올려치세요.")
-                            all_problems.append("상향 스윙 궤적")
+                        if chain_velocities and not has_chain_problem:
+                            correct_chain_count += 1
                             
                         # 결과 출력
                         st.write(f"- **구질 분석**: {stype}")

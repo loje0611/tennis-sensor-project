@@ -50,5 +50,31 @@ class TestAngleCalculator(unittest.TestCase):
         angle = calculate_3d_angle(a, b, c)
         self.assertTrue(np.isnan(angle))
 
+    def test_get_joint_angles_from_pose(self):
+        """AC: get_joint_angles_from_pose가 팔/무릎 각도 dict를 반환한다."""
+        pose_frame = np.zeros((33, 4))
+        # right arm 12-14-16: straight line → 180°
+        pose_frame[12, :3] = [1.0, 0.0, 0.0]
+        pose_frame[14, :3] = [0.0, 0.0, 0.0]
+        pose_frame[16, :3] = [-1.0, 0.0, 0.0]
+        # right knee 24-26-28: right angle → 90°
+        pose_frame[24, :3] = [1.0, 0.0, 0.0]
+        pose_frame[26, :3] = [0.0, 0.0, 0.0]
+        pose_frame[28, :3] = [0.0, 1.0, 0.0]
+
+        result = get_joint_angles_from_pose(pose_frame)
+
+        self.assertEqual(set(result.keys()), {"right_arm_angle", "right_knee_angle"})
+        self.assertAlmostEqual(result["right_arm_angle"], 180.0, places=2)
+        self.assertAlmostEqual(result["right_knee_angle"], 90.0, places=2)
+
+    def test_get_joint_angles_insufficient_joints(self):
+        """EH-2: 관절 33개 미만이면 NaN dict."""
+        pose_frame = np.zeros((10, 4))
+        result = get_joint_angles_from_pose(pose_frame)
+        self.assertEqual(set(result.keys()), {"right_arm_angle", "right_knee_angle"})
+        self.assertTrue(np.isnan(result["right_arm_angle"]))
+        self.assertTrue(np.isnan(result["right_knee_angle"]))
+
 if __name__ == '__main__':
     unittest.main()

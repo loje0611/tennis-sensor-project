@@ -48,5 +48,35 @@ class TestTasks(unittest.TestCase):
         swing_type = classify_swing_path(dummy_pose, impact_frame=10, analysis_window=5)
         self.assertEqual(swing_type, "Slice")
 
+    def test_build_swing_feedbacks(self):
+        from swing_diagnosis import build_swing_feedbacks
+        impact_frames = [10]
+        swing_types = ["Flat"]
+        arm_angles = [150] * 20
+        # Arm angle is 110 at impact frame 10 (Arm Bent)
+        arm_angles[10] = 110
+        
+        # Hip peak at 15, shoulder peak at 10, wrist peak at 5 (wrong chain: Hip late)
+        vel_hip = np.zeros(20); vel_hip[15] = 1.0
+        vel_shoulder = np.zeros(20); vel_shoulder[10] = 1.0
+        vel_wrist = np.zeros(20); vel_wrist[5] = 1.0
+        
+        chain_velocities = {"hip": vel_hip, "shoulder": vel_shoulder, "wrist": vel_wrist}
+        fps = 30
+        
+        feedbacks, problems = build_swing_feedbacks(impact_frames, swing_types, arm_angles, chain_velocities, fps)
+        
+        self.assertIn(10, feedbacks)
+        fbs = feedbacks[10]
+        
+        # peak_hip(15) >= peak_shoulder(10) => Use Hip First
+        self.assertTrue(any(fb["text"] == "Use Hip First" for fb in fbs))
+        self.assertTrue(any(fb["text"] == "Arm Bent(110)" for fb in fbs))
+        self.assertTrue(any(fb["text"] == "Low Path" for fb in fbs))
+        
+        self.assertIn("운동 체인(하체->상체 순서)", problems)
+        self.assertIn("타점(팔 각도)", problems)
+        self.assertIn("상향 스윙 궤적", problems)
+
 if __name__ == '__main__':
     unittest.main()
