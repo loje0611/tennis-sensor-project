@@ -41,10 +41,10 @@
       "target_project": "tennis-vision-analyzer",
       "depends_on": [],
       "spec_path": "docs/specs/TASK-003-impact-detection.md",
-      "status": "DEV_DONE",
+      "status": "DONE",
       "retry_count": 0,
       "created_at": "2026-07-31T06:08:58Z",
-      "updated_at": "2026-07-31T06:08:58Z"
+      "updated_at": "2026-07-31T11:45:54Z"
     },
     {
       "id": "TASK-004",
@@ -53,10 +53,10 @@
       "target_project": "tennis-vision-analyzer",
       "depends_on": [],
       "spec_path": "docs/specs/TASK-004-swing-path-classification.md",
-      "status": "DEV_DONE",
+      "status": "DONE",
       "retry_count": 0,
       "created_at": "2026-07-31T06:08:58Z",
-      "updated_at": "2026-07-31T06:08:58Z"
+      "updated_at": "2026-07-31T11:48:19Z"
     },
     {
       "id": "TASK-005",
@@ -67,10 +67,10 @@
         "TASK-003"
       ],
       "spec_path": "docs/specs/TASK-005-kinetic-chain-analysis.md",
-      "status": "DEV_DONE",
+      "status": "DONE",
       "retry_count": 0,
       "created_at": "2026-07-31T06:08:58Z",
-      "updated_at": "2026-07-31T06:08:58Z"
+      "updated_at": "2026-07-31T11:49:32Z"
     },
     {
       "id": "TASK-006",
@@ -83,10 +83,10 @@
         "TASK-005"
       ],
       "spec_path": "docs/specs/TASK-006-swing-diagnosis.md",
-      "status": "DEV_DONE",
+      "status": "DONE",
       "retry_count": 0,
       "created_at": "2026-07-31T06:08:58Z",
-      "updated_at": "2026-07-31T06:08:58Z"
+      "updated_at": "2026-07-31T11:51:20Z"
     },
     {
       "id": "TASK-007",
@@ -99,10 +99,10 @@
         "TASK-006"
       ],
       "spec_path": "docs/specs/TASK-007-overlay-rendering.md",
-      "status": "DEV_DONE",
-      "retry_count": 0,
+      "status": "DONE",
+      "retry_count": 1,
       "created_at": "2026-07-31T06:08:58Z",
-      "updated_at": "2026-07-31T06:08:58Z"
+      "updated_at": "2026-07-31T12:12:15Z"
     },
     {
       "id": "TASK-008",
@@ -119,10 +119,10 @@
         "TASK-007"
       ],
       "spec_path": "docs/specs/TASK-008-app-orchestration-ui.md",
-      "status": "DEV_DONE",
+      "status": "DONE",
       "retry_count": 0,
       "created_at": "2026-07-31T06:08:58Z",
-      "updated_at": "2026-07-31T06:08:58Z"
+      "updated_at": "2026-07-31T11:58:11Z"
     }
   ]
 }

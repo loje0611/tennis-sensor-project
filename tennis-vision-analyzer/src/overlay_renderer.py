@@ -55,6 +55,10 @@ def render_overlay(video_path, pose_data, impact_frames=None, swing_feedbacks=No
                 # 1. 랜드마크 점 그리기
                 points = []
                 for idx, joint in enumerate(frame_joints):
+                    if np.isnan(joint[0]) or np.isnan(joint[1]):
+                        points.append(None)
+                        continue
+                        
                     px = int(joint[0] * width)
                     py = int(joint[1] * height)
                     points.append((px, py))
@@ -67,6 +71,9 @@ def render_overlay(video_path, pose_data, impact_frames=None, swing_feedbacks=No
                 for connection in POSE_CONNECTIONS:
                     idx1, idx2 = connection
                     if idx1 < len(points) and idx2 < len(points):
+                        if points[idx1] is None or points[idx2] is None:
+                            continue
+                            
                         vis1 = frame_joints[idx1][3] if len(frame_joints[idx1]) > 3 else 1.0
                         vis2 = frame_joints[idx2][3] if len(frame_joints[idx2]) > 3 else 1.0
                         
