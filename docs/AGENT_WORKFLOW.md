@@ -162,7 +162,7 @@
 
 | target_project | 테스트 명령 |
 |---|---|
-| `SwingSenseAI` | `./gradlew test` |
+| `TennisDocAI` | `./gradlew test` |
 | `tennis-swing-analyzer` | 컴포넌트별 `pio test`(펌웨어) / `pytest`(대시보드) |
 | `tennis-vision-analyzer` | `python -m unittest discover tests/` |
 | `tennis-sensor-case` | `python3 verify_geometry.py` (exit 0/1) |

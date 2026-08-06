@@ -16,7 +16,7 @@
           │ (BLE 블루투스 실시간 스윙 데이터 송신 @ 50Hz)
           ▼
   [ 분석 및 모니터링 애플리케이션 ]
-   ├── Android 앱 (SwingSenseAI) : Kotlin/NDK C++ Edge Impulse AI 추론 & 코칭
+   ├── Android 앱 (TennisDocAI) : Kotlin/NDK C++ Edge Impulse AI 추론 & 코칭
    └── 데이터 로거 대시보드      : Streamlit Python BLE 수신기 & 6축 시각화
 
   [ 비전 기반 보완 분석 (알고리즘 검증용 프로토타입) ]
@@ -35,7 +35,7 @@ tennis-sensor-project/
 ├── ⚙️ tennis-sensor-case/        # 3D 인클로저 설계(OpenSCAD v3.2), STL 파일, 검증 스크립트
 ├── 💻 tennis-swing-analyzer/     # ESP32_FW (C++ 펌웨어) & data-logger-dashboard (Python)
 ├── 🎥 tennis-vision-analyzer/    # 스마트폰 영상 기반 비전 AI 스윙 분석 (MediaPipe / Python)
-└── 📱 SwingSenseAI/              # 안드로이드 실시간 스윙 분석 앱 (Kotlin / C++ NDK)
+└── 📱 TennisDocAI/              # 안드로이드 실시간 스윙 분석 앱 (Kotlin / C++ NDK)
 ```
 
 ### 1. 🔌 `tennis-sensor-hardware/` (하드웨어 저장소)
@@ -56,7 +56,7 @@ tennis-sensor-project/
 * **`models/`**: 스윙 인식용 Edge Impulse TFLite AI 모델 (.eim)
 
 ### 4. 🎥 `tennis-vision-analyzer/` (비전 AI 분석 저장소)
-**스마트폰으로 촬영한 영상 1개**만으로 스윙 품질을 분석하는 Python 프로토타입입니다. 알고리즘을 빠르게 검증한 뒤 `SwingSenseAI` 앱의 **Lab 모드(`:feature:lab`)**로 포팅하는 것을 목표로 합니다. 프로토타입 단계에서는 영상만 사용하지만, **최종 제품의 Lab 모드는 센서 데이터와 융합**됩니다(→ [로드맵](#-제품-비전-및-단계별-로드맵)).
+**스마트폰으로 촬영한 영상 1개**만으로 스윙 품질을 분석하는 Python 프로토타입입니다. 알고리즘을 빠르게 검증한 뒤 `TennisDocAI` 앱의 **Lab 모드(`:feature:lab`)**로 포팅하는 것을 목표로 합니다. 프로토타입 단계에서는 영상만 사용하지만, **최종 제품의 Lab 모드는 센서 데이터와 융합**됩니다(→ [로드맵](#-제품-비전-및-단계별-로드맵)).
 * **[app.py](file:///home/keunu/personal-project/tennis-sensor-project/tennis-vision-analyzer/app.py)**: MP4 영상 업로드 → 분석 결과를 시각화하는 Streamlit 앱
 * **`src/pose_extractor.py`**: MediaPipe Pose Landmarker 기반 관절 포즈 추출
 * **`src/angle_calculator.py` · `kinetic_chain.py` · `swing_path.py`**: 관절 각도·운동 사슬(Kinetic Chain)·스윙 궤적 정량 분석
@@ -64,7 +64,7 @@ tennis-sensor-project/
 * **`src/overlay_renderer.py`**: 원본 영상에 분석 오버레이 렌더링
 * **`tests/`**: `test_*.py` 단위 테스트 (`python -m unittest discover tests/`)
 
-### 5. 📱 `SwingSenseAI/` (안드로이드 모바일 앱 저장소)
+### 5. 📱 `TennisDocAI/` (안드로이드 모바일 앱 저장소)
 * **AI 스윙 추론**: NDK C++17 기반 2단계 스윙 분류 (Edge Impulse TFLite Micro 800ms 윈도우 추론)
 * **6축 운동학 분석**: Power, Spin, Timing, Fluidity, Stability, Consistency 육각형 점수 계산
 * **사이버펑크 UI**: Jetpack Compose 기반 미래지향적 실시간 코칭 UI
@@ -104,11 +104,11 @@ tennis-sensor-project/
 
 **v1 제품 정의**: 기록 앱이 아니라 **"테니스 폼 정밀 진단 앱"**. 센서는 **필수 의존성**이며, v1은 스토어 출시가 아닌 **검증 빌드**입니다.
 
-### 최종 제품 구조 (SwingSenseAI 통합 목표)
+### 최종 제품 구조 (TennisDocAI 통합 목표)
 
 ```text
 ┌──────────────────────────────────────────────────────────┐
-│  SwingSenseAI (Android) — Gradle 멀티모듈                 │
+│  TennisDocAI (Android) — Gradle 멀티모듈                 │
 │                                                          │
 │  ┌────────────────────────────────────────────────────┐  │
 │  │ 🔬 :feature:lab  ← v1 제품 정체성                   │  │
