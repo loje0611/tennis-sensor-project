@@ -184,5 +184,48 @@ class TestImpactDetector(unittest.TestCase):
         np.testing.assert_array_almost_equal(vels, expected)
 
 
+    def test_left_hand_detection(self):
+        # 15번(왼쪽 손목) 관절이 4번 프레임에서 급격히 이동
+        left_pose = np.zeros((10, 33, 4))
+        for i in range(10):
+            if i < 4:
+                left_pose[i, 15, :3] = [i * 0.1, 0.0, 0.0]
+            else:
+                left_pose[i, 15, :3] = [(i-1) * 0.1 + 0.8 + (i-4)*0.1, 0.0, 0.0]
+        
+        impact_frames, vels = detect_impact_frame(left_pose, fps=30, hand='left')
+        self.assertEqual(impact_frames[0], 4)
+
+    def test_multi_swing_detection(self):
+        # 100프레임 (fps=30) 내에서 두 개의 피크 생성 (프레임 20과 프레임 85, distance=60 초과)
+        fps = 30
+        frames = 100
+        multi_pose = np.zeros((frames, 33, 4))
+        
+        # 프레임 20 및 85 근처에 이동 급증
+        x_pos = 0.0
+        for i in range(frames):
+            if i == 20 or i == 85:
+                x_pos += 1.0
+            else:
+                x_pos += 0.01
+            multi_pose[i, 16, :3] = [x_pos, 0.0, 0.0]
+            
+        impact_frames, vels = detect_impact_frame(multi_pose, fps=fps, hand='right')
+        self.assertIn(20, impact_frames)
+        self.assertIn(85, impact_frames)
+
+    def test_fallback_argmax(self):
+        # 피크 조건(prominence/height)을 미충족시키는 완만한 변화 환경에서도 max_vel 프레임 반환
+        flat_pose = np.zeros((10, 33, 4))
+        for i in range(10):
+            flat_pose[i, 16, :3] = [i * 0.01, 0.0, 0.0]
+        flat_pose[5, 16, :3] = [4 * 0.01 + 0.05, 0.0, 0.0]  # 약한 돌출
+        
+        impact_frames, vels = detect_impact_frame(flat_pose, fps=30, hand='right')
+        self.assertTrue(len(impact_frames) > 0)
+        self.assertIn(5, impact_frames)
+
 if __name__ == '__main__':
     unittest.main()
+

@@ -11,8 +11,10 @@
 
 ### **나. 프로젝트 목표**
 1. 하드웨어(센서/케이스) 없이 **스마트폰으로 촬영한 영상 1개**만으로 테니스 스윙 품질을 분석.
-2. 기존 [테니스 센서 프로젝트](file:///home/keunu/personal-project/tennis-sensor-project/README.md)의 **SwingSenseAI 안드로이드 앱**에 새로운 기능 탭으로 최종 통합.
-3. 향후 센서(IMU) 데이터와 비전(관절) 데이터를 타임스탬프로 동기화하는 **Multi-Modal Sensor Fusion**의 기반 마련.
+2. 기존 [테니스 센서 프로젝트](file:///home/keunu/personal-project/tennis-sensor-project/README.md)의 **SwingSenseAI 안드로이드 앱**에 **Lab 모드(`:feature:lab`)**로 최종 통합.
+3. 향후 센서(IMU) 데이터와 비전(관절) 데이터를 **임팩트 앵커 기준으로 정렬**하는 **Multi-Modal Sensor Fusion**의 기반 마련.
+
+> ⚠️ **범위 주의**: 이 모듈(프로토타입)은 영상 단독으로 동작하지만, **최종 제품의 Lab 모드는 센서를 필수 의존성으로 요구**합니다. "센서 없는 비전 단독 제품"은 명시적으로 기각된 방향입니다. 근거는 [`docs/PRODUCT_DIRECTION.md`](../docs/PRODUCT_DIRECTION.md) D-4를 참조하세요.
 
 ---
 
@@ -30,7 +32,7 @@
 [ 단계 2: SwingSenseAI 앱 통합 — 전체 로드맵은 루트 README 참조 ]
 ```
 
-> 최종 제품 구조(센서 탭 + 비전 탭 + Fusion 탭)와 Phase 2~4 로드맵은 루트 [`README.md`](../README.md#-제품-비전-및-단계별-로드맵)에서 관리합니다.
+> 최종 제품 구조(Match 모드 / Lab 모드)와 Phase 2~5 로드맵은 루트 [`README.md`](../README.md#-제품-비전-및-단계별-로드맵)에서 관리합니다.
 
 ---
 
@@ -87,6 +89,6 @@ tennis-sensor-project/
 
 ## 6. 향후 방향
 
-이 모듈에서 검증을 마친 수학 공식·임계값·타이밍 로직은 `SwingSenseAI` 앱으로 포팅되어 "비전 분석 탭"으로 통합될 예정입니다.
+이 모듈에서 검증을 마친 수학 공식·임계값·타이밍 로직은 `SwingSenseAI` 앱으로 포팅되어 **Lab 모드(`:feature:lab`)**로 통합될 예정입니다.
 
-전체 제품의 단계별 로드맵(Phase 2 앱 통합 · Phase 3 센서+비전 Fusion · Phase 4 AI 코칭 리포트)은 루트 [`README.md` — 제품 비전 및 단계별 로드맵](../README.md#-제품-비전-및-단계별-로드맵)에서 관리합니다.
+전체 제품의 단계별 로드맵(Phase 2 멀티모듈 분리 및 Kotlin 포팅 · Phase 3 Lab 모드 MVP · Phase 4 AI 코칭 리포트 · Phase 5 Match 모드 복귀)은 루트 [`README.md` — 제품 비전 및 단계별 로드맵](../README.md#-제품-비전-및-단계별-로드맵)에서 관리하며, 방향 전환의 근거는 [`docs/PRODUCT_DIRECTION.md`](../docs/PRODUCT_DIRECTION.md)에 기록되어 있습니다.
