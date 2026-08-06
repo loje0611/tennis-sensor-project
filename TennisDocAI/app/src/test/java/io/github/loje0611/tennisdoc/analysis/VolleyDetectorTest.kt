@@ -93,6 +93,9 @@ class VolleyDetectorTest {
     @Test
     fun `high follow-through gyro returns null for topspin stroke`() {
         val peakIdx = 10
+        // Follow-through 자이로 크기가 임계값을 넘어야 스트로크로 판정된다.
+        // DEFAULT_GYRO_FOLLOW_THROUGH_THRESHOLD_SQ = 1_440_000 (= 1200 dps)이므로
+        // 축당 800f → 800²×3 = 1_920_000 > 1_440_000 으로 임계값을 초과한다.
         val window = makeWindow { i ->
             if (i in (peakIdx - 1)..(peakIdx + 1)) {
                 sample(ax = 25f, ay = 10f, az = 5f, gz = 50f)

@@ -163,3 +163,50 @@ All §8 criteria verified PASS (rename, modules, dependency rules, behavior pres
 
 ### Verdict
 **QA_PASSED** — handoff to developer for commit/push/DONE.
+
+---
+
+## Addendum — 사후 감사 (사용자 지시, PM 기록) — 2026-08-06T14:35Z
+
+TASK-009가 `DONE`에 도달한 뒤 사용자 요청으로 프로토콜 준수 여부를 감사했다. 파이프라인이 놓친 위반 2건을 확인하고 직접 수정했다.
+
+### 위반 1 — Developer가 기존 테스트의 입력 픽스처를 변경 (경계 위반)
+
+- 대상: `app/src/test/.../analysis/VolleyDetectorTest.kt`, `high follow-through gyro returns null for topspin stroke`
+- 변경: 커밋 `87df5ca`에서 `gx/gy/gz = 200f` → `800f`. 커밋 메시지는 `Fix gradle build errors and failing test`.
+- spec AC는 *"기존 테스트 파일의 단정문이 변경되지 않았다(변경은 package/import/클래스명 참조에 한정)"* 를 요구했으나, Run 3·4는 이 항목을 실행 증거 없이 `PASS`로 기록했다.
+
+**근본 원인은 별개였다.** 원본 픽스처는 개명 이전부터 수학적으로 통과가 불가능했다.
+
+| 픽스처 | 자이로 크기² | 임계값 `DEFAULT_GYRO_FOLLOW_THROUGH_THRESHOLD_SQ` | 판정 |
+|---|---|---|---|
+| `200f` | 200²×3 = 120,000 | 1,440,000 (= 1200 dps) | 미달 → 발리로 감지 → `assertNull` 실패 |
+| `800f` | 800²×3 = 1,920,000 | 1,440,000 | 초과 → 스트로크로 배제 → 통과 |
+
+`077b300`(개명 전) 확인 결과 임계값 `1440000`과 픽스처 `200f`가 모두 동일했고, 구현(`VolleyDetector.kt`)은 개명 커밋에서 KDoc 링크 한 줄 외 변경이 없다. **개명이 만든 회귀가 아니라 사전에 존재하던 결함**이며, 이 서브프로젝트의 단위 테스트가 그동안 파이프라인에서 실행된 적이 없었음을 시사한다.
+
+따라서 **FR-9는 작성 시점부터 충족 불가능한 요구사항이었다.** *"기존 6개 스위트가 모두 통과"* 와 *"픽스처 불변"* 이 동시에 성립할 수 없었다. 올바른 처리는 조용한 수정이 아니라 **명세 결함 에스컬레이션**(Tester Case C → `BLOCKED` → 사용자가 PM에게 개정 지시)이었다.
+
+**조치**: 값 `800f`는 임계값에서 도출되는 정당한 값이므로 유지하되, 매직 넘버로 보이지 않도록 산출 근거를 주석으로 명시했다. 200f로 되돌리면 빌드가 실패한다(실측 확인).
+
+### 위반 2 — 선언된 하네스 밖의 검사 스크립트
+
+- 대상: `TennisDocAI/tests/test_task009_static_ac.py` (+ `__pycache__/`)
+- Kotlin/Gradle 프로젝트에 Python 스크립트를 두고 `.gradle.kts`·`.md` 파일을 `read_text()` 후 문자열 매칭하는 방식이었다. 선언된 테스트 명령으로 실행되지 않으므로 검증으로 인정되지 않으며, spec §9의 *"소스 문자열 단정으로 판정 금지"* 에도 위배된다.
+- Run 3의 유일한 FAIL 사유가 이 스크립트였고, 그 결과 마지막 사이클은 **문자열 매처를 통과시키기 위해 문서를 수정하는** 작업이 되었다.
+- 다만 당시 Tester 프롬프트가 문자 그대로 `{target_project}/tests/`에 테스트를 두라고 지시하고 있었으므로, **위치는 프롬프트 결함에 기인**한다.
+
+**조치**: 스크립트와 캐시를 삭제했다. `AI_README.md`에는 이미 참조가 남아 있지 않다.
+
+### 검증
+
+```
+./gradlew verifyModuleDependencies test  →  BUILD SUCCESSFUL
+```
+
+### 프로토콜 반영
+
+재발 방지를 위해 프롬프트를 개정했다.
+- Tester: 사이클 시작 시 **경계 검사**(Developer 변경 경로 vs 쓰기 권한 매트릭스) 의무화. 명세 근거가 있을 때만 예외 인정하고 근거 요구사항 ID를 기록. 단정문·기대값·입력 픽스처·임계값 변경은 예외 불인정.
+- Tester: 핸드오프 전 **자기 산출물 정리 의무**.
+- Developer: 커밋 전 **잔여 산출물 거름망(Step 3b)**.
