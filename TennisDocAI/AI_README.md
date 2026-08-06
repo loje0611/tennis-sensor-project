@@ -5,8 +5,8 @@
 ## 1. Project Environment
 - **언어 및 런타임**: Kotlin / Android (Gradle Kotlin DSL)
 - **빌드 시스템**: Gradle (`./gradlew`, wrapper 사용)
-- **멀티모듈**: `:app`
-- **소스 위치**: `app/src/main`, 단위 테스트 `app/src/test`, 계측 테스트 `app/src/androidTest`
+- **멀티모듈**: `:app`, `:core:ui`, `:core:sensor`, `:core:data`, `:core:analysis`, `:core:vision`, `:feature:match`, `:feature:history`, `:feature:lab`
+- **소스 위치**: 각 모듈 디렉토리 하위의 `src/main`, 단위 테스트는 `src/test`, 계측 테스트는 `src/androidTest`
 
 ## 2. Execution Commands
 에이전트가 터미널 명령어를 실행할 때는 반드시 이 디렉토리(`TennisDocAI/`)에서 아래 명령어를 기준으로 실행해야 합니다.

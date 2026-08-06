@@ -89,3 +89,77 @@ An exception occurred applying plugin request [id: 'tennisdoc.android.library']
 
 ### Verdict
 **QA_FAILED** — retry_count=1. Developer handoff.
+
+
+---
+
+## Run 3 (spec v1) — 2026-08-06T14:09:10Z
+
+**Result:** **FAIL**
+
+### Environment
+- `JAVA_HOME` Temurin 21, `ANDROID_HOME=/home/keunu/Android/Sdk`
+- Commands:
+  ```bash
+  cd TennisDocAI
+  ./gradlew verifyModuleDependencies test assembleDebug
+  python3 tests/test_task009_static_ac.py
+  ```
+
+### Gradle
+- `./gradlew verifyModuleDependencies test assembleDebug` → **BUILD SUCCESSFUL**
+- Unit tests (app debug): **49 tests, 0 failures, 0 errors** including required 6:
+  - `CoachingEngineTest`, `KinematicAnalyzerTest`, `SwingClassificationKeysTest`, `SwingInferenceBufferTest`, `VolleyDetectorTest`, `ImuPayloadParserTest`
+- Debug APK ABIs present: `arm64-v8a`, `armeabi-v7a`, `x86_64`, `x86`
+- EH-8: temporarily added `implementation(project(":feature:lab"))` to `:core:ui` → `verifyModuleDependencies` **FAILED** with message containing `:core:ui` and `:feature:lab`; restored afterward and verify **SUCCEEDED**
+
+### Static AC
+- `python3 tests/test_task009_static_ac.py` → **FAIL**
+  - `AI_README.md` does not describe `:core:` / `:feature:` multimodule layout (still `멀티모듈: :app` only)
+
+### Acceptance Criteria (delta vs Run 2)
+
+| Area | Result | Notes |
+|---|---|---|
+| 개명 AC | PASS | unchanged |
+| 모듈 골격 / vision JVM / no SDK literals in library scripts | PASS | unchanged |
+| `verifyModuleDependencies` success | **PASS** | fixed since Run 2 |
+| Forbidden dep fails verify (EH-8) | **PASS** | exercised |
+| `./gradlew test` 6 required suites | **PASS** | 49/49 |
+| `assembleDebug` + ABI 4종 | **PASS** | APK inspected |
+| `AI_README.md` FR-8 multimodule/source description | **FAIL** | still lists only `:app` |
+
+### Failure Detail (Developer)
+Update `TennisDocAI/AI_README.md` §1 so module/source description matches FR-4 (nine modules including `:core:*` and `:feature:*`). Test command block already includes `verifyModuleDependencies` and is fine.
+
+### Verdict
+**QA_FAILED** — retry_count=2. Remaining gap is documentation (FR-8 AI_README). Handoff to developer.
+
+
+---
+
+## Run 4 (spec v1) — 2026-08-06T14:14:40Z
+
+**Result:** **PASS**
+
+### Environment
+- `JAVA_HOME` Temurin 21, `ANDROID_HOME=/home/keunu/Android/Sdk`
+- Commands:
+  ```bash
+  cd TennisDocAI
+  python3 tests/test_task009_static_ac.py
+  ./gradlew verifyModuleDependencies test assembleDebug
+  ```
+
+### Results
+- Static AC script: **PASS** (AI_README now lists all 9 modules)
+- `./gradlew verifyModuleDependencies test assembleDebug`: **BUILD SUCCESSFUL**
+- Unit tests: **49 tests, 0 failures** incl. required 6 suites
+- APK native ABIs: arm64-v8a, armeabi-v7a, x86_64, x86
+- EH-8: forbidden `:core:ui` → `:feature:lab` causes verify failure with both paths in message; restored verify succeeds
+
+### Acceptance Criteria
+All §8 criteria verified PASS (rename, modules, dependency rules, behavior preservation, docs).
+
+### Verdict
+**QA_PASSED** — handoff to developer for commit/push/DONE.
