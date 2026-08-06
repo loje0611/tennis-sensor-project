@@ -98,6 +98,165 @@ v1은 "기록 앱"이 아니라 **"테니스 폼 정밀 진단 앱"**입니다.
 - **센서를 비전의 트리거로 사용**합니다. Lab 모드에서 BLE 스윙 감지 시 **임팩트 ±2초 구간만 자동 클립**으로 저장 → 사용자가 폰을 조작할 필요가 없고, 영상 전체를 MediaPipe에 넣지 않아 연산·배터리·저장공간이 크게 절감되며, 임팩트 프레임을 이미 알고 있어 비전 임팩트 오검출 리스크도 제거됩니다.
 - **baseline 전이(후속 단계)**: Lab에서 산출한 개인 기준선(임팩트 시 팔 펴짐 각도, 운동 체인 지연, 대응 IMU 시그니처)을 저장해 두면, 이후 **동시 촬영 없이도 센서 단독 세션을 비전 지식으로 해석**할 수 있습니다. 융합을 *공간적 동시성*이 아니라 *시간적 전이*로 설계하는 것이 고정 위치 제약을 우회하는 핵심입니다.
 
+### D-7. AI/ML은 이미 제품의 일부이며, 적용 지점을 단계별로 확정한다
+
+#### 전제 정정
+
+"v1은 AI를 쓰지 않는다"는 해석은 사실과 다릅니다. ML은 이미 제품의 핵심 자산입니다.
+
+| 자산 | 기술 | 위치 |
+|---|---|---|
+| 스윙 분류기 | **NDK C++ TFLite Micro 온디바이스 추론**(800ms 윈도우) | `SwingSenseAI/app/src/main/cpp/edge_impulse`, `inference/EdgeImpulseNative.kt` |
+| 학습 모델 | Edge Impulse 모델 5종(court v1~v3, shadow v1~v2) | `tennis-swing-analyzer/models/*.eim` |
+| 포즈 추출 | **MediaPipe Pose** — 33개 랜드마크 추출 자체가 DNN | `tennis-vision-analyzer/src/pose_extractor.py` |
+| AI 코치 리포트 | **LLM 자연어 생성** | Phase 4(로드맵 기 반영) |
+
+**D-2 근거 2번("ML 리스크 제거")의 정확한 의미**는 *ML을 배제한다*가 아니라, **분류기 정확도를 제품의 크리티컬 패스에서 제거한다**는 것입니다. Lab 모드는 앱이 드릴을 지시해 사용자가 정답 라벨을 제공하므로, 분류기가 틀려도 제품이 무너지지 않습니다. ML은 유지하되 **의존의 성격을 바꾼** 결정입니다.
+
+#### D-7.1 Ablation 자동 채점 — 검증 도구 (Phase 3 선결)
+
+D-5는 MVP의 **유일한 성공 지표**로 *"센서를 빼면 코칭 문장이 달라지는가"* 를 규정했지만, **"달라졌다"의 판정 방법이 정의되어 있지 않습니다.** 사람이 눈으로 비교하면 주관적이고 드릴마다 반복해야 하므로 지표로 기능하지 못합니다.
+
+→ 두 리포트를 **문장 임베딩 코사인 유사도**로 수치화하고, **진단 태그 집합의 Jaccard 거리**를 병행해 "조언이 바뀐 비율"을 자동 집계합니다. 제품 기능이 아니라 **검증 도구**이므로 사용자 경험 리스크가 없으며, **Phase 3 합격 판정을 성립시키는 선결 조건**입니다.
+
+#### D-7.2 드릴 라벨 자동 수집 → 재학습 루프 (Phase 3에 포함)
+
+D-2 근거 2번이 *"축적된 드릴 데이터는 그대로 모델 재학습 데이터가 된다"* 고 명시했으나, **수집 파이프라인이 어디에도 정의되어 있지 않습니다.**
+
+Lab 모드는 드릴을 지시하므로 **라벨이 비용 없이 생성됩니다.** 세션마다 `(드릴 라벨, IMU 50Hz 원시, 비전 포즈)`를 함께 저장하면 다음 기술 부채를 데이터로 해소할 수 있습니다.
+
+- Edge Impulse **4구종 한계** → 드릴 종류만큼 클래스 확장
+- **Gyro Z축 부호 반전 문제**(`VolleyDetector.classifyVolleyHand()`, "배포 전 부호/축 수정 필요" 주석) → 라벨 데이터로 실증 교정
+
+> **시점 제약**: 이 데이터는 **사후에 다시 모을 수 없습니다.** Phase 3 Lab 모드 구현 시 저장 스키마를 함께 설계하지 않으면 기회가 소멸합니다.
+
+#### D-7.3 비전 → 센서 지식 증류 (Phase 5, 전략적 최상위)
+
+D-6의 *baseline 전이*를 휴리스틱 저장이 아니라 **학습된 매핑**으로 격상시키는 안입니다.
+
+```text
+Lab 모드 동시 수집:
+  IMU 시계열 ──(입력)──▶ 소형 회귀 모델 ──▶ 관절 각도·운동 체인 지연 추정
+                                              ▲
+                                    (교사 라벨 = 비전 산출값)
+```
+
+학습이 완료되면 **Match 모드에서 카메라 없이 IMU만으로 폼 지표를 추정**할 수 있습니다. *"비전은 고정 위치에서만 성립한다"* 는 본 프로젝트의 근본 제약을 우회하는 유일한 경로이며, D-6이 말한 **"공간적 동시성이 아니라 시간적 전이"의 정확한 ML 구현**입니다. Phase 5 Match 모드 복귀의 기술적 근거가 됩니다.
+
+#### D-7.4 개인 baseline 대비 이상 탐지 (데이터 소량으로 성립)
+
+절대 기준이 아니라 **자기 자신의 평균 대비 이탈**을 탐지합니다. 세션 후반 폼 붕괴, 피로 누적, 특정 구종에서만 나타나는 편차 등. z-score·이동평균 등 통계적 방법만으로 성립하므로 **데이터가 적은 초기 단계에 특히 유효**하며, D-7.3의 데이터 요구량 문제를 우회합니다.
+
+#### D-7.5 LLM 리포트 설계 제약 (Phase 4)
+
+Phase 4는 이미 로드맵에 있으므로, 설계 제약만 확정합니다.
+
+- **수치는 LLM이 생성하지 않는다.** 결정론적 분석 엔진이 산출한 값을 구조화 JSON으로 전달하고, LLM은 **표현·우선순위·톤**만 담당합니다. 환각이 코칭 오류로 직결되는 것을 구조적으로 차단합니다.
+- **전송 payload를 지표 수치로 한정**합니다. 영상·원시 포즈를 외부로 보내지 않습니다(프라이버시).
+- v1은 검증 빌드이므로 온디바이스 소형 LLM보다 **서버 API가 합리적**입니다.
+
+#### 적용 단계 요약
+
+| # | 항목 | 단계 | 성격 | 비고 |
+|---|---|---|---|---|
+| D-7.1 | Ablation 자동 채점 | **Phase 3 선결** | 검증 도구 | 미구현 시 D-5 지표가 측정 불가 |
+| D-7.2 | 드릴 라벨 수집·재학습 | **Phase 3 포함** | 데이터 인프라 | 사후 수집 불가 |
+| D-7.3 | 비전→센서 지식 증류 | Phase 5 | 제품 기능 | 데이터 축적 선행 필요 |
+| D-7.4 | 개인 baseline 이상 탐지 | Phase 3~4 | 제품 기능 | 소량 데이터로 가능 |
+| D-7.5 | LLM 리포트 설계 제약 | Phase 4 | 설계 원칙 | 기 계획된 단계의 가드레일 |
+
+#### 최대 제약: 알고리즘이 아니라 데이터
+
+1인 개발 + 본인·지인 대상 검증 빌드(D-4)라는 조건에서 확보 가능한 스윙은 수백~수천 개 규모로 추정됩니다. **D-7.3은 그보다 훨씬 큰 데이터를 요구할 가능성이 높습니다.** 따라서 D-7.3의 실현 가능성은 **D-7.2를 Phase 3에 반드시 심어두는지**에 종속됩니다. D-7.1·D-7.2는 기존 로드맵을 변경하지 않고 얹는 성격이라 즉시 확정 가능하고, D-7.3은 데이터 축적 이후 재판단합니다.
+
+### D-8. 앱 명칭을 **TennisDoc AI**로 확정한다
+
+§4의 미해결 논점이었던 앱 명칭을 확정합니다.
+
+| 항목 | 값 |
+|---|---|
+| 표시명 | **TennisDoc AI** |
+| `rootProject.name` | `TennisDocAI` |
+| 모노레포 디렉토리 | `SwingSenseAI/` → `TennisDocAI/` |
+| `applicationId` | `io.github.loje0611.tennisdoc` (도메인 미보유 시 권장) / 도메인 확보 시 `com.tennisdoc.app` |
+| 패키지 루트 | `com.example.swingsenseai` → 위 `applicationId`와 동일 루트 |
+
+**근거**
+1. **`Doc`이 D-2의 정체성을 직접 전달한다.** v1은 "기록 앱"이 아니라 *테니스 폼 정밀 진단 앱*이며, 후보 중 이 정의를 설명 없이 전달하는 유일한 이름입니다.
+2. **`Tennis` 접두사가 도메인·검색성을 확보한다.** `Baseline`·`Trace`·`Contact` 등 일반명사 후보의 최대 약점이었습니다.
+3. **`AI` 접미사는 D-7 확정 이후 사실에 부합한다.** 온디바이스 TFLite Micro 추론, MediaPipe DNN, Phase 4 LLM 리포트가 모두 실재하므로 과장이 아닙니다.
+4. **`SwingSense`의 문제(센서 중심 작명)를 해소한다.** 특정 데이터 소스에 종속되지 않아 Phase 5에서 Match 모드가 복귀해도 이름이 깨지지 않습니다.
+
+**기각된 주요 후보**
+
+| 후보 | 기각 사유 |
+|---|---|
+| `StrokeMetrics` | `Stroke`의 1차 의미가 **뇌졸중**. 진단·헬스 인접 제품이라 오독 위험이 일반 앱보다 높음. 골프에서도 쓰여 테니스 특정성 희석 |
+| `SwingFlow AI` | "Swing+추상명사+AI" 패턴 반복이라 **개명 효과가 없음**. `Flow`는 6축 지표 중 Fluidity 하나에만 대응하며 핵심(인과·순서)과 무관 |
+| `Kinetic Swing` | 차별점(운동 체인) 지칭은 우수하나 전달력이 낮고 일반 사용자에게 진입 장벽. **차선안으로 보존** — 스토어 출시 단계에서 재검토 가능 |
+| `Baseline` / `Swing Clinic` / `Whip` 등 | 개념 적합도는 높으나 전달력·검색성·상표 리스크에서 열세 |
+
+**적용 범위**
+- 개명은 **TASK-009(멀티모듈 분리)와 같은 사이클에서 처리**합니다. 62개 Kotlin 파일의 패키지가 어차피 이동하는 시점이라 비용이 가장 낮습니다.
+- **클래스명은 최소 개명**합니다. `SwingMetrics`·`SwingHistoryRepository` 등의 `Swing`은 **여전히 유효한 도메인 어휘**이므로 유지하고, 옛 제품명이 박힌 `SwingSenseApplication`·`SwingSenseDatabase`·`SwingColorScheme`만 개명합니다.
+- **`task-board.json`은 영향받지 않습니다.** TASK-001~008이 전부 `target_project: tennis-vision-analyzer`이며 `SwingSenseAI`를 참조하는 task가 없습니다. 갱신 대상은 `README.md`(디렉토리 구조), `docs/AGENT_WORKFLOW.md`(§7 테스트 명령표), 해당 서브프로젝트의 `AI_README.md` 세 곳뿐입니다.
+
+> **주의**: `SwingSenseDatabase`의 **DB 파일명**을 바꾸면 기존 로컬 데이터에 접근할 수 없게 됩니다. 개발 단계라 실질 피해는 없으나, 축적된 테스트 세션을 보존하려면 클래스명만 바꾸고 파일명은 유지합니다.
+
+> **미검증**: `TennisDoc` 유사 명칭의 상표·스토어 선점 여부는 확인되지 않았습니다. `Tennis`가 일반명사라 상표 식별력이 약할 수 있으나, v1이 검증 빌드(D-4)이므로 착수 차단 요인은 아닙니다.
+
+### D-9. Phase 2 모듈 경계를 확정한다
+
+D-3에서 멀티모듈 분리를 결정했으나 모듈 목록이 개략적이었습니다. Phase 2 착수에 필요한 경계를 확정합니다.
+
+```text
+:core:ui        [신규] 테마 + 공용 Compose 컴포넌트
+:core:sensor    BLE, IMU 파서
+:core:analysis  Kinematic, Coaching, Edge Impulse 추론 (NDK/CMake 포함)
+:core:vision    [신규] 비전 알고리즘 — 순수 kotlin("jvm") 모듈
+:core:data      Room, DataStore
+:feature:lab    [신규] CameraX + MediaPipe SDK 바인딩 + Fusion
+:feature:match  [보존/비활성] 기존 PracticeScreen
+:feature:history[신규] Match·Lab 공통 이력 조회
+:app            조립 + 설정 화면
+```
+
+#### D-9.1 `:core:ui`와 `:feature:history`를 신설한다
+
+| 대상 | 배치 | 근거 |
+|---|---|---|
+| `ui/theme/*`, `HexagonalRadarChart`, `DeltaSummaryChips`, `SwingLabelFormatter`, `SwingCategoryUi` | `:core:ui` | 테마는 전 feature가 의존. 육각형 레이더 차트는 **Lab 리포트의 6축 지표 시각화에 재사용이 확실**하므로 특정 feature에 가두면 안 됨 |
+| `ui/history/*` (Screen·ViewModel 4종) | `:feature:history` | **History는 Match·Lab 양쪽 세션을 모두 소비**한다. `:feature:match`에 넣으면 D-2의 Match 비활성화 시 History가 함께 죽고, `:feature:lab`에 넣으면 Phase 5 Match 복귀 시 의존 방향이 뒤집힌다 |
+| `ui/settings/*` | `:app` 잔류 | 앱 전역 설정이라 조립 계층에 자연스럽고, 모듈을 신설할 규모(4파일)가 아님 |
+| `navigation/*`, `MainActivity`, `MainViewModel`, Application, `di/AppModule` | `:app` | 조립 전용 계층 |
+| `service/SwingAnalysisForegroundService`, `session/*` | **`:app` 잔류 — Phase 3에서 재배치** | 후속조치 #3이 *"BLE 연결 시 자동 세션 생성 → 모드 선택"* 으로 이 서비스의 역할 자체를 바꾼다. 지금 확정하면 Phase 3에서 다시 옮기게 되므로 **판단을 유보**한다 |
+
+#### D-9.2 비전 알고리즘은 `:core:vision`(순수 JVM)으로 분리한다
+
+`:core:analysis`에 합치지 않는 이유:
+
+- `:core:analysis`는 **Edge Impulse NDK/CMake 네이티브 빌드**를 포함한다. 순수 수학 함수인 비전 포팅 코드를 여기 넣으면 **단위 테스트가 매번 네이티브 빌드에 묶여** 느려지고 환경 의존이 생긴다. 에이전트 파이프라인이 `./gradlew test`로 QA를 도는 구조라 이 비용이 매 사이클 반복된다.
+- 포팅 대상(`angle_calculator`·`impact_detector`·`swing_path`·`kinetic_chain`·`swing_diagnosis`)은 Python에서도 순수 함수였고 **Android 의존이 전혀 없다.** `kotlin("jvm")` 모듈로 두면 계측 기기 없이 가장 빠르게 검증된다.
+- 도메인 분리: IMU 시계열 분석(`:core:analysis`) vs 포즈 기하 분석(`:core:vision`).
+
+**MediaPipe Android SDK 래퍼는 `:core:vision`이 아니라 `:feature:lab`에 둡니다.** Android 의존이 들어오는 순간 위 장점이 사라지므로 알고리즘(JVM)과 SDK 바인딩(Android)을 분리합니다.
+
+Phase 3의 Fusion 엔진은 `:core:fusion`을 신설해 두 모듈을 소비하면 의존 방향이 단방향으로 유지됩니다.
+
+```text
+:core:vision (JVM, 순수 수학)  ─┐
+:core:analysis (IMU + NDK)     ─┼─▶ :core:fusion (Phase 3) ─▶ :feature:lab
+:core:sensor / :core:data      ─┘
+```
+
+### D-10. 검증용 스파이크는 정규 task 파이프라인 밖에서 수행한다
+
+MediaPipe Android의 실기기 실용성 확인처럼 **폐기를 전제로 한 스파이크**는 `docs/AGENT_WORKFLOW.md`의 task 사이클에 등록하지 않습니다.
+
+**근거**: 파이프라인의 종결 조건은 *"테스트 통과(`QA_PASSED`) → 커밋 → `DONE`"* 인데, 스파이크는 산출물을 버리는 것이 목적이므로 QA·커밋 개념이 성립하지 않습니다. D-3의 예외 조항도 별도 진행을 허용합니다.
+
+대신 **결과(실기기 fps, 프레임 지연, 배터리 소모)를 문서로 남겨 MediaPipe 통합 task spec의 입력**으로 사용합니다. 스파이크 결과가 Phase 2 설계를 흔들 수 있으므로 `:feature:lab` 착수보다 **선행**하는 것이 바람직합니다. 수행 시점과 위치는 [`docs/PHASE2_PLAN.md`](PHASE2_PLAN.md) §3에 SPIKE-01로 기록되어 있습니다.
+
 ---
 
 ## 3. 파생되는 후속 조치
@@ -109,13 +268,23 @@ v1은 "기록 앱"이 아니라 **"테니스 폼 정밀 진단 앱"**입니다.
 | 3 | 세션 생성 지점 변경 | BLE 연결 시 자동 생성 → **사용자가 모드를 먼저 선택**. 가장 중요한 UX 변경 |
 | 4 | CameraX + MediaPipe Android 의존성 도입 | 현재 `libs.versions.toml`에 없음 |
 | 5 | 개인 baseline 저장소 | `CalibrationStore` 확장 또는 신규 테이블 |
-| 6 | `applicationId` 변경 | 현재 `com.example.swingsenseai`. 제품 정체성 재정의에 맞춰 앱 명칭 재검토 시점 |
+| 6 | `applicationId` 및 패키지·디렉토리 개명 | **D-8 확정**. `com.example.swingsenseai` → `io.github.loje0611.tennisdoc`, `SwingSenseAI/` → `TennisDocAI/`. TASK-009에서 처리 |
 | 7 | 영상 보존 정책 | Lab 모드는 저장공간 소모가 큼 |
+| 8 | Ablation 자동 채점 도구 | D-7.1. Phase 3 합격 판정의 선결 조건 |
+| 9 | Lab 세션 원시 데이터 저장 스키마 | D-7.2. `(드릴 라벨, IMU 원시, 비전 포즈)`. **사후 수집 불가**하므로 Phase 3에 반드시 포함 |
+| 10 | LLM 전송 payload 경계 정의 | D-7.5. 지표 수치만 전송, 영상·원시 포즈 제외 |
+| 11 | 개명 관련 문서 갱신 | D-8. `README.md`(디렉토리 구조), `docs/AGENT_WORKFLOW.md`(§7 테스트 명령표), 해당 서브프로젝트 `AI_README.md` |
+| 12 | `README.md` 모듈 구조 갱신 | D-9. `:core:ui`·`:core:vision`·`:feature:history` 추가 반영 |
+| 13 | MediaPipe 실기기 스파이크 수행 | D-10. 정규 task 밖에서 진행. [`PHASE2_PLAN.md`](PHASE2_PLAN.md) §3 **SPIKE-01** |
+| 14 | Phase 2 task 후보 목록 유지 | 단일 task 제약상 보드에 없는 계획을 [`PHASE2_PLAN.md`](PHASE2_PLAN.md)가 보존. task 등록 시 동기화 |
 
 ---
 
 ## 4. 미해결 논점
 
-- **앱 명칭** — "SwingSense"는 센서 중심 작명으로, 비전 우선 제품 정체성과 어긋날 수 있음.
 - **하드웨어 배포 전략** — 스토어 출시 시점을 결정하는 선행 조건.
 - **Match 모드 복귀 시점** — 하드웨어 v2.0 완성 및 baseline 전이 구현 이후로 판단.
+- **학습 데이터 규모 확보 방안** — D-7.3(지식 증류)의 실현 가능성을 좌우. 검증 빌드 규모로 충분한지, 외부 데이터셋·데이터 증강이 필요한지 미결.
+- **`TennisDoc` 상표·스토어 선점 여부** — D-8은 확정되었으나 외부 검증 미완. 충돌 발견 시 차선안은 `Kinetic Swing`.
+- **`service/`·`session/`의 최종 소속 모듈** — D-9.1에서 Phase 3까지 판단 유보.
+
