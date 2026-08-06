@@ -77,7 +77,8 @@
 
 - `next_agent`는 `pm` → `developer` → `tester` 사이를 오갑니다.
 - task 사이클이 끝나면(`DONE` 또는 `BLOCKED`) `{"next_agent": "none", "task_id": ""}`로 초기화됩니다.
-- Developer와 Tester는 이 파일을 **5초마다 폴링**하며, 파일이 없거나 자신의 차례가 아니면 대기(idle)합니다.
+- Developer와 Tester는 이 파일을 **블로킹 방식으로 감시**합니다. 짧은 읽기를 반복하는 폴링 대신, **자신의 차례로 바뀔 때만 반환되는 단일 대기 명령**(내부적으로 5초 간격 확인)을 사용해 전이 시점에 **정확히 한 번** 깨어납니다.
+- **유휴 상태에서는 어떤 출력·알림도 내지 않습니다.** 차례가 아닌 사이클을 보고하면 동일한 "idle" 알림만 반복되어 로그가 오염됩니다. 감시자는 에이전트당 **하나만** 실행하고, 보고는 **차례 진입·핸드오프 시점에만** 합니다.
 
 ---
 
@@ -93,7 +94,7 @@
 ### 💻 Developer 에이전트 ([`prompts/developer-agent.md`](../prompts/developer-agent.md))
 - `SPEC_READY` → 명세 구현(`{target_project}/` 내부로 한정) → `DEV_DONE`.
 - `QA_FAILED` → QA 리포트를 읽고 버그 수정 → `DEV_DONE`.
-- `QA_PASSED` → `git add -A`로 spec·소스·테스트·QA 리포트를 모두 스테이징 후 커밋/푸시 → `DONE`.
+- `QA_PASSED` → 상태 파일(`task-board.json` → `DONE`, `turn.json` → `none`)을 **먼저** 갱신한 뒤, **해당 task의 산출물 경로만 명시적으로 스테이징**하여 커밋/푸시 → `DONE`.
 
 ### 🔍 Tester 에이전트 ([`prompts/tester-agent.md`](../prompts/tester-agent.md))
 - `DEV_DONE` → `{target_project}/tests/`에 테스트 작성.
@@ -152,6 +153,8 @@
 - 무한 루프 방지: QA 재시도는 최대 3회, 초과 시 `BLOCKED`로 종료됩니다.
 - 하나의 기능에 대해 유효한 spec은 **정확히 하나**입니다. 같은 산출물을 규정하는 spec을 중복 생성하지 마세요(§5).
 - `DONE`/`BLOCKED` 재개는 **PM만** 수행합니다.
+- **커밋 스테이징은 `git add -A`/`git add .`을 금지하고, 해당 task의 산출물 경로만 명시적으로 지정합니다.** 본 저장소는 PM·사용자가 문서를 동시에 편집할 수 있는 모노레포이므로, 일괄 스테이징은 무관한 작업을 잘못된 task 커밋 메시지 아래 묻어버립니다. 커밋 전 `git diff --cached --name-only`로 스테이징 목록을 검증하고, 무관한 변경은 **워킹 트리에 그대로 남겨 둡니다**.
+- 상태 파일(`task-board.json`, `turn.json`) 갱신은 **커밋보다 먼저** 수행합니다. 커밋 후에 갱신하면 그 변경이 워킹 트리에 남아 다음 task의 커밋에 섞여 들어갑니다.
 
 ---
 
