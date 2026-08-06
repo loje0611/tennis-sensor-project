@@ -8,9 +8,9 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import io.github.loje0611.tennisdoc.core.ui.theme.TennisDocTheme
 import io.github.loje0611.tennisdoc.data.repository.ThemePreferencesRepository
 import io.github.loje0611.tennisdoc.navigation.AppNavHost
-import io.github.loje0611.tennisdoc.ui.theme.SwingSenseAITheme
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
@@ -37,7 +37,7 @@ class MainActivity : ComponentActivity() {
                 )
             }
 
-            SwingSenseAITheme(isDarkMode = isDarkMode) {
+            TennisDocTheme(isDarkMode = isDarkMode) {
                 AppNavHost()
             }
         }

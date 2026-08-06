@@ -1,4 +1,4 @@
-package io.github.loje0611.tennisdoc.ui.theme
+package io.github.loje0611.tennisdoc.core.ui.theme
 
 import android.app.Activity
 import androidx.compose.material3.MaterialTheme
@@ -30,7 +30,7 @@ private val SwingSenseDarkScheme = darkColorScheme(
 )
 
 @Composable
-fun SwingSenseAITheme(
+fun TennisDocTheme(
     isDarkMode: Boolean = true,
     content: @Composable () -> Unit,
 ) {

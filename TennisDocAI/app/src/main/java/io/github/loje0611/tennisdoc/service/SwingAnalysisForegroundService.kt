@@ -38,7 +38,7 @@ import io.github.loje0611.tennisdoc.sensor.MockSwingDataGenerator
 import io.github.loje0611.tennisdoc.sensor.RealBleDataSource
 import io.github.loje0611.tennisdoc.sensor.SensorDataSource
 import io.github.loje0611.tennisdoc.session.SwingAnalysisSessionState
-import io.github.loje0611.tennisdoc.ui.SwingLabelFormatter
+import io.github.loje0611.tennisdoc.core.ui.SwingLabelFormatter
 import io.github.loje0611.tennisdoc.data.db.entity.SwingEventEntity
 import io.github.loje0611.tennisdoc.data.db.entity.SwingSessionEntity
 import io.github.loje0611.tennisdoc.data.repository.CalibrationStore

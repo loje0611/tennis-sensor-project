@@ -69,9 +69,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.loje0611.tennisdoc.BleConnectionState
 import io.github.loje0611.tennisdoc.MainViewModel
 import io.github.loje0611.tennisdoc.analysis.SwingClassificationKeys
-import io.github.loje0611.tennisdoc.ui.SwingLabelFormatter
-import io.github.loje0611.tennisdoc.ui.theme.MichromaFont
-import io.github.loje0611.tennisdoc.ui.theme.SwingTheme
+import io.github.loje0611.tennisdoc.core.ui.SwingLabelFormatter
+import io.github.loje0611.tennisdoc.core.ui.theme.MichromaFont
+import io.github.loje0611.tennisdoc.core.ui.theme.SwingTheme
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
 

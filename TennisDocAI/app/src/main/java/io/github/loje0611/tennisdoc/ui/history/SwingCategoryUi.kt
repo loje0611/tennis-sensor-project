@@ -4,7 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import io.github.loje0611.tennisdoc.ui.theme.SwingTheme
+import io.github.loje0611.tennisdoc.core.ui.theme.SwingTheme
 
 private val VOLLEY_REGEX = Regex("\\bvolley\\b", RegexOption.IGNORE_CASE)
 private val TOPSPIN_REGEX = Regex("\\btopspin\\b", RegexOption.IGNORE_CASE)

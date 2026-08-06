@@ -50,7 +50,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.github.loje0611.tennisdoc.analysis.SwingMetrics
-import io.github.loje0611.tennisdoc.ui.theme.SwingTheme
+import io.github.loje0611.tennisdoc.core.ui.theme.SwingTheme
 import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin

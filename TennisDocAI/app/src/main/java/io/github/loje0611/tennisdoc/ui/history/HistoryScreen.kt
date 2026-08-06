@@ -48,8 +48,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import io.github.loje0611.tennisdoc.navigation.AppRoutes
 import io.github.loje0611.tennisdoc.session.SwingAnalysisSessionState
-import io.github.loje0611.tennisdoc.ui.theme.MichromaFont
-import io.github.loje0611.tennisdoc.ui.theme.SwingTheme
+import io.github.loje0611.tennisdoc.core.ui.theme.MichromaFont
+import io.github.loje0611.tennisdoc.core.ui.theme.SwingTheme
 import io.github.loje0611.tennisdoc.data.db.entity.SwingSessionEntity
 
 @Composable

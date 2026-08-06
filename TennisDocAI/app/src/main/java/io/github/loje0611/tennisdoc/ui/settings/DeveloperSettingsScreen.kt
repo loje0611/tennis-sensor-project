@@ -59,8 +59,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import io.github.loje0611.tennisdoc.ui.theme.MichromaFont
-import io.github.loje0611.tennisdoc.ui.theme.SwingTheme
+import io.github.loje0611.tennisdoc.core.ui.theme.MichromaFont
+import io.github.loje0611.tennisdoc.core.ui.theme.SwingTheme
 import kotlinx.coroutines.delay
 
 @Composable

@@ -83,8 +83,8 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.DialogWindowProvider
 import androidx.core.view.WindowCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import io.github.loje0611.tennisdoc.ui.theme.MichromaFont
-import io.github.loje0611.tennisdoc.ui.theme.SwingTheme
+import io.github.loje0611.tennisdoc.core.ui.theme.MichromaFont
+import io.github.loje0611.tennisdoc.core.ui.theme.SwingTheme
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlin.math.round
 

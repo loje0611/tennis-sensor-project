@@ -38,7 +38,7 @@ import io.github.loje0611.tennisdoc.ui.settings.DeveloperSettingsScreen
 import io.github.loje0611.tennisdoc.ui.settings.DeveloperSettingsViewModel
 import io.github.loje0611.tennisdoc.ui.settings.SettingsScreen
 import io.github.loje0611.tennisdoc.ui.settings.SettingsViewModel
-import io.github.loje0611.tennisdoc.ui.theme.SwingTheme
+import io.github.loje0611.tennisdoc.core.ui.theme.SwingTheme
 
 @Composable
 fun AppNavHost() {

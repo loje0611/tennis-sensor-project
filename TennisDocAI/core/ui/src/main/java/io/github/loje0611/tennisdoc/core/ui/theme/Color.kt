@@ -1,4 +1,4 @@
-package io.github.loje0611.tennisdoc.ui.theme
+package io.github.loje0611.tennisdoc.core.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
