@@ -97,7 +97,7 @@ class VolleyDetectorTest {
             if (i in (peakIdx - 1)..(peakIdx + 1)) {
                 sample(ax = 25f, ay = 10f, az = 5f, gz = 50f)
             } else {
-                sample(ax = 1f, ay = 1f, az = 1f, gx = 200f, gy = 200f, gz = 200f)
+                sample(ax = 1f, ay = 1f, az = 1f, gx = 800f, gy = 800f, gz = 800f)
             }
         }
 

@@ -27,7 +27,7 @@ tasks.register("verifyModuleDependencies") {
                 conf.dependencies.withType(ProjectDependency::class.java).forEach { dep ->
                     val depPath = dep.path
                     val allowedForProj = allowedDeps[projPath] ?: emptySet()
-                    if (depPath !in allowedForProj) {
+                    if (depPath != projPath && depPath !in allowedForProj) {
                         violations.add("Module $projPath has forbidden dependency on $depPath")
                     }
                 }
