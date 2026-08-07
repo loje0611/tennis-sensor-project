@@ -11,9 +11,9 @@
 ## 2. Execution Commands
 에이전트가 터미널 명령어를 실행할 때는 반드시 이 디렉토리(`TennisDocAI/`)에서 아래 명령어를 기준으로 실행해야 합니다.
 
-- **단위 테스트 실행 (Tester Agent용, 기기 불필요)**:
+- **단위 테스트 및 네이티브 바인딩 검증 실행 (Tester Agent용, 기기 불필요)**:
   ```bash
-  ./gradlew verifyModuleDependencies test assembleDebug
+  ./gradlew verifyModuleDependencies verifyJniBindings test assembleDebug
   ```
   (특정 모듈만: `./gradlew :app:testDebugUnitTest`)
 
@@ -21,7 +21,7 @@
   ```bash
   ./gradlew connectedAndroidTest
   ```
-  > 참고: CI/에이전트 환경에 기기가 없으면 계측 테스트는 건너뛰고 단위 테스트(`./gradlew verifyModuleDependencies test assembleDebug`) 결과로 검증합니다.
+  > 참고: CI/에이전트 환경에 기기가 없으면 단위 테스트 및 네이티브 바인딩 검증(`./gradlew verifyModuleDependencies verifyJniBindings test assembleDebug`) 결과로 검증합니다.
 
 - **디버그 빌드**:
   ```bash

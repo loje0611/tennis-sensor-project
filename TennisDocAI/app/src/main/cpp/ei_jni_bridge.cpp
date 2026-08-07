@@ -8,9 +8,12 @@
 
 #define LOG_TAG "EdgeImpulseJNI"
 #define ALOGW(...) __android_log_print(ANDROID_LOG_WARN, LOG_TAG, __VA_ARGS__)
+#define ALOGE(...) __android_log_print(ANDROID_LOG_ERROR, LOG_TAG, __VA_ARGS__)
 
-extern "C" JNIEXPORT jstring JNICALL
-Java_com_example_swingsenseai_inference_EdgeImpulseNative_runClassifierNative(
+static const char *NATIVE_CLASS_PATH =
+    "io/github/loje0611/tennisdoc/inference/EdgeImpulseNative";
+
+static jstring runClassifierNativeImpl(
         JNIEnv *env,
         jobject /* thiz */,
         jfloatArray input) {
@@ -69,4 +72,39 @@ Java_com_example_swingsenseai_inference_EdgeImpulseNative_runClassifierNative(
     }
     return env->NewStringUTF(label);
 #endif
+}
+
+static JNINativeMethod gMethods[] = {
+    {
+        const_cast<char *>("runClassifierNative"),
+        const_cast<char *>("([F)Ljava/lang/String;"),
+        reinterpret_cast<void *>(runClassifierNativeImpl)
+    }
+};
+
+JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *vm, void *reserved) {
+    JNIEnv *env = nullptr;
+    if (vm->GetEnv(reinterpret_cast<void **>(&env), JNI_VERSION_1_6) != JNI_OK) {
+        ALOGE("JNI_OnLoad: GetEnv failed");
+        return JNI_ERR;
+    }
+
+    jclass clazz = env->FindClass(NATIVE_CLASS_PATH);
+    if (clazz == nullptr) {
+        ALOGE("JNI_OnLoad: FindClass failed for %s", NATIVE_CLASS_PATH);
+        if (env->ExceptionCheck()) {
+            env->ExceptionClear();
+        }
+        return JNI_ERR;
+    }
+
+    if (env->RegisterNatives(clazz, gMethods, sizeof(gMethods) / sizeof(gMethods[0])) < 0) {
+        ALOGE("JNI_OnLoad: RegisterNatives failed for %s", NATIVE_CLASS_PATH);
+        if (env->ExceptionCheck()) {
+            env->ExceptionClear();
+        }
+        return JNI_ERR;
+    }
+
+    return JNI_VERSION_1_6;
 }

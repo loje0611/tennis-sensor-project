@@ -204,7 +204,7 @@ Tester는 아래 세 경우에 `BLOCKED`를 설정하며, QA 리포트 말미의
 
 | target_project | 테스트 명령 |
 |---|---|
-| `TennisDocAI` | `./gradlew test` |
+| `TennisDocAI` | `./gradlew verifyModuleDependencies verifyJniBindings test assembleDebug` |
 | `tennis-swing-analyzer` | 컴포넌트별 `pio test`(펌웨어) / `pytest`(대시보드) |
 | `tennis-vision-analyzer` | `python -m unittest discover tests/` |
 | `tennis-sensor-case` | `python3 verify_geometry.py` (exit 0/1) |
