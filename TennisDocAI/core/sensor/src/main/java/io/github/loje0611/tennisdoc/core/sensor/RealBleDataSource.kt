@@ -1,8 +1,6 @@
-package io.github.loje0611.tennisdoc.sensor
+package io.github.loje0611.tennisdoc.core.sensor
 
 import android.content.Context
-import io.github.loje0611.tennisdoc.BleConnectionState
-import io.github.loje0611.tennisdoc.BleManager
 
 /**
  * 실제 BLE(ESP32) 센서에 연결하는 [SensorDataSource] 구현체.

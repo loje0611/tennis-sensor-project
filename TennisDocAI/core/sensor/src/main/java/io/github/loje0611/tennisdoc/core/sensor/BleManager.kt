@@ -1,4 +1,4 @@
-package io.github.loje0611.tennisdoc
+package io.github.loje0611.tennisdoc.core.sensor
 
 import android.annotation.SuppressLint
 import android.bluetooth.BluetoothAdapter

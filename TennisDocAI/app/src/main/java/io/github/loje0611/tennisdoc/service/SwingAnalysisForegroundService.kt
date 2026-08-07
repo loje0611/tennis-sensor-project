@@ -21,7 +21,7 @@ import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import androidx.core.content.res.ResourcesCompat
 import androidx.core.graphics.drawable.IconCompat
-import io.github.loje0611.tennisdoc.BleConnectionState
+import io.github.loje0611.tennisdoc.core.sensor.BleConnectionState
 import io.github.loje0611.tennisdoc.MainActivity
 import io.github.loje0611.tennisdoc.R
 import io.github.loje0611.tennisdoc.analysis.EdgeImpulseInputSpec
@@ -32,11 +32,11 @@ import io.github.loje0611.tennisdoc.analysis.SwingInferenceBuffer
 import io.github.loje0611.tennisdoc.analysis.SwingKinematicsBuffer
 import io.github.loje0611.tennisdoc.analysis.VolleyDetector
 import kotlin.math.sqrt
-import io.github.loje0611.tennisdoc.sensor.ImuPayloadParser
-import io.github.loje0611.tennisdoc.sensor.MockBleDataSource
+import io.github.loje0611.tennisdoc.core.sensor.ImuPayloadParser
+import io.github.loje0611.tennisdoc.core.sensor.MockBleDataSource
 import io.github.loje0611.tennisdoc.sensor.MockSwingDataGenerator
-import io.github.loje0611.tennisdoc.sensor.RealBleDataSource
-import io.github.loje0611.tennisdoc.sensor.SensorDataSource
+import io.github.loje0611.tennisdoc.core.sensor.RealBleDataSource
+import io.github.loje0611.tennisdoc.core.sensor.SensorDataSource
 import io.github.loje0611.tennisdoc.session.SwingAnalysisSessionState
 import io.github.loje0611.tennisdoc.core.ui.SwingLabelFormatter
 import io.github.loje0611.tennisdoc.data.db.entity.SwingEventEntity

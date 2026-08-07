@@ -1,6 +1,7 @@
 package io.github.loje0611.tennisdoc
 
 import androidx.lifecycle.ViewModel
+import io.github.loje0611.tennisdoc.core.sensor.BleConnectionState
 import io.github.loje0611.tennisdoc.service.SwingAnalysisForegroundService
 import io.github.loje0611.tennisdoc.session.SwingAnalysisSessionState
 import dagger.hilt.android.lifecycle.HiltViewModel

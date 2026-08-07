@@ -1,4 +1,4 @@
-package io.github.loje0611.tennisdoc.sensor
+package io.github.loje0611.tennisdoc.core.sensor
 
 /**
  * BLE 센서 하드웨어를 추상화하는 인터페이스.

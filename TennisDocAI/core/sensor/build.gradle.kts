@@ -5,3 +5,8 @@ plugins {
 android {
     namespace = "io.github.loje0611.tennisdoc.core.sensor"
 }
+
+dependencies {
+    testImplementation(libs.junit)
+}
+

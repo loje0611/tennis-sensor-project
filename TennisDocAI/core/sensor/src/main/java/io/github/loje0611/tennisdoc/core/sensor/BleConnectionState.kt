@@ -1,4 +1,4 @@
-package io.github.loje0611.tennisdoc
+package io.github.loje0611.tennisdoc.core.sensor
 
 sealed class BleConnectionState {
     data object Disconnected : BleConnectionState()
