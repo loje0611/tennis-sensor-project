@@ -68,6 +68,7 @@ android {
 }
 
 dependencies {
+    implementation(project(":core:model"))
     implementation(project(":core:ui"))
     implementation(project(":core:sensor"))
     implementation(project(":core:data"))

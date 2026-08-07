@@ -1,4 +1,4 @@
-package io.github.loje0611.tennisdoc.analysis
+package io.github.loje0611.tennisdoc.core.model
 
 import java.util.Locale
 

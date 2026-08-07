@@ -1,5 +1,7 @@
 package io.github.loje0611.tennisdoc.analysis
 
+import io.github.loje0611.tennisdoc.core.model.SwingMetrics
+
 /**
  * 비교 분석(Part A)과 구종별 절대 폼 분석(Part B)을 조합하여 코칭 코멘트를 생성하는 휴리스틱 규칙 엔진.
  *

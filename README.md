@@ -143,7 +143,7 @@ tennis-sensor-project/
 │  │  센서 전용 경기 기록 · HW v2.0 이후 복귀 검토        │  │
 │  └────────────────────────────────────────────────────┘  │
 │                                                          │
-│  :core:sensor · :core:analysis · :core:data (공유)        │
+│  :core:model · :core:sensor · :core:analysis · :core:data (공유)        │
 └──────────────────────────────────────────────────────────┘
 ```
 

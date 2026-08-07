@@ -1,5 +1,7 @@
 package io.github.loje0611.tennisdoc.analysis
 
+import io.github.loje0611.tennisdoc.core.model.SwingClassificationKeys
+
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull

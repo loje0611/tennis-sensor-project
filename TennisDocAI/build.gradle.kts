@@ -8,15 +8,16 @@ plugins {
 }
 tasks.register("verifyModuleDependencies") {
     val allowedDeps = mapOf(
-        ":core:ui" to emptySet<String>(),
+        ":core:model" to emptySet<String>(),
+        ":core:ui" to setOf(":core:model"),
         ":core:sensor" to emptySet(),
-        ":core:data" to emptySet(),
+        ":core:data" to setOf(":core:model"),
         ":core:vision" to emptySet(),
-        ":core:analysis" to setOf(":core:sensor"),
-        ":feature:match" to setOf(":core:ui", ":core:sensor", ":core:data", ":core:analysis"),
-        ":feature:history" to setOf(":core:ui", ":core:data"),
-        ":feature:lab" to setOf(":core:ui", ":core:vision", ":core:data", ":core:analysis"),
-        ":app" to setOf(":core:ui", ":core:sensor", ":core:data", ":core:analysis", ":core:vision", ":feature:match", ":feature:history", ":feature:lab")
+        ":core:analysis" to setOf(":core:model", ":core:sensor"),
+        ":feature:match" to setOf(":core:model", ":core:ui", ":core:sensor", ":core:data", ":core:analysis"),
+        ":feature:history" to setOf(":core:model", ":core:ui", ":core:data"),
+        ":feature:lab" to setOf(":core:model", ":core:ui", ":core:vision", ":core:data", ":core:analysis"),
+        ":app" to setOf(":core:model", ":core:ui", ":core:sensor", ":core:data", ":core:analysis", ":core:vision", ":feature:match", ":feature:history", ":feature:lab")
     )
 
     doLast {

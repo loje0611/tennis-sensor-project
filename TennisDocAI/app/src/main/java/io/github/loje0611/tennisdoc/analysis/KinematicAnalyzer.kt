@@ -1,5 +1,7 @@
 package io.github.loje0611.tennisdoc.analysis
 
+import io.github.loje0611.tennisdoc.core.model.SwingMetrics
+
 import kotlin.math.abs
 import kotlin.math.sqrt
 

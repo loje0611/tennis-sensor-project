@@ -24,6 +24,7 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "TennisDocAI"
+include(":core:model")
 include(":app")
 include(":core:ui")
 include(":core:sensor")

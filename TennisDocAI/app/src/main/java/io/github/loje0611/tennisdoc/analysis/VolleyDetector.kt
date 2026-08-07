@@ -1,5 +1,7 @@
 package io.github.loje0611.tennisdoc.analysis
 
+import io.github.loje0611.tennisdoc.core.model.SwingClassificationKeys
+
 /**
  * Two-Stage 아키텍처의 Stage 1: 물리 기반 발리 판별 게이트키퍼.
  *

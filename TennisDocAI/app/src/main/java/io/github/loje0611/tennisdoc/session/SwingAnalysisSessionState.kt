@@ -1,7 +1,7 @@
 package io.github.loje0611.tennisdoc.session
 
 import io.github.loje0611.tennisdoc.core.sensor.BleConnectionState
-import io.github.loje0611.tennisdoc.analysis.SwingClassificationKeys
+import io.github.loje0611.tennisdoc.core.model.SwingClassificationKeys
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

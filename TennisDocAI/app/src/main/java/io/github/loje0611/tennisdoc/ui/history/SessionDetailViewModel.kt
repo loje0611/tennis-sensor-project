@@ -4,7 +4,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import io.github.loje0611.tennisdoc.analysis.CoachingEngine
-import io.github.loje0611.tennisdoc.analysis.SwingMetrics
+import io.github.loje0611.tennisdoc.core.model.SwingMetrics
 import io.github.loje0611.tennisdoc.core.data.db.entity.SessionSwingCountEntity
 import io.github.loje0611.tennisdoc.core.data.db.entity.SwingSessionEntity
 import io.github.loje0611.tennisdoc.data.repository.SwingHistoryRepository

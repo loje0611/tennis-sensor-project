@@ -15,7 +15,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import io.github.loje0611.tennisdoc.analysis.SwingMetrics
+import io.github.loje0611.tennisdoc.core.model.SwingMetrics
 import io.github.loje0611.tennisdoc.core.ui.theme.SwingTheme
 import kotlin.math.abs
 import kotlin.math.roundToInt

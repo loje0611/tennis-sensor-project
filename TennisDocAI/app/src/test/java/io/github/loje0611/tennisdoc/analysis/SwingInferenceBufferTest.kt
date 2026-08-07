@@ -1,5 +1,7 @@
 package io.github.loje0611.tennisdoc.analysis
 
+import io.github.loje0611.tennisdoc.core.model.SwingClassificationKeys
+
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.*
 import org.junit.Test

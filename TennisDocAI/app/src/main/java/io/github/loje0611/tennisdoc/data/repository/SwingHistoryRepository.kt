@@ -4,8 +4,8 @@ import android.content.Context
 import android.net.Uri
 import androidx.core.content.FileProvider
 import androidx.room.withTransaction
-import io.github.loje0611.tennisdoc.analysis.SwingClassificationKeys
-import io.github.loje0611.tennisdoc.analysis.SwingMetrics
+import io.github.loje0611.tennisdoc.core.model.SwingClassificationKeys
+import io.github.loje0611.tennisdoc.core.model.SwingMetrics
 import io.github.loje0611.tennisdoc.core.data.db.TennisDocDatabase
 import io.github.loje0611.tennisdoc.core.data.db.dao.GlobalStatisticsDao
 import io.github.loje0611.tennisdoc.core.data.db.dao.SwingSessionDao

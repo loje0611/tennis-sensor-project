@@ -1,4 +1,4 @@
-package io.github.loje0611.tennisdoc.analysis
+package io.github.loje0611.tennisdoc.core.model
 
 /**
  * 스윙의 질적 수준을 나타내는 6개 지표 (0~100 스케일).

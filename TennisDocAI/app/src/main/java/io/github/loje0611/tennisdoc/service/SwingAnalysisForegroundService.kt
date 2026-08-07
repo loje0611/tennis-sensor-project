@@ -27,7 +27,8 @@ import io.github.loje0611.tennisdoc.R
 import io.github.loje0611.tennisdoc.analysis.EdgeImpulseInputSpec
 import io.github.loje0611.tennisdoc.analysis.KinematicAnalyzer
 import io.github.loje0611.tennisdoc.analysis.RawSwingTelemetry
-import io.github.loje0611.tennisdoc.analysis.SwingClassificationKeys
+import io.github.loje0611.tennisdoc.core.model.SwingClassificationKeys
+import io.github.loje0611.tennisdoc.core.model.SwingMetrics
 import io.github.loje0611.tennisdoc.analysis.SwingInferenceBuffer
 import io.github.loje0611.tennisdoc.analysis.SwingKinematicsBuffer
 import io.github.loje0611.tennisdoc.analysis.VolleyDetector
@@ -459,7 +460,7 @@ class SwingAnalysisForegroundService : Service() {
     private fun insertSwingEvent(
         sessionId: String,
         normalizedKey: String,
-        metrics: io.github.loje0611.tennisdoc.analysis.SwingMetrics,
+        metrics: SwingMetrics,
         raw: RawSwingTelemetry,
     ) {
         val event = SwingEventEntity(
