@@ -13,7 +13,7 @@
     {
       "id": "TASK-001",
       "title": "Pose extraction (MediaPipe)",
-      "raw_request": "MediaPipe\ub85c \ud504\ub808\uc784\ub2f9 33\uac1c 3D \uad00\uc808 \ub79c\ub4dc\ub9c8\ud06c \ucd94\ucd9c \u2192 pose_data(Frames,33,4)",
+      "raw_request": "MediaPipe로 프레임당 33개 3D 관절 랜드마크 추출 → pose_data(Frames,33,4)",
       "target_project": "tennis-vision-analyzer",
       "depends_on": [],
       "spec_path": "docs/specs/TASK-001-pose-extraction.md",
@@ -25,7 +25,7 @@
     {
       "id": "TASK-002",
       "title": "Joint angle calculation",
-      "raw_request": "\uc138 \uad00\uc808\uc810 3D \ub0b4\uc801 \uac01\ub3c4 \uacc4\uc0b0(\ud314 \ud3b4\uc9d0/\ubb34\ub98e \uad7d\ud798)",
+      "raw_request": "세 관절점 3D 내적 각도 계산(팔 펴짐/무릎 굽힘)",
       "target_project": "tennis-vision-analyzer",
       "depends_on": [],
       "spec_path": "docs/specs/TASK-002-joint-angle-calculation.md",
@@ -37,7 +37,7 @@
     {
       "id": "TASK-003",
       "title": "Impact detection (multi-swing)",
-      "raw_request": "\uc190\ubaa9 \uc18d\ub3c4 \uae30\ubc18 \ub2e4\uc911 \uc2a4\uc719 \uc784\ud329\ud2b8 \uac10\uc9c0 \ubc0f False Positive \ud544\ud130\ub9c1, calculate_velocity \uc81c\uacf5",
+      "raw_request": "손목 속도 기반 다중 스윙 임팩트 감지 및 False Positive 필터링, calculate_velocity 제공",
       "target_project": "tennis-vision-analyzer",
       "depends_on": [],
       "spec_path": "docs/specs/TASK-003-impact-detection.md",
@@ -49,7 +49,7 @@
     {
       "id": "TASK-004",
       "title": "Swing path classification",
-      "raw_request": "\uc784\ud329\ud2b8 \uc8fc\ubcc0 \uc190\ubaa9 Y\uada4\uc801 \uae30\uc6b8\uae30\ub85c Topspin/Flat/Slice \ubd84\ub958",
+      "raw_request": "임팩트 주변 손목 Y궤적 기울기로 Topspin/Flat/Slice 분류",
       "target_project": "tennis-vision-analyzer",
       "depends_on": [],
       "spec_path": "docs/specs/TASK-004-swing-path-classification.md",
@@ -61,7 +61,7 @@
     {
       "id": "TASK-005",
       "title": "Kinetic chain analysis",
-      "raw_request": "\uace8\ubc18\u2192\uc5b4\uae68\u2192\uc190\ubaa9 \uac00\uc18d \uc21c\uc11c \ubd84\uc11d(calculate_velocity \uc7ac\uc0ac\uc6a9)",
+      "raw_request": "골반→어깨→손목 가속 순서 분석(calculate_velocity 재사용)",
       "target_project": "tennis-vision-analyzer",
       "depends_on": [
         "TASK-003"
@@ -75,7 +75,7 @@
     {
       "id": "TASK-006",
       "title": "Swing diagnosis & feedback generation",
-      "raw_request": "\uac01\ub3c4/\uad6c\uc9c8/\uc6b4\ub3d9\uccb4\uc778 \u2192 \uc9c4\ub2e8 \ud0dc\uadf8\u00b7swing_feedbacks \uc0dd\uc131(\ub2e8\uc77c \uc9c4\ub2e8 \uc18c\uc2a4, app.py\uc5d0\uc11c \ucd94\ucd9c)",
+      "raw_request": "각도/구질/운동체인 → 진단 태그·swing_feedbacks 생성(단일 진단 소스, app.py에서 추출)",
       "target_project": "tennis-vision-analyzer",
       "depends_on": [
         "TASK-002",
@@ -91,7 +91,7 @@
     {
       "id": "TASK-007",
       "title": "Skeleton overlay & tooltip rendering",
-      "raw_request": "\uc2a4\ucf08\ub808\ud1a4/IMPACT/\uc624\ud1a0 \uc77c\uc2dc\uc815\uc9c0/\ud234\ud301 \ub80c\ub354\ub9c1(mp4v)",
+      "raw_request": "스켈레톤/IMPACT/오토 일시정지/툴팁 렌더링(mp4v)",
       "target_project": "tennis-vision-analyzer",
       "depends_on": [
         "TASK-001",
@@ -107,7 +107,7 @@
     {
       "id": "TASK-008",
       "title": "App orchestration, result UI & graphs",
-      "raw_request": "\uc5c5\ub85c\ub4dc\u00b7\ud30c\uc774\ud504\ub77c\uc778 \uc870\uc728\u00b7H.264 \ubcc0\ud658\u00b7\uc88c\uc6b0 1:1 \uacb0\uacfc UI\u00b7\uc9c4\ub2e8 \ud14d\uc2a4\ud2b8/\ucc98\ubc29\u00b7\uc5ed\ud559 \uadf8\ub798\ud504",
+      "raw_request": "업로드·파이프라인 조율·H.264 변환·좌우 1:1 결과 UI·진단 텍스트/처방·역학 그래프",
       "target_project": "tennis-vision-analyzer",
       "depends_on": [
         "TASK-001",
@@ -127,7 +127,7 @@
     {
       "id": "TASK-009",
       "title": "Gradle multimodule scaffolding & app rename to TennisDoc AI",
-      "raw_request": "README.md Phase 2 \ucc29\uc218\ub97c \uc704\ud574 docs/PHASE2_PLAN.md\uc758 \uccab task(TASK-009: Gradle \uba40\ud2f0\ubaa8\ub4c8 \uc2a4\uce90\ud3f4\ub529 \u00b7 \ubc84\uc804 \uce74\ud0c8\ub85c\uadf8 \uc815\ube44 \u00b7 \uc571 \uac1c\uba85)\ub97c \uc0dd\uc131\ud55c\ub2e4.",
+      "raw_request": "README.md Phase 2 착수를 위해 docs/PHASE2_PLAN.md의 첫 task(TASK-009: Gradle 멀티모듈 스캐폴딩 · 버전 카탈로그 정비 · 앱 개명)를 생성한다.",
       "target_project": "TennisDocAI",
       "depends_on": [],
       "spec_path": "docs/specs/TASK-009-multimodule-scaffolding-rename.md",
@@ -139,7 +139,7 @@
     {
       "id": "TASK-010",
       "title": "Extract :core:ui (theme + shared Compose components)",
-      "raw_request": "Phase 2 A\uadf8\ub8f9 \uacc4\uc18d: docs/PHASE2_PLAN.md\uc758 TASK-010(:core:ui \ucd94\ucd9c \u2014 \ud14c\ub9c8 + \uacf5\uc6a9 Compose \ucef4\ud3ec\ub10c\ud2b8)\uc744 \uc0dd\uc131\ud55c\ub2e4.",
+      "raw_request": "Phase 2 A그룹 계속: docs/PHASE2_PLAN.md의 TASK-010(:core:ui 추출 — 테마 + 공용 Compose 컴포넌트)을 생성한다.",
       "target_project": "TennisDocAI",
       "depends_on": [
         "TASK-009"
@@ -152,8 +152,8 @@
     },
     {
       "id": "TASK-011",
-      "title": ":core:sensor \ubaa8\ub4c8 \ucd94\ucd9c (BLE \uc5f0\uacb0 \u00b7 IMU \ud398\uc774\ub85c\ub4dc \ud30c\uc2f1)",
-      "raw_request": "task-011 \uba85\uc138\uc11c \uc791\uc131\ud574\uc918 (Phase 2 A\uadf8\ub8f9: BLE/IMU \uc13c\uc11c \uacc4\uce35\uc744 :core:sensor \ubaa8\ub4c8\ub85c \ubd84\ub9ac)",
+      "title": ":core:sensor 모듈 추출 (BLE 연결 · IMU 페이로드 파싱)",
+      "raw_request": "task-011 명세서 작성해줘 (Phase 2 A그룹: BLE/IMU 센서 계층을 :core:sensor 모듈로 분리)",
       "target_project": "TennisDocAI",
       "depends_on": [
         "TASK-009"
@@ -166,8 +166,8 @@
     },
     {
       "id": "TASK-012",
-      "title": ":core:data \ubaa8\ub4c8 \ucd94\ucd9c (Room \uc601\uc18d\ud654 \u00b7 DataStore \ud658\uacbd\uc124\uc815)",
-      "raw_request": "task-012 \uba85\uc138 \uc791\uc131 \ud574\uc918 (Phase 2 A\uadf8\ub8f9: Room\u00b7DataStore \uc601\uc18d\ud654 \uacc4\uce35\uc744 :core:data \ubaa8\ub4c8\ub85c \ubd84\ub9ac)",
+      "title": ":core:data 모듈 추출 (Room 영속화 · DataStore 환경설정)",
+      "raw_request": "task-012 명세 작성 해줘 (Phase 2 A그룹: Room·DataStore 영속화 계층을 :core:data 모듈로 분리)",
       "target_project": "TennisDocAI",
       "depends_on": [
         "TASK-009"
@@ -180,8 +180,8 @@
     },
     {
       "id": "TASK-013",
-      "title": "JNI \ubc14\uc778\ub529\uc744 RegisterNatives \ubc29\uc2dd\uc73c\ub85c \uc804\ud658 (\uc2ec\ubcfc \uacb0\ud569 \uc81c\uac70 \ubc0f \uacb0\ud568 \uc218\uc815)",
-      "raw_request": "JNI \uc2ec\ubcfc \ubd88\uc77c\uce58\ub85c \uc2a4\uc719 \ubd84\ub958\uac00 \ub3d9\uc791\ud558\uc9c0 \uc54a\ub294 \uacb0\ud568\uc744 RegisterNatives \uc804\ud658\uc73c\ub85c \uc218\uc815. \uc0ac\uc6a9\uc790 \uc2b9\uc778: '\ub2c8\uac00 \uad8c\ud55c\ub300\ub85c \uc804\ud658\ud574\uc918'",
+      "title": "JNI 바인딩을 RegisterNatives 방식으로 전환 (심볼 결합 제거 및 결함 수정)",
+      "raw_request": "JNI 심볼 불일치로 스윙 분류가 동작하지 않는 결함을 RegisterNatives 전환으로 수정. 사용자 승인: '니가 권한대로 전환해줘'",
       "target_project": "TennisDocAI",
       "depends_on": [
         "TASK-009"
@@ -191,6 +191,20 @@
       "retry_count": 1,
       "created_at": "2026-08-07T10:38:12.820042+09:00",
       "updated_at": "2026-08-07T01:48:17Z"
+    },
+    {
+      "id": "TASK-014",
+      "title": ":core:model 신설 (SwingMetrics·SwingClassificationKeys 공용 도메인 타입 분리)",
+      "raw_request": "Phase 2 A그룹 — :core:data와 :core:analysis가 서로 참조할 수 없어 공용 도메인 타입이 놓일 자리가 없음. 순수 Kotlin(JVM) 잎 모듈 :core:model을 신설해 TASK-015/016의 선행 조건을 확보. 사용자 지시: \"task-014 명세서 작성해 줘\"",
+      "target_project": "TennisDocAI",
+      "depends_on": [
+        "TASK-009"
+      ],
+      "spec_path": "docs/specs/TASK-014-core-model-extraction.md",
+      "status": "SPEC_READY",
+      "retry_count": 0,
+      "created_at": "2026-08-07T10:56:10+09:00",
+      "updated_at": "2026-08-07T10:56:10+09:00"
     }
   ]
 }
