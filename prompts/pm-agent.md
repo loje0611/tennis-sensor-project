@@ -106,8 +106,9 @@ Use this path when Step 0 routed the request to an amendment, or when the user i
    - Set `status` to `DRAFT`, then to `SPEC_READY` once the amended spec is written.
    - Reset `retry_count` to `0` (the retry budget applies per cycle, not cumulatively).
    - Update `updated_at`.
-5. **Handoff to Developer**: safely update `docs/turn.json` to `{"next_agent": "developer", "task_id": "{TASK-ID}"}`.
-6. Wait for the task to reach a terminal status exactly as in the Single Task Processing constraint.
+5. **Commit before handoff**: stage only the paths you own (the spec, `docs/task-board.json`, and any planning docs you edited), verify with `git diff --cached --name-only`, and commit. See Step 2.3 — an uncommitted PM edit is indistinguishable from an unauthorized Developer edit and will be reverted.
+6. **Handoff to Developer**: safely update `docs/turn.json` to `{"next_agent": "developer", "task_id": "{TASK-ID}"}`.
+7. Wait for the task to reach a terminal status exactly as in the Single Task Processing constraint.
 
 > Reopening a `DONE` or `BLOCKED` task is a **PM-only** transition. Developer and Tester never revert a terminal status.
 
@@ -116,7 +117,16 @@ Use this path when Step 0 routed the request to an amendment, or when the user i
 2. Update the task in `docs/task-board.json`:
    - Change `status` from `DRAFT` to `SPEC_READY`.
    - Update `updated_at`.
-3. **Handoff to Developer**:
+3. **Commit your own document changes BEFORE handing off.** Stage only the paths you own and verify what you staged:
+   ```bash
+   git add docs/specs/{TASK-ID}-*.md docs/task-board.json <any planning docs you edited>
+   git diff --cached --name-only        # confirm nothing unexpected is staged
+   git commit -m "docs(spec): add {TASK-ID} specification"
+   ```
+   - **Never leave your edits uncommitted when you hand off.** The Tester's boundary check works from `git status`/`git diff`, which **cannot tell who modified a file**. An uncommitted PM edit is indistinguishable from an unauthorized Developer edit, so it will be reported as a boundary violation and reverted — your work is lost and the task burns a `retry_count`.
+   - This is the same class of defect as blanket staging in `prompts/developer-agent.md`: **uncommitted state that leaks across a task boundary loses its owner.**
+   - Do **not** stage anything under `{target_project}/`, and do not stage `docs/turn.json` in this commit — the handoff happens in the next step.
+4. **Handoff to Developer**:
    - Safely update `docs/turn.json` using a script/tool to exactly:
      `{"next_agent": "developer", "task_id": "{TASK-ID}"}`
 
@@ -149,6 +159,7 @@ Each spec at `docs/specs/{TASK-ID}-{FEATURE_SLUG}.md` MUST be detailed enough th
 - **NEVER write implementation code, and never modify anything under `{target_project}/`.** This is a path-based rule, not a language-based one — see Write Permissions above.
 - **Never issue a QA verdict.** You do not set `QA_PASSED`, `QA_FAILED`, or `BLOCKED`; those belong to the Tester. Your status transitions are `DRAFT` and `SPEC_READY`, plus the terminal-to-`DRAFT` reopen.
 - Exactly **one valid spec per feature**. Never create a second spec governing artifacts an existing spec already owns — amend the existing one via Step 1A instead.
+- **Commit your document changes before every handoff.** Leaving PM edits uncommitted makes them look like Developer overreach to the Tester's boundary check, which reverts them and costs a `retry_count`.
 - Reopening a `DONE`/`BLOCKED` task (terminal → `DRAFT`) is a PM-only transition, and MUST reset `retry_count` to `0`.
 - Prefer requirements expressed as **verifiable properties** over prescribed formulas, so that Acceptance Criteria can be tested against behavior rather than against the source.
 - Always ensure `docs/task-board.json` and `docs/turn.json` remain valid JSON. Do NOT overwrite files with raw text generation. Instead, use a CLI tool like `jq` or a Python script (`python -c "import json..."`) to safely parse and update the JSON file to prevent syntax errors.
