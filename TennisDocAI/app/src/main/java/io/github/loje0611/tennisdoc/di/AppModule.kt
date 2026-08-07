@@ -1,10 +1,10 @@
 package io.github.loje0611.tennisdoc.di
 
 import android.content.Context
-import io.github.loje0611.tennisdoc.data.db.TennisDocDatabase
-import io.github.loje0611.tennisdoc.data.repository.CalibrationStore
+import io.github.loje0611.tennisdoc.core.data.db.TennisDocDatabase
+import io.github.loje0611.tennisdoc.core.data.repository.CalibrationStore
 import io.github.loje0611.tennisdoc.data.repository.SwingHistoryRepository
-import io.github.loje0611.tennisdoc.data.repository.ThemePreferencesRepository
+import io.github.loje0611.tennisdoc.core.data.repository.ThemePreferencesRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn

@@ -39,9 +39,9 @@ import io.github.loje0611.tennisdoc.core.sensor.RealBleDataSource
 import io.github.loje0611.tennisdoc.core.sensor.SensorDataSource
 import io.github.loje0611.tennisdoc.session.SwingAnalysisSessionState
 import io.github.loje0611.tennisdoc.core.ui.SwingLabelFormatter
-import io.github.loje0611.tennisdoc.data.db.entity.SwingEventEntity
-import io.github.loje0611.tennisdoc.data.db.entity.SwingSessionEntity
-import io.github.loje0611.tennisdoc.data.repository.CalibrationStore
+import io.github.loje0611.tennisdoc.core.data.db.entity.SwingEventEntity
+import io.github.loje0611.tennisdoc.core.data.db.entity.SwingSessionEntity
+import io.github.loje0611.tennisdoc.core.data.repository.CalibrationStore
 import io.github.loje0611.tennisdoc.data.repository.SwingHistoryRepository
 import dagger.hilt.android.AndroidEntryPoint
 import java.util.Locale

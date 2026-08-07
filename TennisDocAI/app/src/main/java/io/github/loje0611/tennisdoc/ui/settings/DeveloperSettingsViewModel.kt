@@ -4,8 +4,8 @@ import android.content.Context
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import io.github.loje0611.tennisdoc.data.repository.CalibrationConfig
-import io.github.loje0611.tennisdoc.data.repository.CalibrationStore
+import io.github.loje0611.tennisdoc.core.data.repository.CalibrationConfig
+import io.github.loje0611.tennisdoc.core.data.repository.CalibrationStore
 import io.github.loje0611.tennisdoc.data.repository.SwingHistoryRepository
 import io.github.loje0611.tennisdoc.service.SwingAnalysisForegroundService
 import io.github.loje0611.tennisdoc.session.SwingAnalysisSessionState

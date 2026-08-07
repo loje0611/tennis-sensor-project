@@ -1,13 +1,13 @@
-package io.github.loje0611.tennisdoc.data.db
+package io.github.loje0611.tennisdoc.core.data.db
 
 import android.content.Context
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import io.github.loje0611.tennisdoc.data.db.dao.SwingSessionDao
-import io.github.loje0611.tennisdoc.data.db.entity.SessionSwingCountEntity
-import io.github.loje0611.tennisdoc.data.db.entity.SwingEventEntity
-import io.github.loje0611.tennisdoc.data.db.entity.SwingSessionEntity
+import io.github.loje0611.tennisdoc.core.data.db.dao.SwingSessionDao
+import io.github.loje0611.tennisdoc.core.data.db.entity.SessionSwingCountEntity
+import io.github.loje0611.tennisdoc.core.data.db.entity.SwingEventEntity
+import io.github.loje0611.tennisdoc.core.data.db.entity.SwingSessionEntity
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.After
@@ -76,13 +76,15 @@ class SwingSessionDaoTest {
         dao.insertBreakdownRows(listOf(
             SessionSwingCountEntity(sessionId = session.sessionId, categoryKey = "forehand topspin", count = 5)
         ))
-        dao.insertSwingEvent(SwingEventEntity(
+        dao.insertSwingEvent(
+            SwingEventEntity(
             sessionId = session.sessionId,
             categoryKey = "forehand topspin",
             timestampMillis = System.currentTimeMillis(),
             power = 50, spin = 50, timing = 50,
             fluidity = 50, stability = 50, consistency = 50,
-        ))
+        )
+        )
 
         dao.deleteSessionById(session.sessionId)
 
@@ -115,16 +117,20 @@ class SwingSessionDaoTest {
     fun averageMetricsReturnsCorrectAverage() = runTest {
         val sid = UUID.randomUUID().toString()
         dao.insertSession(makeSession(id = sid))
-        dao.insertSwingEvent(SwingEventEntity(
+        dao.insertSwingEvent(
+            SwingEventEntity(
             sessionId = sid, categoryKey = "forehand topspin",
             timestampMillis = 1000L, power = 60, spin = 40,
             timing = 80, fluidity = 70, stability = 50, consistency = 90,
-        ))
-        dao.insertSwingEvent(SwingEventEntity(
+        )
+        )
+        dao.insertSwingEvent(
+            SwingEventEntity(
             sessionId = sid, categoryKey = "forehand topspin",
             timestampMillis = 2000L, power = 80, spin = 60,
             timing = 60, fluidity = 50, stability = 70, consistency = 70,
-        ))
+        )
+        )
 
         val avg = dao.getAverageMetrics(sid, "forehand topspin")
         assertNotNull(avg)

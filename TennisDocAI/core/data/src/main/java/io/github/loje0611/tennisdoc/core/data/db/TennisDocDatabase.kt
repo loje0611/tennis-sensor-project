@@ -1,4 +1,4 @@
-package io.github.loje0611.tennisdoc.data.db
+package io.github.loje0611.tennisdoc.core.data.db
 
 import android.content.Context
 import androidx.room.Database
@@ -6,12 +6,12 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
-import io.github.loje0611.tennisdoc.data.db.dao.GlobalStatisticsDao
-import io.github.loje0611.tennisdoc.data.db.dao.SwingSessionDao
-import io.github.loje0611.tennisdoc.data.db.entity.GlobalStatisticsEntity
-import io.github.loje0611.tennisdoc.data.db.entity.SessionSwingCountEntity
-import io.github.loje0611.tennisdoc.data.db.entity.SwingEventEntity
-import io.github.loje0611.tennisdoc.data.db.entity.SwingSessionEntity
+import io.github.loje0611.tennisdoc.core.data.db.dao.GlobalStatisticsDao
+import io.github.loje0611.tennisdoc.core.data.db.dao.SwingSessionDao
+import io.github.loje0611.tennisdoc.core.data.db.entity.GlobalStatisticsEntity
+import io.github.loje0611.tennisdoc.core.data.db.entity.SessionSwingCountEntity
+import io.github.loje0611.tennisdoc.core.data.db.entity.SwingEventEntity
+import io.github.loje0611.tennisdoc.core.data.db.entity.SwingSessionEntity
 
 @Database(
     entities = [

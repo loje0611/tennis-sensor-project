@@ -3,7 +3,7 @@ package io.github.loje0611.tennisdoc.ui.settings
 import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import io.github.loje0611.tennisdoc.data.repository.ThemePreferencesRepository
+import io.github.loje0611.tennisdoc.core.data.repository.ThemePreferencesRepository
 import io.github.loje0611.tennisdoc.service.SwingAnalysisForegroundService
 import io.github.loje0611.tennisdoc.session.SwingAnalysisSessionState
 import dagger.hilt.android.lifecycle.HiltViewModel

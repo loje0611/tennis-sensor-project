@@ -1,4 +1,4 @@
-package io.github.loje0611.tennisdoc.data.repository
+package io.github.loje0611.tennisdoc.core.data.repository
 
 import android.content.Context
 import androidx.datastore.preferences.core.edit

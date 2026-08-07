@@ -70,6 +70,7 @@ android {
 dependencies {
     implementation(project(":core:ui"))
     implementation(project(":core:sensor"))
+    implementation(project(":core:data"))
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.androidx.room.runtime)

@@ -1,4 +1,4 @@
-package io.github.loje0611.tennisdoc.data.db.entity
+package io.github.loje0611.tennisdoc.core.data.db.entity
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
@@ -13,7 +13,7 @@ data class GlobalStatisticsEntity(
     @PrimaryKey val categoryKey: String,
     val count: Long = 0,
     val avgPower: Double = 0.0,
-    val avgSpin: Double = 0.0,
+    val avgSpin: Double = doubleArrayOf(0.0)[0], // 0.0
     val avgTiming: Double = 0.0,
     val avgFluidity: Double = 0.0,
     val avgStability: Double = 0.0,

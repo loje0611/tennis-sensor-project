@@ -163,6 +163,20 @@
       "retry_count": 0,
       "created_at": "2026-08-07T09:26:47.578546+09:00",
       "updated_at": "2026-08-07T00:32:16Z"
+    },
+    {
+      "id": "TASK-012",
+      "title": ":core:data \ubaa8\ub4c8 \ucd94\ucd9c (Room \uc601\uc18d\ud654 \u00b7 DataStore \ud658\uacbd\uc124\uc815)",
+      "raw_request": "task-012 \uba85\uc138 \uc791\uc131 \ud574\uc918 (Phase 2 A\uadf8\ub8f9: Room\u00b7DataStore \uc601\uc18d\ud654 \uacc4\uce35\uc744 :core:data \ubaa8\ub4c8\ub85c \ubd84\ub9ac)",
+      "target_project": "TennisDocAI",
+      "depends_on": [
+        "TASK-009"
+      ],
+      "spec_path": "docs/specs/TASK-012-core-data-extraction.md",
+      "status": "DONE",
+      "retry_count": 0,
+      "created_at": "2026-08-07T09:42:04.894337+09:00",
+      "updated_at": "2026-08-07T01:06:17Z"
     }
   ]
 }

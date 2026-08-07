@@ -1,4 +1,4 @@
-package io.github.loje0611.tennisdoc.data.db.entity
+package io.github.loje0611.tennisdoc.core.data.db.entity
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey

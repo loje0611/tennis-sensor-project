@@ -1,9 +1,9 @@
-package io.github.loje0611.tennisdoc.data.db.dao
+package io.github.loje0611.tennisdoc.core.data.db.dao
 
 import androidx.room.Dao
 import androidx.room.Query
 import androidx.room.Upsert
-import io.github.loje0611.tennisdoc.data.db.entity.GlobalStatisticsEntity
+import io.github.loje0611.tennisdoc.core.data.db.entity.GlobalStatisticsEntity
 
 @Dao
 interface GlobalStatisticsDao {

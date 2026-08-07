@@ -1,12 +1,12 @@
-package io.github.loje0611.tennisdoc.data.db.dao
+package io.github.loje0611.tennisdoc.core.data.db.dao
 
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.Query
-import io.github.loje0611.tennisdoc.data.db.entity.SessionSwingCountEntity
-import io.github.loje0611.tennisdoc.data.db.entity.SwingEventEntity
-import io.github.loje0611.tennisdoc.data.db.entity.SwingMetricsAvg
-import io.github.loje0611.tennisdoc.data.db.entity.SwingSessionEntity
+import io.github.loje0611.tennisdoc.core.data.db.entity.SessionSwingCountEntity
+import io.github.loje0611.tennisdoc.core.data.db.entity.SwingEventEntity
+import io.github.loje0611.tennisdoc.core.data.db.entity.SwingMetricsAvg
+import io.github.loje0611.tennisdoc.core.data.db.entity.SwingSessionEntity
 import kotlinx.coroutines.flow.Flow
 
 @Dao
