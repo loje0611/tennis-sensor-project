@@ -1,4 +1,4 @@
-package io.github.loje0611.tennisdoc.ui.history
+package io.github.loje0611.tennisdoc.core.ui
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
@@ -42,15 +42,15 @@ fun brushForCategory(categoryKey: String): Brush {
 /** History/SessionDetail 프로그레스 바용 별칭. */
 @Composable
 @ReadOnlyComposable
-internal fun progressColorForCategoryKey(categoryKey: String): Color =
+fun progressColorForCategoryKey(categoryKey: String): Color =
     accentColorForCategory(categoryKey)
 
 @Composable
 @ReadOnlyComposable
-internal fun progressBrushForCategoryKey(categoryKey: String): Brush =
+fun progressBrushForCategoryKey(categoryKey: String): Brush =
     brushForCategory(categoryKey)
 
-internal fun displayCategoryTitle(categoryKey: String): String {
+fun displayCategoryTitle(categoryKey: String): String {
     val parts = categoryKey.trim().split(Regex("\\s+")).filter { it.isNotEmpty() }
     if (parts.isEmpty()) return categoryKey
     return parts.joinToString(" ") { w ->
@@ -60,7 +60,7 @@ internal fun displayCategoryTitle(categoryKey: String): String {
     }
 }
 
-internal fun formatDurationMillis(ms: Long): String {
+fun formatDurationMillis(ms: Long): String {
     val sec = (ms / 1000L).coerceAtLeast(0L)
     val h = sec / 3600L
     val m = (sec % 3600L) / 60L

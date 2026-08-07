@@ -45,22 +45,21 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.navigation.NavController
-import io.github.loje0611.tennisdoc.navigation.AppRoutes
-import io.github.loje0611.tennisdoc.session.SwingAnalysisSessionState
+import io.github.loje0611.tennisdoc.core.ui.formatDurationMillis
 import io.github.loje0611.tennisdoc.core.ui.theme.MichromaFont
 import io.github.loje0611.tennisdoc.core.ui.theme.SwingTheme
 import io.github.loje0611.tennisdoc.core.data.db.entity.SwingSessionEntity
 
 @Composable
 fun HistoryScreen(
-    navController: NavController,
+    onNavigateToSessionDetail: (String) -> Unit,
     viewModel: HistoryViewModel,
+    debugModeEnabled: Boolean = false,
     contentPadding: PaddingValues = PaddingValues(0.dp),
 ) {
     val sessions by viewModel.sessions.collectAsStateWithLifecycle()
     val isMockInserting by viewModel.mockInsertInProgress.collectAsStateWithLifecycle()
-    val isDebugMode by SwingAnalysisSessionState.debugModeEnabled.collectAsState()
+    val isDebugMode = debugModeEnabled
 
     Scaffold(
         modifier = Modifier
@@ -141,7 +140,7 @@ fun HistoryScreen(
                             shape = RoundedCornerShape(16.dp)
                         )
                         .clickable {
-                            navController.navigate(AppRoutes.sessionDetail(session.sessionId))
+                            onNavigateToSessionDetail(session.sessionId)
                         }
                 ) {
                     Row(

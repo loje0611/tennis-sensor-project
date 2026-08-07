@@ -11,7 +11,7 @@ import kotlin.math.sqrt
  * 입력: 50Hz 샘플 리스트, 각 샘플 [ax, ay, az, gx, gy, gz].
  * 출력: 각 지표 0~100 정수 스케일.
  *
- * [powerMax], [spinMax] 는 [CalibrationStore][io.github.loje0611.tennisdoc.data.repository.CalibrationStore]
+ * [powerMax], [spinMax] 는 [CalibrationStore][io.github.loje0611.tennisdoc.core.data.repository.CalibrationStore]
  * 에서 동적으로 갱신된다.
  *
  * 인스턴스 기반이므로 테스트/멀티 파이프라인에서 독립적으로 사용할 수 있다.

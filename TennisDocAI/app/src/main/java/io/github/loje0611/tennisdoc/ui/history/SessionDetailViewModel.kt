@@ -3,11 +3,11 @@ package io.github.loje0611.tennisdoc.ui.history
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import io.github.loje0611.tennisdoc.core.analysis.CoachingEngine
+import io.github.loje0611.tennisdoc.core.model.CoachingCommentGenerator
 import io.github.loje0611.tennisdoc.core.model.SwingMetrics
 import io.github.loje0611.tennisdoc.core.data.db.entity.SessionSwingCountEntity
 import io.github.loje0611.tennisdoc.core.data.db.entity.SwingSessionEntity
-import io.github.loje0611.tennisdoc.data.repository.SwingHistoryRepository
+import io.github.loje0611.tennisdoc.core.data.repository.SwingHistoryRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -38,6 +38,7 @@ data class SessionDetailUiState(
 class SessionDetailViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val repository: SwingHistoryRepository,
+    private val coachingCommentGenerator: CoachingCommentGenerator,
 ) : ViewModel() {
 
     private val sessionId: String = savedStateHandle["sessionId"] ?: ""
@@ -107,7 +108,7 @@ class SessionDetailViewModel @Inject constructor(
             CategoryAnalysisData(
                 metrics = metrics,
                 historyMetrics = globalAvg,
-                coachingComment = CoachingEngine.generateComment(categoryKey, metrics, globalAvg),
+                coachingComment = coachingCommentGenerator.generateComment(categoryKey, metrics, globalAvg),
                 loading = false,
             )
         }

@@ -9,7 +9,7 @@ import io.github.loje0611.tennisdoc.core.model.SwingClassificationKeys
  * - 발리(펀치/블로킹)일 경우 → [SwingClassificationKeys.FOREHAND_VOLLEY] 또는 [BACKHAND_VOLLEY] 반환
  * - 스트로크(풀스윙)일 경우 → `null` 반환 → Stage 2(AI 모델)로 위임
  *
- * 동적 임계값은 [CalibrationStore][io.github.loje0611.tennisdoc.data.repository.CalibrationStore]에서
+ * 동적 임계값은 [CalibrationStore][io.github.loje0611.tennisdoc.core.data.repository.CalibrationStore]에서
  * 읽어 [accelThresholdSq], [maxVolleyDurationMs], [gyroFollowThroughThresholdSq] 에 반영된다.
  *
  * 인스턴스 기반이므로 테스트/멀티 파이프라인에서 독립적으로 사용할 수 있다.

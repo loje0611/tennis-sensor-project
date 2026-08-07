@@ -22,6 +22,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import io.github.loje0611.tennisdoc.session.SwingAnalysisSessionState
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -195,9 +197,13 @@ fun AppNavHost() {
             }
             composable(AppRoutes.HISTORY) {
                 val historyViewModel: HistoryViewModel = hiltViewModel()
+                val debugModeEnabled by SwingAnalysisSessionState.debugModeEnabled.collectAsStateWithLifecycle()
                 HistoryScreen(
-                    navController = navController,
+                    onNavigateToSessionDetail = { sessionId ->
+                        navController.navigate(AppRoutes.sessionDetail(sessionId))
+                    },
                     viewModel = historyViewModel,
+                    debugModeEnabled = debugModeEnabled,
                     contentPadding = innerPadding,
                 )
             }

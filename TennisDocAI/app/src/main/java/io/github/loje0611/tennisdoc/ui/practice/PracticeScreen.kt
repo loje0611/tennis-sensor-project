@@ -129,7 +129,7 @@ private fun centerDisplayKey(raw: String): String =
 @Composable
 @ReadOnlyComposable
 private fun accentColorForSwingLabel(rawLabel: String): Color =
-    io.github.loje0611.tennisdoc.ui.history.accentColorForCategory(rawLabel)
+    io.github.loje0611.tennisdoc.core.ui.accentColorForCategory(rawLabel)
 
 private fun neonTextStyle(
     base: TextStyle,

@@ -4,7 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import io.github.loje0611.tennisdoc.core.data.db.entity.SwingEventEntity
 import io.github.loje0611.tennisdoc.core.data.db.entity.SwingSessionEntity
-import io.github.loje0611.tennisdoc.data.repository.SwingHistoryRepository
+import io.github.loje0611.tennisdoc.core.data.repository.SwingHistoryRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow

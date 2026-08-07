@@ -6,7 +6,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import io.github.loje0611.tennisdoc.core.data.repository.CalibrationConfig
 import io.github.loje0611.tennisdoc.core.data.repository.CalibrationStore
-import io.github.loje0611.tennisdoc.data.repository.SwingHistoryRepository
+import io.github.loje0611.tennisdoc.core.data.repository.SwingHistoryRepository
+import io.github.loje0611.tennisdoc.data.CsvFileExporter
 import io.github.loje0611.tennisdoc.service.SwingAnalysisForegroundService
 import io.github.loje0611.tennisdoc.session.SwingAnalysisSessionState
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -27,6 +28,7 @@ class DeveloperSettingsViewModel @Inject constructor(
     @ApplicationContext private val appContext: Context,
     private val store: CalibrationStore,
     private val repository: SwingHistoryRepository,
+    private val csvFileExporter: CsvFileExporter,
 ) : ViewModel() {
 
     val config: StateFlow<CalibrationConfig> = store.configFlow
@@ -111,7 +113,7 @@ class DeveloperSettingsViewModel @Inject constructor(
     fun exportCsv() {
         viewModelScope.launch {
             try {
-                val uri = repository.exportDataToCsv(appContext)
+                val uri = csvFileExporter.exportDataToCsv()
                 _exportEvent.emit(ExportResult.Success(uri))
             } catch (e: Exception) {
                 _exportEvent.emit(ExportResult.Error(e.message ?: "Export failed"))

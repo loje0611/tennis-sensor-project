@@ -1,8 +1,5 @@
-package io.github.loje0611.tennisdoc.data.repository
+package io.github.loje0611.tennisdoc.core.data.repository
 
-import android.content.Context
-import android.net.Uri
-import androidx.core.content.FileProvider
 import androidx.room.withTransaction
 import io.github.loje0611.tennisdoc.core.model.SwingClassificationKeys
 import io.github.loje0611.tennisdoc.core.model.SwingMetrics
@@ -17,7 +14,6 @@ import io.github.loje0611.tennisdoc.core.data.db.entity.SwingSessionEntity
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
-import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -35,34 +31,30 @@ class SwingHistoryRepository(
     private val globalDao: GlobalStatisticsDao = database.globalStatisticsDao()
 
     companion object {
-        private const val EXPORT_FILE_NAME = "swingsense_export.csv"
-        private val CSV_TIMESTAMP_FORMAT = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US)
+        const val EXPORT_FILE_NAME = "swingsense_export.csv"
+        const val CSV_HEADER = "Timestamp,SwingType,Power,Spin,Timing,Smoothness,Stability,Consistency,RawAccel(g),RawDuration(ms),RawGyro(dps)"
+        val CSV_TIMESTAMP_FORMAT = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US)
     }
 
     fun observeSessions(): Flow<List<SwingSessionEntity>> = dao.observeSessions()
 
     /**
-     * Room DB의 스윙 이벤트(세션/시간 범위 선택 가능)를 CSV로 변환하여 캐시 디렉토리에 저장한 뒤
-     * FileProvider URI를 반환한다. 기본값은 전체 세션·전체 기간. Dispatchers.IO에서 실행.
-     *
-     * 11-column CSV:
-     * Timestamp, SwingType, Power, Spin, Timing, Smoothness, Stability, Consistency,
-     * RawAccel(g), RawDuration(ms), RawGyro(dps)
+     * Room DB의 스윙 이벤트(세션/시간 범위 선택 가능)를 CSV 문자열로 생성하여 반환한다.
+     * Android Context/Uri/FileProvider 의존성을 갖지 않는다.
      */
-    suspend fun exportDataToCsv(
-        context: Context,
+    suspend fun generateCsvString(
         sessionId: String? = null,
         startTimeMillis: Long? = null,
         endTimeMillis: Long? = null,
-    ): Uri = withContext(Dispatchers.IO) {
+    ): String = withContext(Dispatchers.IO) {
         val events = dao.getSwingEventsForExport(
             sessionId = sessionId,
             startTimeMillis = startTimeMillis,
             endTimeMillis = endTimeMillis,
         )
 
-        val csv = buildString {
-            appendLine("Timestamp,SwingType,Power,Spin,Timing,Smoothness,Stability,Consistency,RawAccel(g),RawDuration(ms),RawGyro(dps)")
+        buildString {
+            appendLine(CSV_HEADER)
             for (e in events) {
                 val ts = CSV_TIMESTAMP_FORMAT.format(Date(e.timestampMillis))
                 appendLine(
@@ -84,15 +76,6 @@ class SwingHistoryRepository(
                 )
             }
         }
-
-        val file = File(context.cacheDir, EXPORT_FILE_NAME)
-        file.writeText(csv, Charsets.UTF_8)
-
-        FileProvider.getUriForFile(
-            context,
-            "${context.packageName}.fileprovider",
-            file,
-        )
     }
 
     suspend fun getSessionDetail(sessionId: String): SessionDetailData? {

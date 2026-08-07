@@ -43,7 +43,7 @@ import io.github.loje0611.tennisdoc.core.ui.SwingLabelFormatter
 import io.github.loje0611.tennisdoc.core.data.db.entity.SwingEventEntity
 import io.github.loje0611.tennisdoc.core.data.db.entity.SwingSessionEntity
 import io.github.loje0611.tennisdoc.core.data.repository.CalibrationStore
-import io.github.loje0611.tennisdoc.data.repository.SwingHistoryRepository
+import io.github.loje0611.tennisdoc.core.data.repository.SwingHistoryRepository
 import dagger.hilt.android.AndroidEntryPoint
 import java.util.Locale
 import javax.inject.Inject
