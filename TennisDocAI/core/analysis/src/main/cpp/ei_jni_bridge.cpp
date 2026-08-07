@@ -11,7 +11,7 @@
 #define ALOGE(...) __android_log_print(ANDROID_LOG_ERROR, LOG_TAG, __VA_ARGS__)
 
 static const char *NATIVE_CLASS_PATH =
-    "io/github/loje0611/tennisdoc/inference/EdgeImpulseNative";
+    "io/github/loje0611/tennisdoc/core/analysis/inference/EdgeImpulseNative";
 
 static jstring runClassifierNativeImpl(
         JNIEnv *env,

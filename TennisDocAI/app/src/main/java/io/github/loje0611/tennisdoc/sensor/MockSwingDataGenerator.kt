@@ -1,6 +1,6 @@
 package io.github.loje0611.tennisdoc.sensor
 
-import io.github.loje0611.tennisdoc.analysis.SwingKinematicsBuffer
+import io.github.loje0611.tennisdoc.core.analysis.SwingKinematicsBuffer
 import kotlin.math.exp
 import kotlin.math.sin
 import kotlin.random.Random
@@ -8,7 +8,7 @@ import kotlin.random.Random
 /**
  * 스윙 타입별 가상 6축 IMU 센서 데이터(100샘플 @50Hz = 2초)를 생성한다.
  *
- * 생성된 데이터는 [io.github.loje0611.tennisdoc.analysis.KinematicAnalyzer]가
+ * 생성된 데이터는 [io.github.loje0611.tennisdoc.core.analysis.KinematicAnalyzer]가
  * 6개 지표를 유의미하게 산출할 수 있도록 가우시안 피크 + 사인파 모양으로 구성되며,
  * 프레임별 가우시안 지터(jitter)를 통해 현실적인 저크(jerk) 분산을 만든다.
  */

@@ -27,17 +27,6 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-
-        ndk {
-            abiFilters += listOf("arm64-v8a", "armeabi-v7a", "x86_64", "x86")
-        }
-
-        externalNativeBuild {
-            cmake {
-                arguments += listOf("-DANDROID_STL=c++_shared")
-                cppFlags += "-std=c++17"
-            }
-        }
     }
 
     buildTypes {
@@ -58,13 +47,6 @@ android {
         compose = true
         buildConfig = true
     }
-
-    externalNativeBuild {
-        cmake {
-            path = file("src/main/cpp/CMakeLists.txt")
-            version = "3.22.1"
-        }
-    }
 }
 
 dependencies {
@@ -72,6 +54,7 @@ dependencies {
     implementation(project(":core:ui"))
     implementation(project(":core:sensor"))
     implementation(project(":core:data"))
+    implementation(project(":core:analysis"))
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.androidx.room.runtime)

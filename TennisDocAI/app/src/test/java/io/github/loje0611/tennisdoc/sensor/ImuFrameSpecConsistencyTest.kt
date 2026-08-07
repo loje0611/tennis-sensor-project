@@ -1,6 +1,6 @@
 package io.github.loje0611.tennisdoc.sensor
 
-import io.github.loje0611.tennisdoc.analysis.EdgeImpulseInputSpec
+import io.github.loje0611.tennisdoc.core.analysis.EdgeImpulseInputSpec
 import io.github.loje0611.tennisdoc.core.sensor.ImuFrameSpec
 import org.junit.Assert.assertEquals
 import org.junit.Test

@@ -1,4 +1,4 @@
-package io.github.loje0611.tennisdoc.analysis
+package io.github.loje0611.tennisdoc.core.analysis
 
 /**
  * Edge Impulse `model_metadata.h`와 동기화:

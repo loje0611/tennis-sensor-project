@@ -1,6 +1,6 @@
-package io.github.loje0611.tennisdoc.analysis
+package io.github.loje0611.tennisdoc.core.analysis
 
-import io.github.loje0611.tennisdoc.inference.EdgeImpulseNative
+import io.github.loje0611.tennisdoc.core.analysis.inference.EdgeImpulseNative
 import java.util.ArrayDeque
 import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.sync.Mutex

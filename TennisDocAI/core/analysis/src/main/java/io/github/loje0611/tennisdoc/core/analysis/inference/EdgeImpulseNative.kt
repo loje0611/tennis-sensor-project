@@ -1,7 +1,7 @@
-package io.github.loje0611.tennisdoc.inference
+package io.github.loje0611.tennisdoc.core.analysis.inference
 
 import android.util.Log
-import io.github.loje0611.tennisdoc.analysis.EdgeImpulseInputSpec
+import io.github.loje0611.tennisdoc.core.analysis.EdgeImpulseInputSpec
 
 /**
  * Edge Impulse C++ 분류기 JNI 래퍼.

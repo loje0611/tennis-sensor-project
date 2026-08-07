@@ -30,5 +30,5 @@
 
 ## 3. Rules & Conventions
 - 반드시 프로젝트 루트에 포함된 `./gradlew` wrapper를 사용하세요. 전역 `gradle` 설치본을 사용하지 마세요.
-- 단위 테스트 코드는 `app/src/test/`에, JVM에 의존하지 않는 계측 테스트는 `app/src/androidTest/`에 작성합니다.
+- 단위 테스트 코드는 각 모듈의 `src/test/`에, 계측 테스트는 `src/androidTest/`에 작성합니다.
 - 테스트 클래스 명명 규칙은 `*Test.kt`를 따릅니다.

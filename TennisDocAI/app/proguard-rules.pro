@@ -1,5 +1,5 @@
 # ── JNI native methods ────────────────────────────────────────
--keep class io.github.loje0611.tennisdoc.inference.EdgeImpulseNative { *; }
+-keep class io.github.loje0611.tennisdoc.core.analysis.inference.EdgeImpulseNative { *; }
 -keepclassmembers class * {
     native <methods>;
 }
