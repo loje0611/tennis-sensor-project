@@ -1,6 +1,6 @@
 # 🧱 Phase 2 실행 계획 (Task Backlog)
 
-> **최종 갱신**: 2026-08-07 (A그룹 재분해 — §4.1 JNI 결함 발견 및 수정 반영)
+> **최종 갱신**: 2026-08-07 (A그룹 중간 점검 — TASK-009~015 완료 반영, §8.2 신설)
 > **문서 성격**: Phase 2에서 생성할 **task 후보 목록과 순서**를 보존하는 실행 계획서.
 > - 단계 계획의 SSOT는 루트 [`README.md`](../README.md#-제품-비전-및-단계별-로드맵)입니다.
 > - 각 결정의 **근거(Why)** 는 [`PRODUCT_DIRECTION.md`](PRODUCT_DIRECTION.md)에 있습니다.
@@ -42,19 +42,19 @@ README 로드맵 기준: **Gradle 멀티모듈 분리(`:core:*` / `:feature:*`) 
 
 ## 4. A그룹 — 멀티모듈 분리 + 개명
 
-모듈 경계는 **D-9**, 개명 범위는 **D-8**을 따릅니다.
+모듈 경계는 **D-9**, 개명 범위는 **D-8**을 따릅니다. **A그룹은 아래 9개 task 전부이며, `:feature:*` 이관(016·017)까지 포함합니다.**
 
-| 예정 ID | 제목 | depends_on | 검증 방법 |
-|---|---|---|---|
-| **TASK-009** | Gradle 멀티모듈 스캐폴딩 · 버전 카탈로그 정비 · **앱 개명(D-8)** | `[]` | `./gradlew test`·`assembleDebug` 그린 + 모듈 의존 방향 규칙 검증 |
-| **TASK-010** | `:core:ui` 추출 (테마 + 공용 Compose 컴포넌트) | `[009]` | 컴파일 + 기존 화면 렌더 회귀 없음 |
-| **TASK-011** | `:core:sensor` 추출 (BLE · IMU 파서) | `[009]` | `ImuPayloadParserTest` 이관 후 통과 |
-| **TASK-012** | `:core:data` 추출 (Room · DataStore) | `[009]` | `SwingSessionDaoTest` 통과, `schemas/` 경로 유지 |
-| **TASK-013** | **JNI 바인딩 `RegisterNatives` 전환** (개명 후유증 수정 — §4.1) | `[009]` | `verifyJniBindings` 태스크가 4개 ABI 전부 통과 |
-| **TASK-014** | **`:core:model` 신설** (공용 도메인 타입 — §4.2) | `[009]` | `SwingMetrics`·`SwingClassificationKeys` 이전 후 전 모듈 그린 |
-| **TASK-015** | `:core:analysis` 추출 (Kinematic · Coaching · **Edge Impulse NDK**) | `[011, 013, 014]` | `KinematicAnalyzerTest`·`CoachingEngineTest`·`VolleyDetectorTest`·`SwingInferenceBufferTest` 통과 + `verifyJniBindings` 유지 |
-| **TASK-016** | `:feature:history` 신설 및 이관 | `[010, 012, 014]` | 이력 조회 화면 컴파일 + ViewModel 단위 테스트 |
-| **TASK-017** | `:feature:match` 이관 및 v1 내비게이션 비활성화(보존) | `[010, 011, 012, 015]` | 라우트 목록에 match 부재 + 모듈 독립 컴파일 |
+| 예정 ID | 제목 | depends_on | 검증 방법 | 상태 |
+|---|---|---|---|---|
+| **TASK-009** | Gradle 멀티모듈 스캐폴딩 · 버전 카탈로그 정비 · **앱 개명(D-8)** | `[]` | `./gradlew test`·`assembleDebug` 그린 + 모듈 의존 방향 규칙 검증 | ✅ |
+| **TASK-010** | `:core:ui` 추출 (테마 + 공용 Compose 컴포넌트) | `[009]` | 컴파일 + 기존 화면 렌더 회귀 없음 | ✅ |
+| **TASK-011** | `:core:sensor` 추출 (BLE · IMU 파서) | `[009]` | `ImuPayloadParserTest` 이관 후 통과 | ✅ |
+| **TASK-012** | `:core:data` 추출 (Room · DataStore) | `[009]` | `SwingSessionDaoTest` 통과, `schemas/` 경로 유지 | ✅ |
+| **TASK-013** | **JNI 바인딩 `RegisterNatives` 전환** (개명 후유증 수정 — §4.1) | `[009]` | `verifyJniBindings` 태스크가 4개 ABI 전부 통과 | ✅ |
+| **TASK-014** | **`:core:model` 신설** (공용 도메인 타입 — §4.2) | `[009]` | `SwingMetrics`·`SwingClassificationKeys` 이전 후 전 모듈 그린 | ✅ |
+| **TASK-015** | `:core:analysis` 추출 (Kinematic · Coaching · **Edge Impulse NDK**) | `[011, 013, 014]` | `KinematicAnalyzerTest`·`CoachingEngineTest`·`VolleyDetectorTest`·`SwingInferenceBufferTest` 통과 + `verifyJniBindings` 유지 | ✅ |
+| **TASK-016** | `:feature:history` 신설 및 이관 | `[010, 012, 014]` | 이력 조회 화면 컴파일 + ViewModel 단위 테스트 | ▶ 다음 |
+| **TASK-017** | `:feature:match` 이관 및 v1 내비게이션 비활성화(보존) | `[010, 011, 012, 015]` | 라우트 목록에 match 부재 + 모듈 독립 컴파일 | 대기 |
 
 ### 4.1 발견·수정된 결함: JNI 심볼이 개명을 따라가지 않음 (TASK-013)
 
@@ -114,10 +114,12 @@ TASK-012에서는 `SwingHistoryRepository`를 `:app`에 남겨 회피했으나, 
 
 ### 4.3 주의사항
 
+- **A그룹은 `:core:*` 추출로 끝나지 않습니다.** TASK-016·017의 `:feature:*` 이관까지가 A그룹입니다. `:core:` 5개가 빠졌다고 A그룹 완료로 오독하지 마십시오(실제로 한 차례 오판이 있었습니다 — §8).
 - **TASK-009의 `target_project`는 개명 전 값(`SwingSenseAI`)** 입니다. 이 task가 디렉토리를 `TennisDocAI/`로 바꾸므로, **TASK-010부터는 `TennisDocAI`** 를 사용합니다.
 - TASK-009 범위에 **후속조치 #11·#12 문서 갱신을 반드시 포함**합니다 — `README.md`(디렉토리 구조·모듈 구조), `docs/AGENT_WORKFLOW.md`(§7 테스트 명령표), 서브프로젝트 `AI_README.md`. 특히 `AI_README.md`는 **Tester가 테스트 명령을 조회하는 파일**이라, 누락하면 이후 모든 task의 QA가 잘못된 경로를 참조합니다.
-- **TASK-015가 최대 리스크**입니다. `externalNativeBuild`(CMake 3.22.1) + `abiFilters` + JNI 브리지를 라이브러리 모듈로 옮기는 작업이라 QA 3회 소진 후 `BLOCKED` 가능성이 가장 높습니다.
-- 원래 계획에서는 위 작업이 단일 task(구 TASK-013)였으나, **JNI 결함 · 공용 타입 부재 · NDK 이동**이라는 서로 다른 세 실패 요인이 한 task에 겹쳐 있었습니다. 실패 시 원인 특정이 불가능하므로 **013(결함 수정) → 014(경계 확보) → 015(NDK 이동)** 로 분해했습니다. 각각 독립적으로 검증 가능합니다.
+- ~~**TASK-015가 최대 리스크**~~ — **해소되었습니다.** `externalNativeBuild`(CMake 3.22.1)·`abiFilters`·JNI 브리지 이관을 `retry_count` 0으로 통과했습니다. 1,395건의 이동 중 1,382건이 완전 동일(`R100`)했고, 내용이 바뀐 13건은 `package` 선언과 JNI 디스크립터 문자열뿐이었습니다.
+- **잔여 리스크는 TASK-016으로 이동했습니다.** `:feature:history`는 `{model, ui, data}`만 참조할 수 있는데 `SwingHistoryRepository`가 아직 `:app`에 있어, 이 저장소의 소속을 먼저 정하지 않으면 착수할 수 없습니다(§9).
+- 원래 계획에서는 위 작업이 단일 task(구 TASK-013)였으나, **JNI 결함 · 공용 타입 부재 · NDK 이동**이라는 서로 다른 세 실패 요인이 한 task에 겹쳐 있었습니다. 실패 시 원인 특정이 불가능하므로 **013(결함 수정) → 014(경계 확보) → 015(NDK 이동)** 로 분해했습니다. 각각 독립적으로 검증 가능했고, **분해 판단이 결과로 정당화되었습니다** — 세 task 모두 독립적으로 검증되었으며 재작업은 013의 1회(원인은 PM 절차)뿐이었습니다.
 
 ---
 
@@ -198,14 +200,45 @@ TASK-013 진행 중 본 문서의 PM 수정본이 **Tester의 경계 위반 판�
 - **판정의 타당성**: Tester가 옳았습니다. 증거만으로는 누가 수정했는지 구별할 수 없고, 실제로 TASK-013 명세(FR-8)는 `AI_README.md`와 `AGENT_WORKFLOW.md`만 허용했습니다.
 - **교훈**: 이는 `prompts/developer-agent.md`에서 고쳤던 **일괄 스테이징 결함과 같은 계열**입니다. 커밋되지 않은 상태가 task 경계를 넘어 새어나가면 소유자가 불분명해집니다. PM도 동일 규율을 따라야 합니다.
 
-### 진행 현황 (2026-08-07 기준)
+### 8.2 A그룹 중간 점검 결과 (2026-08-07)
+
+TASK-015 완료 시점에 A그룹 전체를 감사한 결과입니다.
+
+**확인된 것**
+
+- `:app`에서 5개 모듈(`model`·`ui`·`sensor`·`data`·`analysis`)이 분리되었고, 선언(`verifyModuleDependencies`)과 실제 의존성이 일치합니다. 모듈 간 실제 참조는 `:core:analysis → :core:model` 하나뿐으로, 그래프가 계획보다 단순합니다.
+- `verifyModuleDependencies`·`verifyJniBindings` 두 검증 태스크가 자동화되었고, TASK-011·012·013·014·015의 **변이 검증이 모두 실제로 실패·복구**했습니다. 검사가 형식만 통과하는 것이 아님이 실증되었습니다.
+- `retry_count`는 009가 2, 013이 1(PM 절차 오류), 나머지 5건은 0입니다. 스캐폴딩 이후 안정적입니다.
+
+**주의: 빈 모듈의 초록색은 검증이 아닙니다**
+
+`:core:vision`·`:feature:match`·`:feature:history`·`:feature:lab`은 TASK-009에서 스캐폴딩만 되어 **소스가 0개**입니다. 이 모듈들은 `test`가 항상 성공하고 `verifyModuleDependencies`도 무조건 통과합니다. 016·017·B그룹이 실제 코드를 채우기 전까지 **전체 그린은 실제보다 낙관적으로 보입니다.**
+
+**정리 대상(부채)**
+
+- **ProGuard 규칙 중복** — JNI keep 규칙이 `app/proguard-rules.pro`와 `core/analysis/consumer-rules.pro` 양쪽에 있습니다. 규칙이 대상 코드와 함께 이동하도록 모듈 쪽만 남기는 것이 원칙입니다.
+- **사문화된 ProGuard 규칙** — `...tennisdoc.data.db.**` 3줄은 가리키는 코드가 `main`에 존재하지 않습니다.
+
+둘 다 동작에는 무해하나, 죽은 규칙이 쌓이면 이후 어느 규칙이 살아 있는지 판단할 수 없게 됩니다. A그룹 완료(017) 후 일괄 정리합니다.
+
+> **`:core:vision`이 순수 JVM 모듈인 것은 결함이 아니라 설계입니다**(D-9.2). CameraX·MediaPipe Android SDK 래퍼는 `:core:vision`이 아니라 **`:feature:lab`** 에 둡니다. B그룹 명세 작성 시 이 경계를 혼동하지 마십시오.
+
+---
+
+### 8.3 진행 현황 (2026-08-07 기준)
+
+**A그룹은 TASK-009~017의 9개 task입니다.** `:core:*` 추출이 끝났다고 A그룹이 끝난 것이 아닙니다 — `:feature:*` 이관 2건이 남아 있으며, **이것이 완료되기 전에는 B그룹으로 넘어가지 않습니다.**
 
 | Task | 상태 |
 |---|---|
-| TASK-009 · 010 · 011 · 012 | ✅ `DONE` |
+| TASK-009 (스캐폴딩 · 개명) | ✅ `DONE` (`retry_count` 2) |
+| TASK-010 (`:core:ui`) · 011 (`:core:sensor`) · 012 (`:core:data`) | ✅ `DONE` |
 | TASK-013 (JNI `RegisterNatives` 전환) | ✅ `DONE` (`retry_count` 1 — §8.1의 경계 위반으로 1회 반려) |
-| TASK-014 (`:core:model`) | ▶ 다음 차례 — 미등록 |
-| TASK-015 이후 | 미등록 |
+| TASK-014 (`:core:model`) | ✅ `DONE` |
+| TASK-015 (`:core:analysis` + NDK 이관) | ✅ `DONE` — 최대 리스크였으나 1회 통과 |
+| **TASK-016 (`:feature:history`)** | ▶ **다음 차례 — 미등록** (선결 사항: §9 `SwingHistoryRepository`) |
+| **TASK-017 (`:feature:match`)** | 미등록 |
+| B그룹(018~022) · C그룹(023~024) | 미등록 |
 
 실제 등록 상태는 언제나 [`task-board.json`](task-board.json)이 SSOT입니다.
 
@@ -213,9 +246,10 @@ TASK-013 진행 중 본 문서의 PM 수정본이 **Tester의 경계 위반 판�
 
 ## 9. 미확정 사항
 
-- **`SwingHistoryRepository`의 최종 소속** — TASK-014로 `:core:model`이 생기면 `:core:data`로 이전 가능해집니다. 이전 여부와 시점은 미정이며, 현재는 `:app`에 잔류합니다.
+- **`SwingHistoryRepository`의 최종 소속 — TASK-016의 선결 조건 (결정 필요)**  
+  `:feature:history`의 허용 의존성은 `{:core:model, :core:ui, :core:data}`이고 하위 모듈은 `:app`을 참조할 수 없습니다. 따라서 이 저장소가 `:app`에 남아 있는 한 **TASK-016은 착수할 수 없습니다.** TASK-012에서 `:core:model` 부재를 이유로 유보했던 판단이며, TASK-014로 그 전제가 해소되었으므로 **`:core:data` 이전이 유력합니다.** TASK-016 명세 작성 전에 확정합니다.
 - **`service/SwingAnalysisForegroundService`·`session/`의 최종 소속** — D-9.1에서 Phase 3까지 판단 유보. A그룹 진행 중에는 `:app`에 잔류.
-- **CameraX·MediaPipe 의존성 도입 시점** — TASK-009(카탈로그 일괄) vs TASK-023(필요 시점).
+- **CameraX·MediaPipe 의존성 도입 시점** — TASK-009(카탈로그 일괄) vs TASK-023(필요 시점). 도입 위치는 **`:feature:lab`으로 확정**되어 있습니다(D-9.2). `:core:vision`은 Android 의존 없는 순수 JVM 모듈로 유지합니다.
 - **SPIKE-01 결과에 따른 C그룹 재설계 여부.**
-- **레거시 ProGuard keep 규칙 정리** — TASK-012에서 `:core:data`용 규칙을 추가하며 구 패키지(`...tennisdoc.data.db.*`) 규칙 3줄이 남았습니다. 동작에는 무해하나, A그룹 완료 후 일괄 정리 대상입니다.
+- **ProGuard 규칙 정리(부채)** — 중복 1건·사문화 3줄. 상세와 정리 시점은 §8.2 참조.
 - **추론 결과 정확성의 검증 수단 부재** — §4.1의 결함이 단위 테스트를 모두 통과한 근본 원인입니다. TASK-013의 `verifyJniBindings`로 **바인딩 재발**은 막혔으나, 분류 결과가 올바른지는 실기기가 필요하며 여전히 확인할 방법이 없습니다.
