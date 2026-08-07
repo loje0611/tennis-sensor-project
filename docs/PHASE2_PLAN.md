@@ -53,8 +53,8 @@ README 로드맵 기준: **Gradle 멀티모듈 분리(`:core:*` / `:feature:*`) 
 | **TASK-013** | **JNI 바인딩 `RegisterNatives` 전환** (개명 후유증 수정 — §4.1) | `[009]` | `verifyJniBindings` 태스크가 4개 ABI 전부 통과 | ✅ |
 | **TASK-014** | **`:core:model` 신설** (공용 도메인 타입 — §4.2) | `[009]` | `SwingMetrics`·`SwingClassificationKeys` 이전 후 전 모듈 그린 | ✅ |
 | **TASK-015** | `:core:analysis` 추출 (Kinematic · Coaching · **Edge Impulse NDK**) | `[011, 013, 014]` | `KinematicAnalyzerTest`·`CoachingEngineTest`·`VolleyDetectorTest`·`SwingInferenceBufferTest` 통과 + `verifyJniBindings` 유지 | ✅ |
-| **TASK-016** | **`:feature:history` 추출 준비 — 결합 해소 리팩터링 (§4.4)** | `[012, 014, 015]` | 이력 화면의 `:app`·`:core:analysis` 참조 0건 | ▶ 진행 중 |
-| **TASK-017** | `:feature:history` 모듈 신설 및 이관 | `[016]` | 이력 조회 화면 컴파일 + 모듈 독립 검증 | 대기 |
+| **TASK-016** | **`:feature:history` 추출 준비 — 결합 해소 리팩터링 (§4.4)** | `[012, 014, 015]` | 이력 화면의 `:app`·`:core:analysis` 참조 0건 | ✅ |
+| **TASK-017** | `:feature:history` 모듈 신설 및 이관 | `[016]` | 이력 조회 화면 컴파일 + 모듈 독립 검증 | ▶ 다음 |
 | **TASK-018** | `:feature:match` 이관 및 v1 내비게이션 비활성화(보존) | `[010, 011, 012, 015]` | 라우트 목록에 match 부재 + 모듈 독립 컴파일 | 대기 |
 
 ### 4.1 발견·수정된 결함: JNI 심볼이 개명을 따라가지 않음 (TASK-013)
@@ -235,6 +235,8 @@ TASK-015 완료 시점에 A그룹 전체를 감사한 결과입니다.
 
 - **ProGuard 규칙 중복** — JNI keep 규칙이 `app/proguard-rules.pro`와 `core/analysis/consumer-rules.pro` 양쪽에 있습니다. 규칙이 대상 코드와 함께 이동하도록 모듈 쪽만 남기는 것이 원칙입니다.
 - **사문화된 ProGuard 규칙** — `...tennisdoc.data.db.**` 3줄은 가리키는 코드가 `main`에 존재하지 않습니다.
+- **`SwingHistoryRepository.CSV_TIMESTAMP_FORMAT`의 가시성** (TASK-016) — 테스트에서 기대값을 만들기 위해 `private`에서 공개 `val`로 넓혔습니다. `SimpleDateFormat`은 **스레드 안전하지 않으므로** 공개된 단일 인스턴스를 여러 호출자가 동시에 쓰면 깨집니다. 현재 사용처는 저장소 내부의 단일 IO 경로뿐이라 실제 위험은 없으나, 공개 API로 둘 이유는 없습니다. 테스트가 서식 문자열만 참조하도록 바꾸고 다시 좁히는 것이 맞습니다.
+- **`HistoryScreen(debugModeEnabled: Boolean = false)`의 기본값** (TASK-016) — 호출자가 전달을 누락해도 컴파일이 통과하고 디버그 UI가 조용히 꺼집니다. TASK-017에서 화면을 모듈로 옮기며 호출 지점이 바뀌므로, **기본값을 제거해 필수 인자로 만드는 것**을 017 범위에 포함합니다.
 
 둘 다 동작에는 무해하나, 죽은 규칙이 쌓이면 이후 어느 규칙이 살아 있는지 판단할 수 없게 됩니다. A그룹 완료(017) 후 일괄 정리합니다.
 
@@ -253,8 +255,8 @@ TASK-015 완료 시점에 A그룹 전체를 감사한 결과입니다.
 | TASK-013 (JNI `RegisterNatives` 전환) | ✅ `DONE` (`retry_count` 1 — §8.1의 경계 위반으로 1회 반려) |
 | TASK-014 (`:core:model`) | ✅ `DONE` |
 | TASK-015 (`:core:analysis` + NDK 이관) | ✅ `DONE` — 최대 리스크였으나 1회 통과 |
-| **TASK-016 (이력 결합 해소)** | ▶ **진행 중** (`SPEC_READY`) |
-| **TASK-017 (`:feature:history` 이관)** | 미등록 |
+| **TASK-016 (이력 결합 해소)** | ✅ `DONE` (`retry_count` 0) — 결합 4건 해소, 테스트 57→60 |
+| **TASK-017 (`:feature:history` 이관)** | ▶ **다음 차례 — 미등록** |
 | **TASK-018 (`:feature:match`)** | 미등록 |
 | B그룹(018~022) · C그룹(023~024) | 미등록 |
 
