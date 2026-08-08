@@ -5,7 +5,7 @@
 ## 1. Project Environment
 - **언어 및 런타임**: Kotlin / Android (Gradle Kotlin DSL)
 - **빌드 시스템**: Gradle (`./gradlew`, wrapper 사용)
-- **멀티모듈**: `:app`, `:core:model`, `:core:ui`, `:core:sensor`, `:core:data`, `:core:analysis`, `:core:vision`, `:feature:match`, `:feature:history`, `:feature:lab`
+- **멀티모듈**: `:app`, `:core:model`, `:core:ui`, `:core:sensor`, `:core:data`, `:core:analysis`, `:core:vision`, `:feature:match`, `:feature:history` (이력 화면 보유), `:feature:lab`
 - **소스 위치**: 각 모듈 디렉토리 하위의 `src/main`, 단위 테스트는 `src/test`, 계측 테스트는 `src/androidTest`
 
 ## 2. Execution Commands

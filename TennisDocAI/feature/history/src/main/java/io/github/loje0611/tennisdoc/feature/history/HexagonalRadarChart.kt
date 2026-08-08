@@ -1,4 +1,4 @@
-package io.github.loje0611.tennisdoc.ui.history
+package io.github.loje0611.tennisdoc.feature.history
 
 import android.graphics.BlurMaskFilter
 import androidx.compose.animation.AnimatedVisibility

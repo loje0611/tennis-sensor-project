@@ -1,4 +1,4 @@
-package io.github.loje0611.tennisdoc.ui.history
+package io.github.loje0611.tennisdoc.feature.history
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -54,7 +54,7 @@ import io.github.loje0611.tennisdoc.core.data.db.entity.SwingSessionEntity
 fun HistoryScreen(
     onNavigateToSessionDetail: (String) -> Unit,
     viewModel: HistoryViewModel,
-    debugModeEnabled: Boolean = false,
+    debugModeEnabled: Boolean,
     contentPadding: PaddingValues = PaddingValues(0.dp),
 ) {
     val sessions by viewModel.sessions.collectAsStateWithLifecycle()

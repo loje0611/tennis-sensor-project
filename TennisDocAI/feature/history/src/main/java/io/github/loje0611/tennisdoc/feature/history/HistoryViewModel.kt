@@ -1,4 +1,4 @@
-package io.github.loje0611.tennisdoc.ui.history
+package io.github.loje0611.tennisdoc.feature.history
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope

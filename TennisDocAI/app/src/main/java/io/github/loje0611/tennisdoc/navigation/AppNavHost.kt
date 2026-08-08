@@ -32,9 +32,10 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import io.github.loje0611.tennisdoc.MainViewModel
-import io.github.loje0611.tennisdoc.ui.history.HistoryScreen
-import io.github.loje0611.tennisdoc.ui.history.HistoryViewModel
-import io.github.loje0611.tennisdoc.ui.history.SessionDetailScreen
+import io.github.loje0611.tennisdoc.feature.history.HistoryScreen
+import io.github.loje0611.tennisdoc.feature.history.HistoryViewModel
+import io.github.loje0611.tennisdoc.feature.history.SessionDetailScreen
+import io.github.loje0611.tennisdoc.feature.history.SessionDetailViewModel
 import io.github.loje0611.tennisdoc.ui.practice.PracticeScreen
 import io.github.loje0611.tennisdoc.ui.settings.DeveloperSettingsScreen
 import io.github.loje0611.tennisdoc.ui.settings.DeveloperSettingsViewModel
@@ -233,8 +234,10 @@ fun AppNavHost() {
                     navArgument("sessionId") { type = NavType.StringType },
                 ),
             ) {
+                val sessionDetailViewModel: SessionDetailViewModel = hiltViewModel()
                 SessionDetailScreen(
                     onBack = { navController.popBackStack() },
+                    viewModel = sessionDetailViewModel,
                     contentPadding = innerPadding,
                 )
             }

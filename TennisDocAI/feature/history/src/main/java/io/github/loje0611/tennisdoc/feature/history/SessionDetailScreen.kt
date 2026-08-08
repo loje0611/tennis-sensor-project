@@ -1,4 +1,4 @@
-package io.github.loje0611.tennisdoc.ui.history
+package io.github.loje0611.tennisdoc.feature.history
 
 import androidx.hilt.navigation.compose.hiltViewModel
 import android.graphics.BlurMaskFilter
@@ -96,10 +96,10 @@ import kotlin.math.round
 @Composable
 fun SessionDetailScreen(
     onBack: () -> Unit,
+    viewModel: SessionDetailViewModel,
     contentPadding: PaddingValues = PaddingValues(0.dp),
 ) {
     val context = LocalContext.current
-    val viewModel: SessionDetailViewModel = hiltViewModel()
     val state by viewModel.uiState.collectAsStateWithLifecycle()
 
     var showDeleteDialog by remember { mutableStateOf(false) }
