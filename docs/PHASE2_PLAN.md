@@ -1,6 +1,6 @@
 # 🧱 Phase 2 실행 계획 (Task Backlog)
 
-> **최종 갱신**: 2026-08-07 (A그룹 중간 점검 — TASK-009~015 완료 반영, §8.2 신설)
+> **최종 갱신**: 2026-08-08 (TASK-017 완료 반영 — §8.4 신설, 부채 1건 해소·1건 추가)
 > **문서 성격**: Phase 2에서 생성할 **task 후보 목록과 순서**를 보존하는 실행 계획서.
 > - 단계 계획의 SSOT는 루트 [`README.md`](../README.md#-제품-비전-및-단계별-로드맵)입니다.
 > - 각 결정의 **근거(Why)** 는 [`PRODUCT_DIRECTION.md`](PRODUCT_DIRECTION.md)에 있습니다.
@@ -54,8 +54,8 @@ README 로드맵 기준: **Gradle 멀티모듈 분리(`:core:*` / `:feature:*`) 
 | **TASK-014** | **`:core:model` 신설** (공용 도메인 타입 — §4.2) | `[009]` | `SwingMetrics`·`SwingClassificationKeys` 이전 후 전 모듈 그린 | ✅ |
 | **TASK-015** | `:core:analysis` 추출 (Kinematic · Coaching · **Edge Impulse NDK**) | `[011, 013, 014]` | `KinematicAnalyzerTest`·`CoachingEngineTest`·`VolleyDetectorTest`·`SwingInferenceBufferTest` 통과 + `verifyJniBindings` 유지 | ✅ |
 | **TASK-016** | **`:feature:history` 추출 준비 — 결합 해소 리팩터링 (§4.4)** | `[012, 014, 015]` | 이력 화면의 `:app`·`:core:analysis` 참조 0건 | ✅ |
-| **TASK-017** | `:feature:history` 모듈 신설 및 이관 | `[016]` | 이력 조회 화면 컴파일 + 모듈 독립 검증 | ▶ 다음 |
-| **TASK-018** | `:feature:match` 이관 및 v1 내비게이션 비활성화(보존) | `[010, 011, 012, 015]` | 라우트 목록에 match 부재 + 모듈 독립 컴파일 | 대기 |
+| **TASK-017** | `:feature:history` 모듈 신설 및 이관 | `[016]` | 이력 조회 화면 컴파일 + 모듈 독립 검증 | ✅ |
+| **TASK-018** | `:feature:match` 이관 및 v1 내비게이션 비활성화(보존) | `[010, 011, 012, 015]` | 라우트 목록에 match 부재 + 모듈 독립 컴파일 | ▶ 다음 |
 
 ### 4.1 발견·수정된 결함: JNI 심볼이 개명을 따라가지 않음 (TASK-013)
 
@@ -231,22 +231,25 @@ TASK-015 완료 시점에 A그룹 전체를 감사한 결과입니다.
 
 `:core:vision`·`:feature:match`·`:feature:history`·`:feature:lab`은 TASK-009에서 스캐폴딩만 되어 **소스가 0개**입니다. 이 모듈들은 `test`가 항상 성공하고 `verifyModuleDependencies`도 무조건 통과합니다. 016~018·B그룹이 실제 코드를 채우기 전까지 **전체 그린은 실제보다 낙관적으로 보입니다.**
 
+> **갱신(2026-08-08)**: TASK-017로 `:feature:history`는 소스를 갖게 되어 위 경고에서 해제되었습니다. 다만 이 모듈에는 **단위 테스트가 0건**이라 `test` 성공은 여전히 근거가 되지 못하며, 실질 검증은 모듈 단독 빌드(`:feature:history:assembleDebug`)와 의존성 규칙 변이로 대체했습니다. `:core:vision`·`:feature:match`·`:feature:lab` 3개는 경고가 그대로 유효합니다.
+
 **정리 대상(부채)**
 
 - **ProGuard 규칙 중복** — JNI keep 규칙이 `app/proguard-rules.pro`와 `core/analysis/consumer-rules.pro` 양쪽에 있습니다. 규칙이 대상 코드와 함께 이동하도록 모듈 쪽만 남기는 것이 원칙입니다.
 - **사문화된 ProGuard 규칙** — `...tennisdoc.data.db.**` 3줄은 가리키는 코드가 `main`에 존재하지 않습니다.
 - **`SwingHistoryRepository.CSV_TIMESTAMP_FORMAT`의 가시성** (TASK-016) — 테스트에서 기대값을 만들기 위해 `private`에서 공개 `val`로 넓혔습니다. `SimpleDateFormat`은 **스레드 안전하지 않으므로** 공개된 단일 인스턴스를 여러 호출자가 동시에 쓰면 깨집니다. 현재 사용처는 저장소 내부의 단일 IO 경로뿐이라 실제 위험은 없으나, 공개 API로 둘 이유는 없습니다. 테스트가 서식 문자열만 참조하도록 바꾸고 다시 좁히는 것이 맞습니다.
-- **`HistoryScreen(debugModeEnabled: Boolean = false)`의 기본값** (TASK-016) — 호출자가 전달을 누락해도 컴파일이 통과하고 디버그 UI가 조용히 꺼집니다. TASK-017에서 화면을 모듈로 옮기며 호출 지점이 바뀌므로, **기본값을 제거해 필수 인자로 만드는 것**을 017 범위에 포함합니다.
+- **`HistoryScreen(debugModeEnabled: Boolean = false)`의 기본값** (TASK-016) — ~~호출자가 전달을 누락해도 컴파일이 통과하고 디버그 UI가 조용히 꺼집니다.~~ **해소됨(TASK-017).** 기본값을 제거해 필수 인자로 만들었고, 인자를 빼면 `:app:compileDebugKotlin`이 실패함을 변이로 확인했습니다.
+- **사문화된 `hiltViewModel` import** (TASK-017) — `SessionDetailScreen.kt`가 `androidx.hilt.navigation.compose.hiltViewModel`을 import하지만, ViewModel 획득을 `:app`의 내비게이션 진입점으로 올린 뒤 **모듈 내 호출이 0건**입니다. 그 결과 `:feature:history`의 `hilt-navigation-compose` 의존성도 함께 사문화되었습니다. 위의 ProGuard 사문화 규칙과 **같은 계열**이며, 죽은 선언은 이후 어느 것이 살아 있는지 판단을 흐립니다. import와 의존성을 함께 제거하는 것이 맞습니다.
 
-둘 다 동작에는 무해하나, 죽은 규칙이 쌓이면 이후 어느 규칙이 살아 있는지 판단할 수 없게 됩니다. A그룹 완료(017) 후 일괄 정리합니다.
+위 항목들은 동작에는 무해하나, 죽은 규칙과 선언이 쌓이면 이후 어느 것이 살아 있는지 판단할 수 없게 됩니다. A그룹 완료(018) 후 일괄 정리합니다.
 
 > **`:core:vision`이 순수 JVM 모듈인 것은 결함이 아니라 설계입니다**(D-9.2). CameraX·MediaPipe Android SDK 래퍼는 `:core:vision`이 아니라 **`:feature:lab`** 에 둡니다. B그룹 명세 작성 시 이 경계를 혼동하지 마십시오.
 
 ---
 
-### 8.3 진행 현황 (2026-08-07 기준)
+### 8.3 진행 현황 (2026-08-08 기준)
 
-**A그룹은 TASK-009~018의 10개 task입니다.** `:core:*` 추출이 끝났다고 A그룹이 끝난 것이 아닙니다 — `:feature:*` 이관 3건이 남아 있으며, **이것이 완료되기 전에는 B그룹으로 넘어가지 않습니다.**
+**A그룹은 TASK-009~018의 10개 task입니다.** `:core:*` 추출이 끝났다고 A그룹이 끝난 것이 아닙니다 — `:feature:*` 이관이 A그룹에 포함되며, **이것이 완료되기 전에는 B그룹으로 넘어가지 않습니다.** 016·017이 끝나 남은 것은 **TASK-018 하나**입니다.
 
 | Task | 상태 |
 |---|---|
@@ -256,11 +259,26 @@ TASK-015 완료 시점에 A그룹 전체를 감사한 결과입니다.
 | TASK-014 (`:core:model`) | ✅ `DONE` |
 | TASK-015 (`:core:analysis` + NDK 이관) | ✅ `DONE` — 최대 리스크였으나 1회 통과 |
 | **TASK-016 (이력 결합 해소)** | ✅ `DONE` (`retry_count` 0) — 결합 4건 해소, 테스트 57→60 |
-| **TASK-017 (`:feature:history` 이관)** | ▶ **다음 차례 — 미등록** |
-| **TASK-018 (`:feature:match`)** | 미등록 |
-| B그룹(018~022) · C그룹(023~024) | 미등록 |
+| **TASK-017 (`:feature:history` 이관)** | ✅ `DONE` (`retry_count` 0) — 6개 파일 이관, **라이브러리 모듈 Hilt 최초 실증** |
+| **TASK-018 (`:feature:match`)** | ▶ **다음 차례 — 미등록** |
+| B그룹(019~023) · C그룹(024~025) | 미등록 |
 
 실제 등록 상태는 언제나 [`task-board.json`](task-board.json)이 SSOT입니다.
+
+### 8.4 TASK-017 결과 — 라이브러리 모듈 Hilt는 동작한다
+
+본 task의 최대 리스크는 기능 이관이 아니라 **이 저장소에 전례가 없던 "라이브러리 모듈에서의 Hilt"** 였습니다. 결과적으로 1회에 통과했고, 이후 `:feature:*` 이관(018·B그룹)은 더 이상 미검증 인프라를 다루지 않습니다.
+
+- **구성**: `feature/history/build.gradle.kts`에 `tennisdoc.android.library.compose` + KSP + Hilt 플러그인을 적용하고, 프로젝트 의존성은 `:core:model`·`:core:ui`·`:core:data` 3개로 한정했습니다. Hilt **제공자(`AppModule`)는 `:app`에 그대로 두었고**, feature 모듈에는 모듈을 신설하지 않았습니다 — 복제하면 동일 타입에 바인딩이 둘 생깁니다.
+- **`hiltViewModel()`의 위치**: `SessionDetailScreen`이 본문에서 스스로 ViewModel을 얻던 구조를 **파라미터 주입으로 바꾸고**, 호출을 `:app`의 `SESSION_DETAIL` composable로 올렸습니다. 그 지점은 `NavBackStackEntry` 스코프이므로 `SavedStateHandle`에 `sessionId`가 정상적으로 채워집니다. **이 스코프를 잘못 잡으면 상세 화면이 항상 빈 상태가 되며 컴파일로는 드러나지 않습니다** — 018에서 같은 패턴을 쓸 때 반드시 확인하십시오.
+
+**"Hilt가 설정된 것처럼 보이는" 상태를 검사로 배제했습니다**
+
+플러그인만 적용하고 컴파일러(`ksp`)를 빠뜨려도 애노테이션은 조용히 무시되고 빌드는 통과합니다. 그래서 명세는 **생성 산출물의 실재**를 인수 조건으로 요구했고, `feature/history/build/generated/ksp/`에서 `HistoryViewModel_Factory`·`SessionDetailViewModel_HiltModules` 등이 확인되었습니다. 018 이후의 feature 모듈 명세에도 이 조건을 유지하십시오.
+
+**변이 검증 2건이 실제로 실패했습니다**
+
+`:core:analysis` 의존성을 임시로 추가하자 `verifyModuleDependencies`가 `forbidden dependency`로 실패했고, `debugModeEnabled` 인자를 빼자 `:app:compileDebugKotlin`이 실패했습니다. 모듈 격리와 필수 인자화가 형식이 아니라 실효적임이 확인되었습니다.
 
 ---
 
