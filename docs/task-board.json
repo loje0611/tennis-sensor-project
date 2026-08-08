@@ -251,6 +251,24 @@
       "retry_count": 0,
       "created_at": "2026-08-08T14:20:00Z",
       "updated_at": "2026-08-08T05:38:36Z"
+    },
+    {
+      "id": "TASK-018",
+      "title": ":feature:match \uc774\uad00 \ubc0f v1 \ub0b4\ube44\uac8c\uc774\uc158 \ube44\ud65c\uc131\ud654(\ubcf4\uc874)",
+      "raw_request": "PHASE2_PLAN \u00a74 A\uadf8\ub8f9\uc758 \ub9c8\uc9c0\ub9c9 task\uc778 :feature:match \uc774\uad00\uacfc v1 \ub0b4\ube44\uac8c\uc774\uc158 \ube44\ud65c\uc131\ud654(D-2 \ubcf4\uc874)\ub97c \uc9c4\ud589",
+      "target_project": "TennisDocAI",
+      "depends_on": [
+        "TASK-010",
+        "TASK-011",
+        "TASK-012",
+        "TASK-015",
+        "TASK-017"
+      ],
+      "spec_path": "docs/specs/TASK-018-feature-match-extraction.md",
+      "status": "SPEC_READY",
+      "retry_count": 0,
+      "created_at": "2026-08-08T15:05:00Z",
+      "updated_at": "2026-08-08T15:05:00Z"
     }
   ]
 }
