@@ -49,6 +49,17 @@ object SwingAnalysisSessionState {
         _debugModeEnabled.value = enabled
     }
 
+    private var clickCounter: Int = 0
+
+    fun onDebugActivationAreaTap() {
+        if (_debugModeEnabled.value) return
+        clickCounter++
+        if (clickCounter >= 10) {
+            setDebugMode(true)
+            clickCounter = 0
+        }
+    }
+
     fun setMockMode(active: Boolean) {
         _mockModeActive = active
     }

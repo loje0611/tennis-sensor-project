@@ -160,7 +160,11 @@ fun SettingsScreen(
                 fontSize = 28.sp,
                 color = SwingTheme.colors.onBackground,
             ),
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+            modifier = Modifier
+                .padding(horizontal = 16.dp, vertical = 12.dp)
+                .clickable {
+                    SwingAnalysisSessionState.onDebugActivationAreaTap()
+                },
         )
 
         // Theme Toggle MenuItem

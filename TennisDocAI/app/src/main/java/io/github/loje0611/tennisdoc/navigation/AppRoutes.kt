@@ -1,7 +1,7 @@
 package io.github.loje0611.tennisdoc.navigation
 
 object AppRoutes {
-    const val PRACTICE = "practice"
+
     const val HISTORY = "history"
     const val SETTINGS = "settings"
     const val ENGINEERING_MODE = "engineering_mode"

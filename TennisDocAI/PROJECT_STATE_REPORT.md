@@ -42,7 +42,7 @@ MVVM 아키텍처 기반의 **100% Kotlin** 프로젝트. UI는 **Jetpack Compos
 | 레이어 | 구성 요소 | 설명 |
 |---|---|---|
 | Presentation | PracticeScreen, HistoryScreen, SettingsScreen, SessionDetailScreen, DeveloperSettingsScreen | Compose UI + ViewModel |
-| ViewModel | MainViewModel, HistoryViewModel, SettingsViewModel, SessionDetailViewModel, DeveloperSettingsViewModel | StateFlow 기반 상태 관리 |
+| ViewModel | MatchViewModel, HistoryViewModel, SettingsViewModel, SessionDetailViewModel, DeveloperSettingsViewModel | StateFlow 기반 상태 관리 |
 | Service | SwingAnalysisForegroundService | BLE 수신 + 추론 파이프라인 운영 |
 | Analysis | SwingInferenceBuffer, VolleyDetector, KinematicAnalyzer, CoachingEngine | Two-Stage 분류 + 운동학 분석 |
 | Data | Room DB (TennisDocDatabase v6), CalibrationStore (DataStore) | 로컬 영구 저장, 캘리브레이션/파라미터 설정 |

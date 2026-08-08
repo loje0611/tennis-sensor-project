@@ -7,6 +7,8 @@ import io.github.loje0611.tennisdoc.core.data.repository.CalibrationStore
 import io.github.loje0611.tennisdoc.core.data.repository.SwingHistoryRepository
 import io.github.loje0611.tennisdoc.core.data.repository.ThemePreferencesRepository
 import io.github.loje0611.tennisdoc.core.model.CoachingCommentGenerator
+import io.github.loje0611.tennisdoc.feature.match.MatchSessionPort
+import io.github.loje0611.tennisdoc.session.MatchSessionPortImpl
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
@@ -24,6 +26,14 @@ abstract class AppModule {
     abstract fun bindCoachingCommentGenerator(
         impl: CoachingCommentGeneratorImpl,
     ): CoachingCommentGenerator
+
+    @Binds
+    @Singleton
+    abstract fun bindMatchSessionPort(
+        impl: MatchSessionPortImpl,
+    ): MatchSessionPort
+
+
 
     companion object {
         @Provides

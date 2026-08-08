@@ -1,4 +1,4 @@
-package io.github.loje0611.tennisdoc.ui.practice
+package io.github.loje0611.tennisdoc.feature.match
 
 import android.Manifest
 import android.os.Build
@@ -67,7 +67,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.loje0611.tennisdoc.core.sensor.BleConnectionState
-import io.github.loje0611.tennisdoc.MainViewModel
+import io.github.loje0611.tennisdoc.feature.match.MatchViewModel
 import io.github.loje0611.tennisdoc.core.model.SwingClassificationKeys
 import io.github.loje0611.tennisdoc.core.ui.SwingLabelFormatter
 import io.github.loje0611.tennisdoc.core.ui.theme.MichromaFont
@@ -191,7 +191,7 @@ fun CyberpunkBackground() {
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun PracticeScreen(
-    viewModel: MainViewModel,
+    viewModel: MatchViewModel,
     contentPadding: PaddingValues = PaddingValues(0.dp),
 ) {
     val permissionsState = rememberMultiplePermissionsState(runtimePermissionList())
@@ -321,7 +321,7 @@ fun PracticeScreen(
                                     contentAlignment = Alignment.Center
                                 ) {
                                     androidx.compose.foundation.Image(
-                                        painter = androidx.compose.ui.res.painterResource(id = io.github.loje0611.tennisdoc.R.drawable.ic_neon_racket),
+                                        painter = androidx.compose.ui.res.painterResource(id = io.github.loje0611.tennisdoc.feature.match.R.drawable.ic_neon_racket),
                                         contentDescription = "App Icon",
                                         modifier = Modifier.fillMaxSize().clip(CircleShape),
                                         contentScale = androidx.compose.ui.layout.ContentScale.Crop
