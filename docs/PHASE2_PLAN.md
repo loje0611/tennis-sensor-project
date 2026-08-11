@@ -1,6 +1,6 @@
 # 🧱 Phase 2 실행 계획 (Task Backlog)
 
-> **최종 갱신**: 2026-08-08 (TASK-017 완료 반영 — §8.4 신설, 부채 1건 해소·1건 추가)
+> **최종 갱신**: 2026-08-11 (A그룹 완료 — TASK-009~018 10개 task 전원 완료 반영, §8.3·§8.5 최신화)
 > **문서 성격**: Phase 2에서 생성할 **task 후보 목록과 순서**를 보존하는 실행 계획서.
 > - 단계 계획의 SSOT는 루트 [`README.md`](../README.md#-제품-비전-및-단계별-로드맵)입니다.
 > - 각 결정의 **근거(Why)** 는 [`PRODUCT_DIRECTION.md`](PRODUCT_DIRECTION.md)에 있습니다.
@@ -247,9 +247,9 @@ TASK-015 완료 시점에 A그룹 전체를 감사한 결과입니다.
 
 ---
 
-### 8.3 진행 현황 (2026-08-08 기준)
+### 8.3 진행 현황 (2026-08-11 기준 — A그룹 완결)
 
-**A그룹은 TASK-009~018의 10개 task입니다.** `:core:*` 추출이 끝났다고 A그룹이 끝난 것이 아닙니다 — `:feature:*` 이관이 A그룹에 포함되며, **이것이 완료되기 전에는 B그룹으로 넘어가지 않습니다.** 016·017이 끝나 남은 것은 **TASK-018 하나**입니다.
+**A그룹은 TASK-009~018의 10개 task입니다.** `:core:*` 추출 및 `:feature:*` 이관까지 포함하는 A그룹 10개 task가 전원 성공적으로 완료(`DONE`)되었습니다. 다음 차례는 **B그룹(비전 알고리즘 Kotlin 포팅 — TASK-019부터 시작)**입니다.
 
 | Task | 상태 |
 |---|---|
@@ -260,8 +260,8 @@ TASK-015 완료 시점에 A그룹 전체를 감사한 결과입니다.
 | TASK-015 (`:core:analysis` + NDK 이관) | ✅ `DONE` — 최대 리스크였으나 1회 통과 |
 | **TASK-016 (이력 결합 해소)** | ✅ `DONE` (`retry_count` 0) — 결합 4건 해소, 테스트 57→60 |
 | **TASK-017 (`:feature:history` 이관)** | ✅ `DONE` (`retry_count` 0) — 6개 파일 이관, **라이브러리 모듈 Hilt 최초 실증** |
-| **TASK-018 (`:feature:match`)** | ▶ **다음 차례 — 미등록** |
-| B그룹(019~023) · C그룹(024~025) | 미등록 |
+| **TASK-018 (`:feature:match` 이관)** | ✅ `DONE` (`retry_count` 1) — PracticeScreen 결합 해소 & v1 내비게이션 비활성화 |
+| **B그룹(019~023) · C그룹(024~025)** | ▶ **다음 차례 (TASK-019 착수 대기)** |
 
 실제 등록 상태는 언제나 [`task-board.json`](task-board.json)이 SSOT입니다.
 
@@ -280,6 +280,13 @@ TASK-015 완료 시점에 A그룹 전체를 감사한 결과입니다.
 
 `:core:analysis` 의존성을 임시로 추가하자 `verifyModuleDependencies`가 `forbidden dependency`로 실패했고, `debugModeEnabled` 인자를 빼자 `:app:compileDebugKotlin`이 실패했습니다. 모듈 격리와 필수 인자화가 형식이 아니라 실효적임이 확인되었습니다.
 
+### 8.5 TASK-018 결과 — `:feature:match` 이관 및 D-2 보존 완결
+
+A그룹의 마지막 작업으로 Match 화면 및 관련 ViewModel을 `:feature:match` 모듈로 이관하고 v1 내비게이션 라우트에서 제거(비활성화)했습니다.
+
+- **결합 해소**: `PracticeScreen`이 `:app`의 `MainViewModel` 및 세션 관련 상태와 직접 결합되어 있던 것을 이벤트 콜백과 상태 파라미터 전달 방식으로 역전시켜 `:feature:match`가 `:core:model`, `:core:ui`, `:core:sensor`, `:core:data`, `:core:analysis`만 참조하는 깔끔한 모듈 경계를 완성했습니다.
+- **D-2 원칙 보존**: D-2 방침에 따라 코드를 삭제하지 않고 `:feature:match` 모듈로 격리 보존했으며, Engineering Mode 진입 경로(PracticeScreen 타이틀 10회 탭)를 보존하여 디버그 기능 및 History Mock 생성 기능이 손상되지 않도록 보호했습니다.
+
 ---
 
 ## 9. 미확정 사항
@@ -290,3 +297,4 @@ TASK-015 완료 시점에 A그룹 전체를 감사한 결과입니다.
 - **SPIKE-01 결과에 따른 C그룹 재설계 여부.**
 - **ProGuard 규칙 정리(부채)** — 중복 1건·사문화 3줄. 상세와 정리 시점은 §8.2 참조.
 - **추론 결과 정확성의 검증 수단 부재** — §4.1의 결함이 단위 테스트를 모두 통과한 근본 원인입니다. TASK-013의 `verifyJniBindings`로 **바인딩 재발**은 막혔으나, 분류 결과가 올바른지는 실기기가 필요하며 여전히 확인할 방법이 없습니다.
+
