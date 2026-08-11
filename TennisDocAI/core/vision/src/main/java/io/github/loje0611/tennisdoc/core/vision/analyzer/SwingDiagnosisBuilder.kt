@@ -33,9 +33,12 @@ object SwingDiagnosisBuilder {
                     val shoulderSlice = chainVelocities.shoulder.subList(startF, endF)
                     val wristSlice = chainVelocities.wrist.subList(startF, endF)
 
-                    val hipMaxIdx = hipSlice.indexOfFirst { it == hipSlice.maxOrNull() }.takeIf { it >= 0 } ?: 0
-                    val shoulderMaxIdx = shoulderSlice.indexOfFirst { it == shoulderSlice.maxOrNull() }.takeIf { it >= 0 } ?: 0
-                    val wristMaxIdx = wristSlice.indexOfFirst { it == wristSlice.maxOrNull() }.takeIf { it >= 0 } ?: 0
+                    val hipMax = hipSlice.maxOrNull()
+                    val hipMaxIdx = if (hipMax != null) hipSlice.indexOf(hipMax).takeIf { it >= 0 } ?: 0 else 0
+                    val shoulderMax = shoulderSlice.maxOrNull()
+                    val shoulderMaxIdx = if (shoulderMax != null) shoulderSlice.indexOf(shoulderMax).takeIf { it >= 0 } ?: 0 else 0
+                    val wristMax = wristSlice.maxOrNull()
+                    val wristMaxIdx = if (wristMax != null) wristSlice.indexOf(wristMax).takeIf { it >= 0 } ?: 0 else 0
 
                     val peakHip = startF + hipMaxIdx
                     val peakShoulder = startF + shoulderMaxIdx

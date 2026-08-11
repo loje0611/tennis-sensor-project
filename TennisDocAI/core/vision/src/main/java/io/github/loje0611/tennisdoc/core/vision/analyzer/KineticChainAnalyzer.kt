@@ -33,9 +33,12 @@ object KineticChainAnalyzer {
         val velShoulder = velShoulderRaw.map { if (it.isNaN()) 0.0f else it }
         val velWrist = velWristRaw.map { if (it.isNaN()) 0.0f else it }
 
-        val peakHip = velHip.indexOfFirst { it == velHip.maxOrNull() }.takeIf { it >= 0 } ?: 0
-        val peakShoulder = velShoulder.indexOfFirst { it == velShoulder.maxOrNull() }.takeIf { it >= 0 } ?: 0
-        val peakWrist = velWrist.indexOfFirst { it == velWrist.maxOrNull() }.takeIf { it >= 0 } ?: 0
+        val maxHip = velHip.maxOrNull()
+        val peakHip = if (maxHip != null) velHip.indexOf(maxHip).takeIf { it >= 0 } ?: 0 else 0
+        val maxShoulder = velShoulder.maxOrNull()
+        val peakShoulder = if (maxShoulder != null) velShoulder.indexOf(maxShoulder).takeIf { it >= 0 } ?: 0 else 0
+        val maxWrist = velWrist.maxOrNull()
+        val peakWrist = if (maxWrist != null) velWrist.indexOf(maxWrist).takeIf { it >= 0 } ?: 0 else 0
 
         val msPerFrame = 1000.0 / fps
         val hipToShoulderMs = (peakShoulder - peakHip) * msPerFrame
