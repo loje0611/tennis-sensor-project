@@ -77,7 +77,7 @@ tennis-sensor-project/
 |---|---|---|
 | **메인 MCU** | Seeed Studio XIAO ESP32-C3 | **Nordic nRF52840** (초저전력) |
 | **IMU 센서** | GY-521 MPU-6050 | **LSM6DS3TR-C** (보드 온보드 통합) |
-| **배터리** | 602030 LiPo (300mAh, 6.0mm) | **401520 LiPo (100mAh, 4.0mm)** |
+| **배터리** | 602030 LiPo (300mAh, 6.0mm) | **401420 LiPo (90mAh, 4.0mm)** |
 | **외형 크기** | 가로 28.5mm × 세로 36.0mm × **높이 27.5mm** | 가로 22.0mm × 세로 24.0mm × **높이 13.0mm** |
 | **마운팅** | 3M Dual Lock 바닥 함몰 마운트 | 3M Dual Lock 바닥 함몰 마운트 |
 | **충전/전원** | 온보드 USB-C + 방수 고무 마개 | 온보드 USB-C + 방수 고무 마개 |
