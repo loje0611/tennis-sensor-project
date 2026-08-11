@@ -41,3 +41,13 @@ data class KineticChainResult(
     val isCorrectChain: Boolean,
     val velocities: JointVelocities
 )
+
+data class FeedbackItem(
+    val text: String,
+    val targetJoint: Int
+)
+
+data class SwingDiagnosisResult(
+    val swingFeedbacks: Map<Int, List<FeedbackItem>>,
+    val allProblems: List<String>
+)
