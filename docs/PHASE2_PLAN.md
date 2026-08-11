@@ -247,21 +247,22 @@ TASK-015 완료 시점에 A그룹 전체를 감사한 결과입니다.
 
 ---
 
-### 8.3 진행 현황 (2026-08-11 기준 — A그룹 완결)
+### 8.3 진행 현황 (2026-08-11 기준 — B그룹 진행 중)
 
-**A그룹은 TASK-009~018의 10개 task입니다.** `:core:*` 추출 및 `:feature:*` 이관까지 포함하는 A그룹 10개 task가 전원 성공적으로 완료(`DONE`)되었습니다. 다음 차례는 **B그룹(비전 알고리즘 Kotlin 포팅 — TASK-019부터 시작)**입니다.
+- **A그룹 (TASK-009~018, 019, 020)**: 멀티모듈 분리, `:feature:*` 이관, Repository 인터페이스 추출, 기술 부채 정리 12개 태스크 전원 완료 (`DONE`).
+- **B그룹 (TASK-021~25 예정)**: 비전 알고리즘 Kotlin 포팅 진행 중 (`TASK-021`~`TASK-023` 완료, `TASK-024` 개발 진행 중).
 
-| Task | 상태 |
-|---|---|
-| TASK-009 (스캐폴딩 · 개명) | ✅ `DONE` (`retry_count` 2) |
-| TASK-010 (`:core:ui`) · 011 (`:core:sensor`) · 012 (`:core:data`) | ✅ `DONE` |
-| TASK-013 (JNI `RegisterNatives` 전환) | ✅ `DONE` (`retry_count` 1 — §8.1의 경계 위반으로 1회 반려) |
-| TASK-014 (`:core:model`) | ✅ `DONE` |
-| TASK-015 (`:core:analysis` + NDK 이관) | ✅ `DONE` — 최대 리스크였으나 1회 통과 |
-| **TASK-016 (이력 결합 해소)** | ✅ `DONE` (`retry_count` 0) — 결합 4건 해소, 테스트 57→60 |
-| **TASK-017 (`:feature:history` 이관)** | ✅ `DONE` (`retry_count` 0) — 6개 파일 이관, **라이브러리 모듈 Hilt 최초 실증** |
-| **TASK-018 (`:feature:match` 이관)** | ✅ `DONE` (`retry_count` 1) — PracticeScreen 결합 해소 & v1 내비게이션 비활성화 |
-| **B그룹(019~023) · C그룹(024~025)** | ▶ **다음 차례 (TASK-019 착수 대기)** |
+| Task | 내용 / 관련 모듈 | 상태 |
+|---|---|---|
+| **TASK-009** ~ **018** | A그룹 멀티모듈 추출, 개명, `:feature:history`, `:feature:match` 이관 | ✅ `DONE` |
+| **TASK-019** | `SwingHistoryRepository` 인터페이스 추출 및 ViewModel Fast Unit Test | ✅ `DONE` |
+| **TASK-020** | A그룹 기술 부채 일괄 정리 (ProGuard, SimpleDateFormat, Hilt 의존성) | ✅ `DONE` |
+| **TASK-021** | `:core:vision` 모듈 + `PoseFrame` 데이터 계약 + 관절 각도 계산 (`angle_calculator.py`) | ✅ `DONE` (골든 픽스처 통과) |
+| **TASK-022** | `:core:vision` 3D 관절 속도 계산 및 다중 스윙 임팩트 감지 (`impact_detector.py`) | ✅ `DONE` (골든 픽스처 통과) |
+| **TASK-023** | `:core:vision` 손목 Y 궤적 기울기 기반 스윙 구종 분류 (`swing_path.py`) | ✅ `DONE` (골든 픽스처 통과) |
+| **TASK-024** | `:core:vision` 골반-어깨-손목 운동 체인 역학 분석 (`kinetic_chain.py`) | ▶️ **진행 중 (`SPEC_READY` — Developer 개발 인계)** |
+| **TASK-025** (예정) | `:core:vision` 스윙 종합 진단 및 코칭 피드백 생성 (`swing_diagnosis.py`) | ⏳ 대기 |
+| **C그룹 (TASK-026~027)** | MediaPipe Pose Landmarker 통합 및 CameraX 파이프라인 (`:feature:lab`) | ⏳ 대기 |
 
 실제 등록 상태는 언제나 [`task-board.json`](task-board.json)이 SSOT입니다.
 
