@@ -1,6 +1,5 @@
 package io.github.loje0611.tennisdoc.feature.history
 
-import androidx.hilt.navigation.compose.hiltViewModel
 import android.graphics.BlurMaskFilter
 import android.view.View
 import android.view.ViewParent

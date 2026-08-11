@@ -1,13 +1,9 @@
 # ── JNI native methods ────────────────────────────────────────
--keep class io.github.loje0611.tennisdoc.core.analysis.inference.EdgeImpulseNative { *; }
 -keepclassmembers class * {
     native <methods>;
 }
 
 # ── Room entities & DAOs ──────────────────────────────────────
--keep class io.github.loje0611.tennisdoc.data.db.entity.** { *; }
--keep class io.github.loje0611.tennisdoc.data.db.dao.** { *; }
--keep class io.github.loje0611.tennisdoc.data.db.TennisDocDatabase { *; }
 -keep class io.github.loje0611.tennisdoc.core.data.db.entity.** { *; }
 -keep class io.github.loje0611.tennisdoc.core.data.db.dao.** { *; }
 -keep class io.github.loje0611.tennisdoc.core.data.db.TennisDocDatabase { *; }

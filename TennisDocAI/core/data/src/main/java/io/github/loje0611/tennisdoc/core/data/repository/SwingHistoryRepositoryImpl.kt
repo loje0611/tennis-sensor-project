@@ -32,10 +32,12 @@ class SwingHistoryRepositoryImpl @Inject constructor(
     private val dao: SwingSessionDao = database.swingSessionDao()
     private val globalDao: GlobalStatisticsDao = database.globalStatisticsDao()
 
+    private val csvTimestampFormat = SimpleDateFormat(SwingHistoryRepository.CSV_TIMESTAMP_PATTERN, Locale.US)
+
     override fun observeSessions(): Flow<List<SwingSessionEntity>> = dao.observeSessions()
 
     /**
-     * Room DB의 스윙 이벤트(세션/시간 범위 선택 가능)를 CSV 문자열로 생성하여 반환한다.
+     * FR-2: CSV 추출 유즈케이스.
      * Android Context/Uri/FileProvider 의존성을 갖지 않는다.
      */
     override suspend fun generateCsvString(
@@ -52,7 +54,7 @@ class SwingHistoryRepositoryImpl @Inject constructor(
         buildString {
             appendLine(SwingHistoryRepository.CSV_HEADER)
             for (e in events) {
-                val ts = SwingHistoryRepository.CSV_TIMESTAMP_FORMAT.format(Date(e.timestampMillis))
+                val ts = csvTimestampFormat.format(Date(e.timestampMillis))
                 appendLine(
                     String.format(
                         Locale.US,

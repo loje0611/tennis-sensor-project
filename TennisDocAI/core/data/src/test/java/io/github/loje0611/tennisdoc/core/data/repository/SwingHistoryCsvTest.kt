@@ -25,7 +25,8 @@ class SwingHistoryCsvTest {
     @Test
     fun eventRowSerializesWithPreservedFormat() {
         val tsMillis = 1_700_000_000_000L
-        val formattedTs = SwingHistoryRepository.CSV_TIMESTAMP_FORMAT.format(Date(tsMillis))
+        val format = java.text.SimpleDateFormat(SwingHistoryRepository.CSV_TIMESTAMP_PATTERN, java.util.Locale.US)
+        val formattedTs = format.format(Date(tsMillis))
 
         val event = SwingEventEntity(
             id = 1,

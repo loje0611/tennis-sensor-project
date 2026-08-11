@@ -10,7 +10,7 @@ interface SwingHistoryRepository {
     companion object {
         const val EXPORT_FILE_NAME = "swingsense_export.csv"
         const val CSV_HEADER = "Timestamp,SwingType,Power,Spin,Timing,Smoothness,Stability,Consistency,RawAccel(g),RawDuration(ms),RawGyro(dps)"
-        val CSV_TIMESTAMP_FORMAT = java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss", java.util.Locale.US)
+        const val CSV_TIMESTAMP_PATTERN = "yyyy-MM-dd HH:mm:ss"
     }
 
     fun observeSessions(): Flow<List<SwingSessionEntity>>
