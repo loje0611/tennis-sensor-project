@@ -262,10 +262,11 @@ TASK-015 완료 시점에 A그룹 전체를 감사한 결과입니다.
 
 ---
 
-### 8.3 진행 현황 (2026-08-11 기준 — B그룹 진행 중)
+### 8.3 진행 현황 (2026-08-11 기준 — B그룹 전원 완결)
 
 - **A그룹 (TASK-009~018, 019, 020)**: 멀티모듈 분리, `:feature:*` 이관, Repository 인터페이스 추출, 기술 부채 정리 12개 태스크 전원 완료 (`DONE`).
-- **B그룹 (TASK-021~25 예정)**: 비전 알고리즘 Kotlin 포팅 진행 중 (`TASK-021`~`TASK-023` 완료, `TASK-024` 개발 진행 중).
+- **B그룹 (TASK-021~025)**: `:core:vision` (순수 Kotlin/JVM) 비전 알고리즘 포팅 5개 태스크 전원 완료 (`DONE`, 골든 픽스처 100% 검증 통과).
+- **다음 차례**: C그룹 (CameraX / MediaPipe Pose Landmarker 통합 — `TASK-026`부터 시작).
 
 | Task | 내용 / 관련 모듈 | 상태 |
 |---|---|---|
@@ -275,9 +276,9 @@ TASK-015 완료 시점에 A그룹 전체를 감사한 결과입니다.
 | **TASK-021** | `:core:vision` 모듈 + `PoseFrame` 데이터 계약 + 관절 각도 계산 (`angle_calculator.py`) | ✅ `DONE` (골든 픽스처 통과) |
 | **TASK-022** | `:core:vision` 3D 관절 속도 계산 및 다중 스윙 임팩트 감지 (`impact_detector.py`) | ✅ `DONE` (골든 픽스처 통과) |
 | **TASK-023** | `:core:vision` 손목 Y 궤적 기울기 기반 스윙 구종 분류 (`swing_path.py`) | ✅ `DONE` (골든 픽스처 통과) |
-| **TASK-024** | `:core:vision` 골반-어깨-손목 운동 체인 역학 분석 (`kinetic_chain.py`) | ▶️ **진행 중 (`SPEC_READY` — Developer 개발 인계)** |
-| **TASK-025** (예정) | `:core:vision` 스윙 종합 진단 및 코칭 피드백 생성 (`swing_diagnosis.py`) | ⏳ 대기 |
-| **C그룹 (TASK-026~027)** | MediaPipe Pose Landmarker 통합 및 CameraX 파이프라인 (`:feature:lab`) | ⏳ 대기 |
+| **TASK-024** | `:core:vision` 골반-어깨-손목 운동 체인 역학 분석 (`kinetic_chain.py`) | ✅ `DONE` (골든 픽스처 통과) |
+| **TASK-025** | `:core:vision` 스윙 종합 진단 및 피드백 태그 생성 (`swing_diagnosis.py`) | ✅ `DONE` (골든 픽스처 통과) |
+| **C그룹 (TASK-026~027)** | MediaPipe Pose Landmarker 통합 및 CameraX 파이프라인 (`:feature:lab`) | ▶️ **다음 차례 (`TASK-026` 착수 대기)** |
 
 실제 등록 상태는 언제나 [`task-board.json`](task-board.json)이 SSOT입니다.
 
