@@ -47,14 +47,20 @@ object SwingAnalysisSessionState {
 
     fun setDebugMode(enabled: Boolean) {
         _debugModeEnabled.value = enabled
+        if (!enabled) {
+            clickCounter = 0
+        }
     }
 
     private var clickCounter: Int = 0
 
+    /** 연속 탭으로 디버그 모드를 켤 때 필요한 횟수 (Settings·Match 공유). */
+    const val DEBUG_ACTIVATION_TAP_THRESHOLD: Int = 10
+
     fun onDebugActivationAreaTap() {
         if (_debugModeEnabled.value) return
         clickCounter++
-        if (clickCounter >= 10) {
+        if (clickCounter >= DEBUG_ACTIVATION_TAP_THRESHOLD) {
             setDebugMode(true)
             clickCounter = 0
         }
@@ -109,6 +115,7 @@ object SwingAnalysisSessionState {
         sessionStartTimeMillis = 0L
         _lastRawSwingData.value = ""
         _mockModeActive = false
+        setDebugMode(false)
     }
 
     private val _calibrationDoneChannel = Channel<Unit>(Channel.CONFLATED)

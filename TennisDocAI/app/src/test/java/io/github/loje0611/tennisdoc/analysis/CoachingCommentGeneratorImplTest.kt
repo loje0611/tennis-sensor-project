@@ -1,5 +1,6 @@
 package io.github.loje0611.tennisdoc.analysis
 
+import io.github.loje0611.tennisdoc.core.analysis.impl.CoachingCommentGeneratorImpl
 import io.github.loje0611.tennisdoc.core.model.SwingMetrics
 import org.junit.Assert.assertTrue
 import org.junit.Test

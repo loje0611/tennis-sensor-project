@@ -4,6 +4,8 @@ import android.content.Context
 import dagger.hilt.android.qualifiers.ApplicationContext
 import io.github.loje0611.tennisdoc.core.sensor.BleConnectionState
 import io.github.loje0611.tennisdoc.feature.match.MatchSessionPort
+import io.github.loje0611.tennisdoc.feature.match.SimulateSwingAction
+import io.github.loje0611.tennisdoc.feature.match.resolveSimulateSwingAction
 import io.github.loje0611.tennisdoc.service.SwingAnalysisForegroundService
 import kotlinx.coroutines.flow.StateFlow
 import javax.inject.Inject
@@ -33,11 +35,17 @@ class MatchSessionPortImpl @Inject constructor(
     }
 
     override fun simulateSwing(type: String) {
-        if (!SwingAnalysisSessionState.debugModeEnabled.value) return
-        if (SwingAnalysisSessionState.isPipelineRunning()) {
-            SwingAnalysisForegroundService.requestDebugSimulation(appContext, type)
-        } else {
-            SwingAnalysisSessionState.updateSwingLabel(type)
+        when (
+            resolveSimulateSwingAction(
+                debugModeEnabled = SwingAnalysisSessionState.debugModeEnabled.value,
+                pipelineRunning = SwingAnalysisSessionState.isPipelineRunning(),
+            )
+        ) {
+            SimulateSwingAction.Ignore -> Unit
+            SimulateSwingAction.RequestServiceSimulation ->
+                SwingAnalysisForegroundService.requestDebugSimulation(appContext, type)
+            SimulateSwingAction.UpdateLabelDirectly ->
+                SwingAnalysisSessionState.updateSwingLabel(type)
         }
     }
 }

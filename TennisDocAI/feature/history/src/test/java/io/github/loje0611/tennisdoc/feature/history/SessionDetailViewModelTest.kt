@@ -49,6 +49,30 @@ class SessionDetailViewModelTest {
     }
 
     @Test
+    fun `when sessionId key is missing from SavedStateHandle, state is notFound`() = runTest {
+        val savedStateHandle = SavedStateHandle()
+        val viewModel = SessionDetailViewModel(savedStateHandle, repository, fakeCoachingGenerator)
+
+        val state = viewModel.uiState.first { !it.loading }
+
+        assertFalse(state.loading)
+        assertTrue(state.notFound)
+        assertEquals(null, state.session)
+    }
+
+    @Test
+    fun `when sessionId is unknown, state is notFound`() = runTest {
+        val savedStateHandle = SavedStateHandle(mapOf("sessionId" to "missing-session"))
+        val viewModel = SessionDetailViewModel(savedStateHandle, repository, fakeCoachingGenerator)
+
+        val state = viewModel.uiState.first { !it.loading }
+
+        assertFalse(state.loading)
+        assertTrue(state.notFound)
+        assertEquals(null, state.session)
+    }
+
+    @Test
     fun `when session exists, state loads session detail`() = runTest {
         val testSessionId = UUID.randomUUID().toString()
         val testSession = SwingSessionEntity(
