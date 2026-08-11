@@ -25,18 +25,33 @@ README 로드맵 기준: **Gradle 멀티모듈 분리(`:core:*` / `:feature:*`) 
 
 ---
 
-## 3. 선행: SPIKE-01 (정규 task 아님)
+## 3. 선행: SPIKE-01 (정규 task 아님) — ✅ 완료
 
 | 항목 | 내용 |
 |---|---|
 | **제목** | MediaPipe Pose Landmarker Android 실기기 실용성 검증 |
 | **성격** | **폐기 전제 스파이크.** D-10에 따라 task 파이프라인에 등록하지 않음 |
 | **왜 선행인가** | 실기기 처리 성능이 기대에 못 미치면 `:feature:lab`의 설계 전제(30fps 실시간 포즈 추출)가 무너져 **Phase 2 후반 C그룹 전체가 재설계**된다 |
-| **측정 항목** | 실기기 fps, 프레임당 지연(ms), 배터리 소모, 해상도별 정확도 |
-| **산출물** | 코드가 아니라 **측정 결과 문서**. TASK-024 spec의 입력으로 사용 |
-| **수행 시점** | A그룹(모듈 분리)과 **병행 가능**. C그룹 착수 전까지 완료 |
+| **측정 항목** | 실기기 fps, 프레임당 지연(ms), 해상도별 정확도 (Confidence) |
+| **산출물** | [`docs/SPIKE-01-mediapipe-benchmark-report.md`](SPIKE-01-mediapipe-benchmark-report.md) |
+| **수행 시점** | 2026-08-12 완료 |
 
-> 스파이크 결과가 부정적일 경우의 대안(해상도·프레임레이트 하향, 임팩트 ±2초 구간만 처리 — D-6의 자동 클립 전략)까지 함께 기록합니다.
+### 3.1 실측 결과 (Galaxy Note20 5G · Snapdragon 865+ · CPU delegate)
+
+| 해상도 | 프레임 수 (30초) | 평균 FPS | 평균 Latency | P50 | P95 | Confidence | 판정 |
+|---|---|---|---|---|---|---|---|
+| **480p** (640×480) | 896 | **29.9 fps** | **39.6 ms** | 38 ms | 54 ms | **0.989** | ✅ PASS |
+| 720p (1280×720) | 395 | 13.2 fps | 148.7 ms | 148 ms | 182 ms | 0.000 | ❌ FAIL |
+| 1080p (1920×1080) | 380 | 12.7 fps | 153.1 ms | 150 ms | 198 ms | 0.000 | ❌ FAIL |
+
+### 3.2 결론 및 C그룹 설계 결정
+
+- **480p(640×480)에서 29.9fps로 30fps 실시간 처리 목표를 달성.** `:feature:lab` 설계 전제가 성립함.
+- **FPS 병목은 카메라가 아닌 SoC 추론 성능**이므로, 기기별 해상도 분기 대신 **480p 고정**이 최적.
+- 480p에서 Confidence 0.989 — 랜드마크 정규화 좌표([0,1]) 기반이므로 `:core:vision` 알고리즘 정확도에 영향 없음.
+- 대안 전략(해상도 하향, 임팩트 ±2초 구간만 처리)은 **현재 불필요.**
+- GPU Delegate 적용 시 720p 실시간 처리도 가능성 있으나 추후 검증 대상.
+- **배터리 소모 테스트는 미실시** — 별도 스파이크 또는 C그룹 통합 테스트에서 검증 필요.
 
 ---
 
@@ -265,6 +280,22 @@ TASK-015 완료 시점에 A그룹 전체를 감사한 결과입니다.
 | **C그룹 (TASK-026~027)** | MediaPipe Pose Landmarker 통합 및 CameraX 파이프라인 (`:feature:lab`) | ⏳ 대기 |
 
 실제 등록 상태는 언제나 [`task-board.json`](task-board.json)이 SSOT입니다.
+
+### 8.3.1 A/B그룹 추가 테스트 gap-fill (2026-08-11)
+
+A·B그룹 QA 공백 보강을 수행했다. **실기기/계측·Edge Impulse 추론 정확도는 A그룹 리뷰 결정에 따라 제외.**
+
+| # | 항목 | 결과 |
+|---|---|---|
+| 1 | `:feature:match` ViewModel·simulateSwing 분기 | PASS |
+| 2 | 디버그 10회 탭 (공유 임계값) | PASS |
+| 3 | History·내비 계약 스모크 | PASS |
+| 4 | 비전 파이프라인 E2E | PASS |
+| 5 | 비전 경계·실패모드 | PASS |
+| 6 | 세션 상태 순수 로직 | PASS |
+| 7 | Compose UI 스모크 | 보류 |
+
+상세·명령·스위트 수(103 / 0 failures): [`docs/qa/A-B-group-gap-fill-report.md`](qa/A-B-group-gap-fill-report.md).
 
 ### 8.4 TASK-017 결과 — 라이브러리 모듈 Hilt는 동작한다
 

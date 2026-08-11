@@ -1,0 +1,14 @@
+# Build outputs
+build/
+app/build/
+.gradle/
+
+# IDE
+.idea/
+*.iml
+local.properties
+
+# Misc
+*.orig
+*.rej
+*.patch

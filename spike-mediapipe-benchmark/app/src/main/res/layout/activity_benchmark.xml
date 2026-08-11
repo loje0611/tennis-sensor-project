@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <FrameLayout
+        android:id="@+id/camera_container"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toTopOf="@id/control_panel"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <androidx.camera.view.PreviewView
+            android:id="@+id/view_finder"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            app:scaleType="fillStart" />
+
+        <com.spike.mediapipe.benchmark.OverlayView
+            android:id="@+id/overlay"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+            
+        <TextView
+            android:id="@+id/tv_stats"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="16dp"
+            android:background="#80000000"
+            android:textColor="#FFFFFF"
+            android:padding="8dp"
+            android:textSize="14sp"
+            android:layout_gravity="top|start"
+            android:text="FPS: 0\nLatency: 0ms\nRes: 480p" />
+    </FrameLayout>
+
+    <LinearLayout
+        android:id="@+id/control_panel"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="8dp"
+        app:layout_constraintBottom_toBottomOf="parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center">
+            
+            <Button
+                android:id="@+id/btn_1080p"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="1080p" />
+                
+            <Button
+                android:id="@+id/btn_720p"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="720p" />
+                
+            <Button
+                android:id="@+id/btn_480p"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="480p" />
+        </LinearLayout>
+
+        <Button
+            android:id="@+id/btn_auto_benchmark"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Start Auto Benchmark" />
+    </LinearLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>
