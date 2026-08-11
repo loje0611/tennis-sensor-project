@@ -1,4 +1,4 @@
-package io.github.loje0611.tennisdoc.analysis
+package io.github.loje0611.tennisdoc.core.analysis.impl
 
 import io.github.loje0611.tennisdoc.core.analysis.CoachingEngine
 import io.github.loje0611.tennisdoc.core.model.CoachingCommentGenerator
