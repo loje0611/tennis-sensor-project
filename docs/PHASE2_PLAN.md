@@ -278,7 +278,8 @@ TASK-015 완료 시점에 A그룹 전체를 감사한 결과입니다.
 | **TASK-023** | `:core:vision` 손목 Y 궤적 기울기 기반 스윙 구종 분류 (`swing_path.py`) | ✅ `DONE` (골든 픽스처 통과) |
 | **TASK-024** | `:core:vision` 골반-어깨-손목 운동 체인 역학 분석 (`kinetic_chain.py`) | ✅ `DONE` (골든 픽스처 통과) |
 | **TASK-025** | `:core:vision` 스윙 종합 진단 및 피드백 태그 생성 (`swing_diagnosis.py`) | ✅ `DONE` (골든 픽스처 통과) |
-| **C그룹 (TASK-026~027)** | MediaPipe Pose Landmarker 통합 및 CameraX 파이프라인 (`:feature:lab`) | ▶️ **다음 차례 (`TASK-026` 착수 대기)** |
+| **TASK-026** | `:feature:lab` MediaPipe Pose Landmarker SDK 연동 및 `PoseFrame` 추출 | ✅ `DONE` |
+| **TASK-027** | `:feature:lab` CameraX 프레임 파이프라인 및 Preview/Pose Overlay 구현 | ▶️ **진행 중 (`SPEC_READY` — Developer 인계)** |
 
 실제 등록 상태는 언제나 [`task-board.json`](task-board.json)이 SSOT입니다.
 
