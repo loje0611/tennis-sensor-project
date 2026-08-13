@@ -76,3 +76,33 @@ cd TennisDocAI
 ## Verdict
 
 **QA_PASSED** — NDK move, JNI descriptor sync, packaging, and safety-net mutations all verified.
+
+---
+
+## Run 2 (A-group test gap fill — supplemental)
+
+**Date:** 2026-08-11T04:33:43Z  
+**Result:** **QA_PASSED** (supplemental retest; original verdict unchanged)  
+**Note:** Tester-only test additions + re-execution. Production sources untouched.
+
+### Commands Executed
+
+```bash
+cd TennisDocAI
+./gradlew verifyModuleDependencies verifyJniBindings test assembleDebug
+# androidTest 소스 컴파일만 (adb/기기 없음 → connected 미실행)
+./gradlew :core:data:compileDebugAndroidTestKotlin :app:compileDebugAndroidTestKotlin
+```
+
+- `verifyJniBindings PASSED` (4 ABIs)
+- `BUILD SUCCESSFUL`
+- Unit tests: **76** total, **0** failures (이전 기준선 60 → +16)
+
+
+### Added coverage
+- `EdgeImpulseNativeJvmFallbackTest` (analysis 모듈): NDK 이관 후에도 JVM 폴백 계약 유지.
+- analysis 기존 스위트 37건 + coaching impl 1 + fallback 1 재확인.
+
+### Evidence
+`verifyJniBindings` + analysis 단위 테스트 그린. 분류 품질 E2E는 미실행(기기 없음).
+

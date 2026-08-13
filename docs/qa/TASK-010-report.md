@@ -63,3 +63,29 @@ Re-run with `--rerun-tasks` for `:core:ui:testDebugUnitTest` / `:app:testDebugUn
 ## Verdict
 
 **QA_PASSED** — declared command completed; every AC has executed/search evidence.
+
+---
+
+## Run 2 (A-group test gap fill — supplemental)
+
+**Date:** 2026-08-11T04:33:43Z  
+**Result:** **QA_PASSED** (supplemental retest; original verdict unchanged)  
+**Note:** Tester-only test additions + re-execution. Production sources untouched.
+
+### Commands Executed
+
+```bash
+cd TennisDocAI
+./gradlew verifyModuleDependencies verifyJniBindings test assembleDebug
+# androidTest 소스 컴파일만 (adb/기기 없음 → connected 미실행)
+./gradlew :core:data:compileDebugAndroidTestKotlin :app:compileDebugAndroidTestKotlin
+```
+
+- `verifyJniBindings PASSED` (4 ABIs)
+- `BUILD SUCCESSFUL`
+- Unit tests: **76** total, **0** failures (이전 기준선 60 → +16)
+
+
+### Scope of this retest
+`:core:ui` 기존 스위트(`SwingLabelFormatterTest` 4, `ThemeColorSchemeTest` 2) 재실행 통과. UI 추출 회귀 없음.
+

@@ -170,3 +170,57 @@ export JAVA_HOME=/home/keunu/.gradle/jdks/eclipse_adoptium-21-amd64-linux.2
 ## Verdict
 
 **QA_PASSED** — `:feature:match` configures and builds independently; nav deactivation + debug activation preservation + Hilt binding enforcement verified.
+
+---
+
+## Run 3 (A-group test gap fill — supplemental)
+
+**Date:** 2026-08-11T04:33:43Z  
+**Result:** **QA_PASSED** (supplemental retest; original verdict unchanged)  
+**Note:** Tester-only test additions + re-execution. Production sources untouched.
+
+### Commands Executed
+
+```bash
+cd TennisDocAI
+./gradlew verifyModuleDependencies verifyJniBindings test assembleDebug
+# androidTest 소스 컴파일만 (adb/기기 없음 → connected 미실행)
+./gradlew :core:data:compileDebugAndroidTestKotlin :app:compileDebugAndroidTestKotlin
+```
+
+- `verifyJniBindings PASSED` (4 ABIs)
+- `BUILD SUCCESSFUL`
+- Unit tests: **76** total, **0** failures (이전 기준선 60 → +16)
+
+
+### Added coverage
+- `MatchViewModelTest` (5): 포트 위임
+- `SwingAnalysisSessionStateDebugTest` (3): 10회 탭 활성화 / 조기 return
+- `AppRoutesMatchDeactivationTest` (3): PRACTICE/LIVE 상수 부재, sessionDetail 포맷
+- `MatchSessionPortImplSimulateInstrumentedTest` (androidTest, 3갈래): **컴파일 성공**, connected 미실행
+
+### Evidence
+JVM 관련 신규 11건 포함 전체 76/0. simulateSwing 파이프라인 ON 분기의 기기 실행은 보류.
+
+---
+
+## Run supplemental (A-group gap #2 — Compose/nav smoke)
+
+**Date:** 2026-08-11T05:00:18Z  
+**Result:** **QA_PASSED** (supplemental; original verdict unchanged)
+
+### Added
+- Robolectric + Compose UI Test (`:app` JVM)
+- `HistoryNavigationSmokeTest` (3): History→SessionDetail 클릭 이동, Back 복귀, `debugModeEnabled` Mock FAB 표시
+
+### Commands
+```bash
+cd TennisDocAI
+./gradlew :app:testDebugUnitTest --tests 'io.github.loje0611.tennisdoc.navigation.HistoryNavigationSmokeTest'
+./gradlew verifyModuleDependencies verifyJniBindings test assembleDebug
+```
+- Smoke 3/0, full suite **85**/0, BUILD SUCCESSFUL
+
+### Note
+Uses the same `AppRoutes` + callback wiring pattern as `AppNavHost` (Hilt 없는 스모크). Full `AppNavHost`+Hilt Activity 계측은 기기/`adb` Linux 바이너리 부재로 미실행.
+

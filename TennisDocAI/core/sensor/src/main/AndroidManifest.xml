@@ -15,6 +15,7 @@
 
     <!-- 위치: Android 12+ 일부 기기/스택 호환 및 API 30 이하 BLE 스캔에 사용 -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
 
     <!-- API 30 이하: 클래식 블루투스 권한 -->
     <uses-permission

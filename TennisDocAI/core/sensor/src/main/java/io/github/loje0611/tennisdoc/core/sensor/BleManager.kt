@@ -283,12 +283,7 @@ class BleManager(
         Log.d(TAG, "연결 시도: ${device.address}")
         lastDevice = device
         try {
-            gatt = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
-                device.connectGatt(appContext, false, gattCallback, BluetoothDevice.TRANSPORT_LE)
-            } else {
-                @Suppress("DEPRECATION")
-                device.connectGatt(appContext, false, gattCallback)
-            }
+            gatt = device.connectGatt(appContext, false, gattCallback, BluetoothDevice.TRANSPORT_LE)
 
             mainHandler.postDelayed({
                 if (connectInFlight.get() && gatt?.device?.address == device.address) {

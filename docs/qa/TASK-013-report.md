@@ -102,3 +102,33 @@ AC-17: PASS (`PHASE2_PLAN.md` no longer in change set).
 ## Verdict
 
 **QA_PASSED** — boundary cleared; JNI RegisterNatives + `verifyJniBindings` meet all ACs.
+
+---
+
+## Run 3 (A-group test gap fill — supplemental)
+
+**Date:** 2026-08-11T04:33:43Z  
+**Result:** **QA_PASSED** (supplemental retest; original verdict unchanged)  
+**Note:** Tester-only test additions + re-execution. Production sources untouched.
+
+### Commands Executed
+
+```bash
+cd TennisDocAI
+./gradlew verifyModuleDependencies verifyJniBindings test assembleDebug
+# androidTest 소스 컴파일만 (adb/기기 없음 → connected 미실행)
+./gradlew :core:data:compileDebugAndroidTestKotlin :app:compileDebugAndroidTestKotlin
+```
+
+- `verifyJniBindings PASSED` (4 ABIs)
+- `BUILD SUCCESSFUL`
+- Unit tests: **76** total, **0** failures (이전 기준선 60 → +16)
+
+
+### Added coverage
+- `EdgeImpulseNativeJvmFallbackTest` (1): JVM에서 네이티브 미적재 시 `runClassifier`가 빈 문자열 폴백인지 고정.
+
+### Evidence
+해당 스위트 포함 전체 76/0. `verifyJniBindings` 재통과.
+추론 **정확성**은 여전히 실기기 영역(계획 §4.1·§9) — 이번 보완으로도 미해소.
+

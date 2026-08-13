@@ -210,3 +210,32 @@ TASK-009가 `DONE`에 도달한 뒤 사용자 요청으로 프로토콜 준수 �
 - Tester: 사이클 시작 시 **경계 검사**(Developer 변경 경로 vs 쓰기 권한 매트릭스) 의무화. 명세 근거가 있을 때만 예외 인정하고 근거 요구사항 ID를 기록. 단정문·기대값·입력 픽스처·임계값 변경은 예외 불인정.
 - Tester: 핸드오프 전 **자기 산출물 정리 의무**.
 - Developer: 커밋 전 **잔여 산출물 거름망(Step 3b)**.
+
+---
+
+## Run 5 (A-group test gap fill — supplemental)
+
+**Date:** 2026-08-11T04:33:43Z  
+**Result:** **QA_PASSED** (supplemental retest; original verdict unchanged)  
+**Note:** Tester-only test additions + re-execution. Production sources untouched.
+
+### Commands Executed
+
+```bash
+cd TennisDocAI
+./gradlew verifyModuleDependencies verifyJniBindings test assembleDebug
+# androidTest 소스 컴파일만 (adb/기기 없음 → connected 미실행)
+./gradlew :core:data:compileDebugAndroidTestKotlin :app:compileDebugAndroidTestKotlin
+```
+
+- `verifyJniBindings PASSED` (4 ABIs)
+- `BUILD SUCCESSFUL`
+- Unit tests: **76** total, **0** failures (이전 기준선 60 → +16)
+
+
+### Scope of this retest
+스캐폴딩/개명 task 자체 변경은 없음. A그룹 보완 스위트가 모듈 그래프·전체 그린을 재확인.
+
+### New / related coverage (repo-wide)
+전체 단위 테스트 76건 그린으로 스캐폴딩 이후 모듈 그래프가 여전히 조립됨을 재확인.
+

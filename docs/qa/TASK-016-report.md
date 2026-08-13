@@ -75,3 +75,34 @@ cd TennisDocAI
 ## Verdict
 
 **QA_PASSED** — four history couplings removed; CSV/coaching contracts locked by JVM tests and mutations.
+
+---
+
+## Run 2 (A-group test gap fill — supplemental)
+
+**Date:** 2026-08-11T04:33:43Z  
+**Result:** **QA_PASSED** (supplemental retest; original verdict unchanged)  
+**Note:** Tester-only test additions + re-execution. Production sources untouched.
+
+### Commands Executed
+
+```bash
+cd TennisDocAI
+./gradlew verifyModuleDependencies verifyJniBindings test assembleDebug
+# androidTest 소스 컴파일만 (adb/기기 없음 → connected 미실행)
+./gradlew :core:data:compileDebugAndroidTestKotlin :app:compileDebugAndroidTestKotlin
+```
+
+- `verifyJniBindings PASSED` (4 ABIs)
+- `BUILD SUCCESSFUL`
+- Unit tests: **76** total, **0** failures (이전 기준선 60 → +16)
+
+
+### Added / relocated coverage
+- `SwingHistoryCsvTest` (JVM, 2) 유지
+- `SwingHistoryRepositoryCsvInstrumentedTest` (androidTest): `generateCsvString` 실경로 — **컴파일 성공**, connected 미실행(adb 없음)
+- `CoachingCommentGeneratorImplTest`를 `:core:analysis`로 이전(구현체가 analysis로 이동한 현재 구조에 맞춤) 후 1건 통과
+
+### Evidence
+전체 76/0. CSV **실경로 계측 실행**은 환경 제약으로 보류.
+

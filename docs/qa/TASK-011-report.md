@@ -68,3 +68,29 @@ FR-5 coverage in `ImuPayloadParserTest`: valid 6-axis; spaces; empty/blank; `ERR
 ## Verdict
 
 **QA_PASSED** — declared command completed; every AC has executed evidence.
+
+---
+
+## Run 2 (A-group test gap fill — supplemental)
+
+**Date:** 2026-08-11T04:33:43Z  
+**Result:** **QA_PASSED** (supplemental retest; original verdict unchanged)  
+**Note:** Tester-only test additions + re-execution. Production sources untouched.
+
+### Commands Executed
+
+```bash
+cd TennisDocAI
+./gradlew verifyModuleDependencies verifyJniBindings test assembleDebug
+# androidTest 소스 컴파일만 (adb/기기 없음 → connected 미실행)
+./gradlew :core:data:compileDebugAndroidTestKotlin :app:compileDebugAndroidTestKotlin
+```
+
+- `verifyJniBindings PASSED` (4 ABIs)
+- `BUILD SUCCESSFUL`
+- Unit tests: **76** total, **0** failures (이전 기준선 60 → +16)
+
+
+### Scope of this retest
+`ImuPayloadParserTest` 7건 재실행 통과. `:core:sensor` 추출 회귀 없음.
+

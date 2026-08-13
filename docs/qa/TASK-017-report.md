@@ -81,3 +81,54 @@ Under `feature/history/build/generated/ksp/debug/java/`:
 ## Verdict
 
 **QA_PASSED** — `:feature:history` hosts the six history screens with Hilt codegen proven, module isolation enforced by `verifyModuleDependencies` (including mutation), and `:app` wiring preserved.
+
+---
+
+## Run 2 (A-group test gap fill — supplemental)
+
+**Date:** 2026-08-11T04:33:43Z  
+**Result:** **QA_PASSED** (supplemental retest; original verdict unchanged)  
+**Note:** Tester-only test additions + re-execution. Production sources untouched.
+
+### Commands Executed
+
+```bash
+cd TennisDocAI
+./gradlew verifyModuleDependencies verifyJniBindings test assembleDebug
+# androidTest 소스 컴파일만 (adb/기기 없음 → connected 미실행)
+./gradlew :core:data:compileDebugAndroidTestKotlin :app:compileDebugAndroidTestKotlin
+```
+
+- `verifyJniBindings PASSED` (4 ABIs)
+- `BUILD SUCCESSFUL`
+- Unit tests: **76** total, **0** failures (이전 기준선 60 → +16)
+
+
+### Added coverage
+- `FeatureHistoryContractTest` (4): feature 패키지 위치, `HistoryScreenKt` 패키지, Hilt `*_Factory` 생성물 로드, UI state 기본값
+
+### Evidence
+`:feature:history:testDebugUnitTest` 포함 전체 76/0. Compose 내비/화면 스모크는 여전히 없음.
+
+---
+
+## Run supplemental (A-group gap #2 — Compose/nav smoke)
+
+**Date:** 2026-08-11T05:00:18Z  
+**Result:** **QA_PASSED** (supplemental; original verdict unchanged)
+
+### Added
+- Robolectric + Compose UI Test (`:app` JVM)
+- `HistoryNavigationSmokeTest` (3): History→SessionDetail 클릭 이동, Back 복귀, `debugModeEnabled` Mock FAB 표시
+
+### Commands
+```bash
+cd TennisDocAI
+./gradlew :app:testDebugUnitTest --tests 'io.github.loje0611.tennisdoc.navigation.HistoryNavigationSmokeTest'
+./gradlew verifyModuleDependencies verifyJniBindings test assembleDebug
+```
+- Smoke 3/0, full suite **85**/0, BUILD SUCCESSFUL
+
+### Note
+Uses the same `AppRoutes` + callback wiring pattern as `AppNavHost` (Hilt 없는 스모크). Full `AppNavHost`+Hilt Activity 계측은 기기/`adb` Linux 바이너리 부재로 미실행.
+
