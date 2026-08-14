@@ -557,6 +557,21 @@
       "retry_count": 0,
       "created_at": "2026-08-14T13:58:08Z",
       "updated_at": "2026-08-14T14:03:47Z"
+    },
+    {
+      "id": "TASK-038",
+      "title": "Lab 세션 드릴 가이드 및 실시간 융합 피드백 UI 구현",
+      "raw_request": "task 38 진행해",
+      "target_project": "TennisDocAI",
+      "depends_on": [
+        "TASK-030",
+        "TASK-037"
+      ],
+      "spec_path": "docs/specs/TASK-038-lab-drill-guide-realtime-feedback-ui.md",
+      "status": "SPEC_READY",
+      "retry_count": 0,
+      "created_at": "2026-08-14T14:08:43Z",
+      "updated_at": "2026-08-14T14:08:43Z"
     }
   ]
 }
