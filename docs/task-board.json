@@ -513,6 +513,20 @@
       "retry_count": 0,
       "created_at": "2026-08-14T13:34:35Z",
       "updated_at": "2026-08-14T13:38:35Z"
+    },
+    {
+      "id": "TASK-035",
+      "title": "Ablation 자동 채점 검증 도구 구현 (D-7.1)",
+      "raw_request": "task 35 진행해",
+      "target_project": "TennisDocAI",
+      "depends_on": [
+        "TASK-034"
+      ],
+      "spec_path": "docs/specs/TASK-035-ablation-benchmark-evaluator.md",
+      "status": "SPEC_READY",
+      "retry_count": 0,
+      "created_at": "2026-08-14T13:45:07Z",
+      "updated_at": "2026-08-14T13:45:07Z"
     }
   ]
 }
