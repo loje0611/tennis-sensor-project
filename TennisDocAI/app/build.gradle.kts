@@ -60,6 +60,7 @@ dependencies {
     implementation(project(":core:analysis"))
     implementation(project(":feature:history"))
     implementation(project(":feature:match"))
+    implementation(project(":feature:lab"))
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.androidx.room.runtime)

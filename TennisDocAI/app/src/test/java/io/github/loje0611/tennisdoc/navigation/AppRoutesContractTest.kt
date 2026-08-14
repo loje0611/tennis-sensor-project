@@ -8,7 +8,8 @@ import java.lang.reflect.Modifier
 class AppRoutesContractTest {
 
     @Test
-    fun `history and settings routes are stable`() {
+    fun `lab history and settings routes are stable`() {
+        assertEquals("lab", AppRoutes.LAB)
         assertEquals("history", AppRoutes.HISTORY)
         assertEquals("settings", AppRoutes.SETTINGS)
         assertEquals("engineering_mode", AppRoutes.ENGINEERING_MODE)

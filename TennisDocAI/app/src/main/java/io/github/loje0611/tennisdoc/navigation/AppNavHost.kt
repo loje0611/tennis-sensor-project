@@ -6,6 +6,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Sensors
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.outlined.History
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -37,6 +38,8 @@ import io.github.loje0611.tennisdoc.feature.history.HistoryViewModel
 import io.github.loje0611.tennisdoc.feature.history.SessionDetailScreen
 import io.github.loje0611.tennisdoc.feature.history.SessionDetailViewModel
 
+import io.github.loje0611.tennisdoc.feature.lab.ui.LabScreen
+
 import io.github.loje0611.tennisdoc.ui.settings.DeveloperSettingsScreen
 import io.github.loje0611.tennisdoc.ui.settings.DeveloperSettingsViewModel
 import io.github.loje0611.tennisdoc.ui.settings.SettingsScreen
@@ -51,6 +54,7 @@ fun AppNavHost() {
     // 초기 구성 시 route가 잠깐 null이면 바가 사라지지 않도록 처리
     val showBottomBar =
         currentRoute == null ||
+            currentRoute == AppRoutes.LAB ||
             currentRoute == AppRoutes.HISTORY ||
             currentRoute == AppRoutes.SETTINGS ||
             currentRoute == AppRoutes.ENGINEERING_MODE
@@ -66,6 +70,43 @@ fun AppNavHost() {
                     containerColor = SwingTheme.colors.cardSurface.copy(alpha=0.9f),
                     tonalElevation = 8.dp,
                 ) {
+                    NavigationBarItem(
+                        selected = currentRoute == AppRoutes.LAB,
+                        onClick = {
+                            navController.navigate(AppRoutes.LAB) {
+                                popUpTo(navController.graph.findStartDestination().id) {
+                                    saveState = true
+                                }
+                                launchSingleTop = true
+                                restoreState = true
+                            }
+                        },
+                        icon = {
+                            Icon(
+                                imageVector = Icons.Filled.Sensors,
+                                contentDescription = "Lab",
+                                modifier = Modifier.shadow(
+                                    elevation = if (currentRoute == AppRoutes.LAB) 12.dp else 0.dp,
+                                    shape = androidx.compose.foundation.shape.CircleShape,
+                                    spotColor = SwingTheme.colors.electricCyanSlice,
+                                    ambientColor = SwingTheme.colors.electricCyanSlice
+                                )
+                            )
+                        },
+                        label = {
+                            Text(
+                                "Lab",
+                                fontWeight = if (currentRoute == AppRoutes.LAB) FontWeight.ExtraBold else FontWeight.Medium
+                            )
+                        },
+                        colors = NavigationBarItemDefaults.colors(
+                            selectedIconColor = SwingTheme.colors.electricCyanSlice,
+                            selectedTextColor = SwingTheme.colors.electricCyanSlice,
+                            unselectedIconColor = SwingTheme.colors.subGray,
+                            unselectedTextColor = SwingTheme.colors.subGray,
+                            indicatorColor = Color.Transparent
+                        ),
+                    )
 
                     NavigationBarItem(
                         selected = currentRoute == AppRoutes.HISTORY,
@@ -147,12 +188,18 @@ fun AppNavHost() {
     ) { innerPadding ->
         NavHost(
             navController = navController,
-            startDestination = AppRoutes.HISTORY,
+            startDestination = AppRoutes.LAB,
             modifier = Modifier
                 .fillMaxSize()
                 .background(SwingTheme.colors.background),
         ) {
 
+            composable(AppRoutes.LAB) {
+                LabScreen(
+                    modifier = Modifier.padding(innerPadding)
+                )
+            }
+            
             composable(AppRoutes.HISTORY) {
                 val historyViewModel: HistoryViewModel = hiltViewModel()
                 val debugModeEnabled by SwingAnalysisSessionState.debugModeEnabled.collectAsStateWithLifecycle()
