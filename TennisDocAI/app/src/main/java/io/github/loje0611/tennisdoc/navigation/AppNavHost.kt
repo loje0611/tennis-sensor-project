@@ -39,6 +39,7 @@ import io.github.loje0611.tennisdoc.feature.history.SessionDetailScreen
 import io.github.loje0611.tennisdoc.feature.history.SessionDetailViewModel
 
 import io.github.loje0611.tennisdoc.feature.lab.ui.LabScreen
+import io.github.loje0611.tennisdoc.feature.lab.ui.LabViewModel
 
 import io.github.loje0611.tennisdoc.ui.settings.DeveloperSettingsScreen
 import io.github.loje0611.tennisdoc.ui.settings.DeveloperSettingsViewModel
@@ -195,7 +196,9 @@ fun AppNavHost() {
         ) {
 
             composable(AppRoutes.LAB) {
+                val labViewModel: LabViewModel = hiltViewModel()
                 LabScreen(
+                    viewModel = labViewModel,
                     modifier = Modifier.padding(innerPadding)
                 )
             }

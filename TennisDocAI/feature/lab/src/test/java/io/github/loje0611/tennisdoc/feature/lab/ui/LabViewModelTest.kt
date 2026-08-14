@@ -1,9 +1,12 @@
 package io.github.loje0611.tennisdoc.feature.lab.ui
 
+import io.github.loje0611.tennisdoc.core.fusion.anomaly.AnomalyResult
+import io.github.loje0611.tennisdoc.core.fusion.anomaly.AnomalySeverity
 import io.github.loje0611.tennisdoc.core.fusion.anomaly.BaselineComparisonReport
 import io.github.loje0611.tennisdoc.core.fusion.anomaly.FatigueAnalysis
 import io.github.loje0611.tennisdoc.core.fusion.anomaly.PersonalBaseline
 import io.github.loje0611.tennisdoc.core.fusion.model.FusedSwing
+import io.github.loje0611.tennisdoc.core.fusion.model.FusionDiagnosis
 import io.github.loje0611.tennisdoc.core.fusion.model.ImuDataPoint
 import io.github.loje0611.tennisdoc.core.fusion.model.KineticChain5Stage
 import io.github.loje0611.tennisdoc.core.fusion.model.KineticStage
@@ -12,9 +15,11 @@ import io.github.loje0611.tennisdoc.core.fusion.model.RacketFaceState
 import io.github.loje0611.tennisdoc.core.fusion.model.RacketImpactOrientation
 import io.github.loje0611.tennisdoc.core.fusion.model.SyncAnchor
 import io.github.loje0611.tennisdoc.core.model.DrillType
+import io.github.loje0611.tennisdoc.core.model.SessionType
 import io.github.loje0611.tennisdoc.core.vision.model.PoseFrame
 import io.github.loje0611.tennisdoc.core.vision.model.PoseLandmark
 import io.github.loje0611.tennisdoc.feature.lab.pipeline.LabFusionPipeline
+import io.github.loje0611.tennisdoc.feature.lab.session.LabSessionPort
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -26,7 +31,9 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 
@@ -43,6 +50,40 @@ class LabViewModelTest {
     @After
     fun tearDown() {
         Dispatchers.resetMain()
+    }
+
+    private class FakeLabSessionPort : LabSessionPort {
+        private val _isSessionActive = MutableStateFlow(false)
+        override val isSessionActive: StateFlow<Boolean> = _isSessionActive.asStateFlow()
+
+        private val _activeSessionId = MutableStateFlow<String?>(null)
+        override val activeSessionId: StateFlow<String?> = _activeSessionId.asStateFlow()
+
+        private val _sessionDurationSeconds = MutableStateFlow(0L)
+        override val sessionDurationSeconds: StateFlow<Long> = _sessionDurationSeconds.asStateFlow()
+
+        private val _swingCount = MutableStateFlow(0)
+        override val swingCount: StateFlow<Int> = _swingCount.asStateFlow()
+
+        private val _isSensorConnected = MutableStateFlow(true)
+        override val isSensorConnected: StateFlow<Boolean> = _isSensorConnected.asStateFlow()
+
+        var lastStartType: SessionType? = null
+        var lastStartDrill: DrillType? = null
+
+        override fun startSession(type: SessionType, drillType: DrillType): String {
+            lastStartType = type
+            lastStartDrill = drillType
+            val sid = "test-session-id"
+            _activeSessionId.value = sid
+            _isSessionActive.value = true
+            return sid
+        }
+
+        override fun finishSession() {
+            _activeSessionId.value = null
+            _isSessionActive.value = false
+        }
     }
 
     private class FakeLabFusionPipeline : LabFusionPipeline {
@@ -75,6 +116,12 @@ class LabViewModelTest {
                 KineticStage(KineticStageType.IMPACT, 1110L, 25f, 20L)
             )
             val chain = KineticChain5Stage(stages, true, 110L, 90f)
+            val diagnosis = FusionDiagnosis(
+                diagnosisTags = listOf("CLEAN_STRIKE"),
+                primaryCause = "정상 스윙",
+                coachingFeedback = "훌륭한 임팩트입니다.",
+                causalExplanation = "운동 체인이 순차적으로 올바르게 전달되었습니다."
+            )
             val swing = FusedSwing(
                 swingId = "test-swing",
                 sessionId = sessionId,
@@ -83,12 +130,23 @@ class LabViewModelTest {
                 kineticChain = chain,
                 racketImpact = RacketImpactOrientation(0f, 0f, 0f, RacketFaceState.SQUARE, 0f),
                 visionPoses = emptyList(),
-                imuSamples = emptyList()
+                imuSamples = emptyList(),
+                diagnosis = diagnosis
             )
             _latestFusedSwing.value = swing
             _latestAnomalyReport.value = BaselineComparisonReport(
                 drillType = drillType,
-                anomalies = emptyList(),
+                anomalies = listOf(
+                    AnomalyResult(
+                        metricKey = "racketSpeed",
+                        currentValue = 1500f,
+                        baselineMean = 1500f,
+                        zScore = 0f,
+                        isAnomaly = false,
+                        severity = AnomalySeverity.NORMAL,
+                        description = "정상"
+                    )
+                ),
                 fatigue = FatigueAnalysis(0f, false, null),
                 coachingRecommendation = "Good"
             )
@@ -101,10 +159,111 @@ class LabViewModelTest {
             _latestFusedSwing.value = null
             _latestAnomalyReport.value = null
         }
+
+        fun emitAnomalyReport(report: BaselineComparisonReport) {
+            _latestAnomalyReport.value = report
+        }
     }
 
     @Test
-    fun `AC-6 LabViewModel feeds data and triggers swing and exposes pipeline StateFlows`() = runTest {
+    fun `AC-2 drill selection updates selectedDrill and is disabled when session is active`() = runTest {
+        val fakePipeline = FakeLabFusionPipeline()
+        val fakePort = FakeLabSessionPort()
+        val viewModel = LabViewModel(fakePipeline, fakePort)
+
+        viewModel.selectDrill(DrillType.SERVE)
+        assertEquals(DrillType.SERVE, viewModel.selectedDrill.value)
+
+        viewModel.startSession()
+        testScheduler.advanceUntilIdle()
+        assertTrue(viewModel.uiState.value.isSessionActive)
+
+        // Drill selection attempt while session is active should be ignored
+        viewModel.selectDrill(DrillType.BACKHAND_TOPSPIN)
+        assertEquals(DrillType.SERVE, viewModel.selectedDrill.value)
+    }
+
+    @Test
+    fun `AC-3 startSession and finishSession correctly toggle session state`() = runTest {
+        val fakePipeline = FakeLabFusionPipeline()
+        val fakePort = FakeLabSessionPort()
+        val viewModel = LabViewModel(fakePipeline, fakePort)
+
+        assertFalse(viewModel.uiState.value.isSessionActive)
+
+        viewModel.selectDrill(DrillType.SERVE)
+        viewModel.startSession()
+        testScheduler.advanceUntilIdle()
+        assertTrue(viewModel.uiState.value.isSessionActive)
+        assertEquals("test-session-id", viewModel.uiState.value.activeSessionId)
+        assertEquals(SessionType.LAB, fakePort.lastStartType)
+        assertEquals(DrillType.SERVE, fakePort.lastStartDrill)
+
+        viewModel.finishSession()
+        testScheduler.advanceUntilIdle()
+        assertFalse(viewModel.uiState.value.isSessionActive)
+    }
+
+    @Test
+    fun `AC-4 AC-5 FusedSwing and AnomalyReport data update UI state`() = runTest {
+        val fakePipeline = FakeLabFusionPipeline()
+        val fakePort = FakeLabSessionPort()
+        val viewModel = LabViewModel(fakePipeline, fakePort)
+
+        viewModel.startSession()
+        testScheduler.advanceUntilIdle()
+
+        viewModel.triggerSwing()
+        testScheduler.advanceUntilIdle()
+
+        val ui = viewModel.uiState.value
+        assertNotNull(ui.latestFusedSwing)
+        assertEquals(RacketFaceState.SQUARE, ui.latestFusedSwing!!.racketImpact.faceState)
+        assertEquals("훌륭한 임팩트입니다.", ui.latestFusedSwing!!.diagnosis?.coachingFeedback)
+
+        assertNotNull(ui.latestAnomalyReport)
+        assertEquals(DrillType.FOREHAND_TOPSPIN, ui.latestAnomalyReport!!.drillType)
+    }
+
+    @Test
+    fun `AC-5 fatigued or critical anomaly report is exposed on uiState`() = runTest {
+        val fakePipeline = FakeLabFusionPipeline()
+        val fakePort = FakeLabSessionPort()
+        val viewModel = LabViewModel(fakePipeline, fakePort)
+        testScheduler.advanceUntilIdle()
+
+        fakePipeline.emitAnomalyReport(
+            BaselineComparisonReport(
+                drillType = DrillType.FOREHAND_TOPSPIN,
+                anomalies = listOf(
+                    AnomalyResult(
+                        metricKey = "racketSpeed",
+                        currentValue = 800f,
+                        baselineMean = 1500f,
+                        zScore = -2.8f,
+                        isAnomaly = true,
+                        severity = AnomalySeverity.CRITICAL,
+                        description = "라켓 스피드가 평소 대비 2.8σ 급락했습니다."
+                    )
+                ),
+                fatigue = FatigueAnalysis(
+                    fatigueScore = 0.9f,
+                    isFatigued = true,
+                    formBreakdownSummary = "⚠️ 라켓 스피드가 평소 대비 2.8σ 급락했습니다. 휴식을 권장합니다."
+                ),
+                coachingRecommendation = "휴식"
+            )
+        )
+        testScheduler.advanceUntilIdle()
+
+        val report = viewModel.uiState.value.latestAnomalyReport
+        assertNotNull(report)
+        assertTrue(report!!.fatigue.isFatigued)
+        assertTrue(report.anomalies.any { it.severity == AnomalySeverity.CRITICAL })
+    }
+
+    @Test
+    fun `LabViewModel feeds pose and imu into pipeline`() = runTest {
         val fakePipeline = FakeLabFusionPipeline()
         val viewModel = LabViewModel(fakePipeline)
 
@@ -116,12 +275,5 @@ class LabViewModelTest {
 
         assertEquals(1, fakePipeline.fedPoses.size)
         assertEquals(1, fakePipeline.fedImu.size)
-
-        viewModel.triggerSwing("session-1", DrillType.FOREHAND_FLAT)
-        testScheduler.advanceUntilIdle()
-
-        assertNotNull(viewModel.latestFusedSwing.value)
-        assertEquals("session-1", viewModel.latestFusedSwing.value?.sessionId)
-        assertNotNull(viewModel.latestAnomalyReport.value)
     }
 }
