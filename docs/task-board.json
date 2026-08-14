@@ -485,6 +485,20 @@
       "retry_count": 0,
       "created_at": "2026-08-14T13:18:09Z",
       "updated_at": "2026-08-14T13:23:49Z"
+    },
+    {
+      "id": "TASK-033",
+      "title": "5단계 통합 운동 체인(Kinetic Chain) 분석 엔진 구현",
+      "raw_request": "task-033 진행해",
+      "target_project": "TennisDocAI",
+      "depends_on": [
+        "TASK-032"
+      ],
+      "spec_path": "docs/specs/TASK-033-kinetic-chain-5stage-analysis.md",
+      "status": "SPEC_READY",
+      "retry_count": 0,
+      "created_at": "2026-08-14T13:25:06Z",
+      "updated_at": "2026-08-14T13:25:06Z"
     }
   ]
 }
