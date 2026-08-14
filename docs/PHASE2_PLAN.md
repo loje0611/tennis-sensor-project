@@ -1,7 +1,7 @@
 # 🧱 Phase 2 실행 계획 (Task Backlog)
 
-> **최종 갱신**: 2026-08-11 (A그룹 완료 — TASK-009~018 10개 task 전원 완료 반영, §8.3·§8.5 최신화)
-> **문서 성격**: Phase 2에서 생성할 **task 후보 목록과 순서**를 보존하는 실행 계획서.
+> **최종 갱신**: 2026-08-14 (Phase 2 전체 완결 — TASK-009~028 20개 task 전원 완료 반영)
+> **문서 성격**: Phase 2에서 생성 및 완료된 **task 목록과 최종 상태**를 보존하는 실행 계획 및 마감 기록서.
 > - 단계 계획의 SSOT는 루트 [`README.md`](../README.md#-제품-비전-및-단계별-로드맵)입니다.
 > - 각 결정의 **근거(Why)** 는 [`PRODUCT_DIRECTION.md`](PRODUCT_DIRECTION.md)에 있습니다.
 > - 실제 task 등록 상태는 [`task-board.json`](task-board.json)이 SSOT입니다.
@@ -70,7 +70,8 @@ README 로드맵 기준: **Gradle 멀티모듈 분리(`:core:*` / `:feature:*`) 
 | **TASK-015** | `:core:analysis` 추출 (Kinematic · Coaching · **Edge Impulse NDK**) | `[011, 013, 014]` | `KinematicAnalyzerTest`·`CoachingEngineTest`·`VolleyDetectorTest`·`SwingInferenceBufferTest` 통과 + `verifyJniBindings` 유지 | ✅ |
 | **TASK-016** | **`:feature:history` 추출 준비 — 결합 해소 리팩터링 (§4.4)** | `[012, 014, 015]` | 이력 화면의 `:app`·`:core:analysis` 참조 0건 | ✅ |
 | **TASK-017** | `:feature:history` 모듈 신설 및 이관 | `[016]` | 이력 조회 화면 컴파일 + 모듈 독립 검증 | ✅ |
-| **TASK-018** | `:feature:match` 이관 및 v1 내비게이션 비활성화(보존) | `[010, 011, 012, 015]` | 라우트 목록에 match 부재 + 모듈 독립 컴파일 | ▶ 다음 |
+| **TASK-018** | `:feature:match` 이관 및 v1 내비게이션 비활성화(보존) | `[010, 011, 012, 015]` | 라우트 목록에 match 부재 + 모듈 독립 컴파일 | ✅ |
+
 
 ### 4.1 발견·수정된 결함: JNI 심볼이 개명을 따라가지 않음 (TASK-013)
 
@@ -159,13 +160,13 @@ TASK-012에서는 `SwingHistoryRepository`를 `:app`에 남겨 회피했으나, 
 
 D-9.2에 따라 **`:core:vision`(순수 `kotlin("jvm")` 모듈)** 에 구현합니다. Android 의존이 없으므로 계측 기기 없이 검증됩니다.
 
-| 예정 ID | 제목 | 원본 (Phase 1 산출물) | depends_on |
-|---|---|---|---|
-| **TASK-019** | `:core:vision` 모듈 + `PoseFrame` 데이터 계약 + 관절 각도 계산 | `src/angle_calculator.py` (TASK-002) | `[009]` |
-| **TASK-020** | 속도 계산 + 다중 스윙 임팩트 감지 | `src/impact_detector.py` (TASK-003) | `[019]` |
-| **TASK-021** | 스윙 궤적 분류 (Topspin / Flat / Slice) | `src/swing_path.py` (TASK-004) | `[020]` |
-| **TASK-022** | 운동 체인 분석 | `src/kinetic_chain.py` (TASK-005) | `[020]` |
-| **TASK-023** | 스윙 진단 · 피드백 생성 | `src/swing_diagnosis.py` (TASK-006) | `[019, 021, 022]` |
+| 실제 ID (예정) | 제목 | 원본 (Phase 1 산출물) | depends_on | 상태 |
+|---|---|---|---|:---:|
+| **TASK-021** (019) | `:core:vision` 모듈 + `PoseFrame` 데이터 계약 + 관절 각도 계산 | `src/angle_calculator.py` (TASK-002) | `[009, 020]` | ✅ 완료 |
+| **TASK-022** (020) | 속도 계산 + 다중 스윙 임팩트 감지 | `src/impact_detector.py` (TASK-003) | `[009, 021]` | ✅ 완료 |
+| **TASK-023** (021) | 스윙 궤적 분류 (Topspin / Flat / Slice) | `src/swing_path.py` (TASK-004) | `[009, 022]` | ✅ 완료 |
+| **TASK-024** (022) | 운동 체인 분석 | `src/kinetic_chain.py` (TASK-005) | `[009, 022]` | ✅ 완료 |
+| **TASK-025** (023) | 스윙 진단 · 피드백 생성 | `src/swing_diagnosis.py` (TASK-006) | `[009, 021, 023, 024]` | ✅ 완료 |
 
 ### 골든 픽스처 원칙 (필수)
 
@@ -179,47 +180,44 @@ Python 쪽에서 입출력 골든 픽스처(JSON)를 추출해 Kotlin 테스트 
 
 ---
 
-## 6. C그룹 — 카메라 · MediaPipe
+## 6. C그룹 — 카메라 · MediaPipe 및 내비게이션 통합
 
-| 예정 ID | 제목 | depends_on | 비고 |
-|---|---|---|---|
-| **TASK-024** | MediaPipe Pose Landmarker 통합 → `PoseFrame` 산출 | `[009, 019]` + **SPIKE-01** | Android SDK 바인딩은 D-9.2에 따라 `:feature:lab`에 배치 |
-| **TASK-025** | CameraX 프레임 파이프라인 (`:feature:lab` 골격) | `[024]` | |
+| 실제 ID (예정) | 제목 | depends_on | 비고 | 상태 |
+|---|---|---|---|:---:|
+| **TASK-026** (024) | MediaPipe Pose Landmarker 통합 → `PoseFrame` 산출 | `[009, 021]` + **SPIKE-01** | `:feature:lab` 모듈 | ✅ 완료 |
+| **TASK-027** (025) | CameraX 프레임 파이프라인 (`:feature:lab` 골격/오버레이) | `[009, 021, 026]` | 480p 30fps 고정 | ✅ 완료 |
+| **TASK-028** (신규) | `:feature:lab` 내비게이션 통합 (`AppRoutes.LAB` 및 메인 BottomBar 배선) | `[009, 010, 027]` | 메인 라우트 배선 | ✅ 완료 |
 
-CameraX·MediaPipe 의존성은 현재 `libs.versions.toml`에 없습니다(후속조치 #4). TASK-009의 버전 카탈로그 정비 또는 TASK-024에서 도입합니다.
+CameraX·MediaPipe 의존성은 `libs.versions.toml` 및 `:feature:lab`에 성공적으로 도입되었습니다.
 
 ---
 
 ## 7. 의존 그래프
 
 ```text
-SPIKE-01 (정규 task 아님) ──────────────────────────────────┐
-                                                            │
-009 ─┬─ 010 ──────────────┬─ 016                            │
-     ├─ 011 ─┐            │                                 │
-     ├─ 012 ─┼────────────┤                                 │
-     ├─ 013 ─┼─ 015 ──────┴─ 017                            │
-     ├─ 014 ─┘                                              │
-     │                                                      │
-     └─ 018 ─┬─ 019 ─┬─ 020 ─┬─ 022                         │
-             │       └─ 021 ─┘                              │
-             └────────── 023 ◀─────────────────────────────┘
-                          └─ 024
+SPIKE-01 (선행 스파이크) ────────────────────────────────────────────────────────┐
+                                                                               │
+009 ─┬─ 010 ──────────────┬─ 016 ─ 017 ──┐                                     │
+     ├─ 011 ─┐            │              │                                     │
+     ├─ 012 ─┼────────────┤              │                                     │
+     ├─ 013 ─┼─ 015 ──────┴──────────────┼─ 018 ─ 019 ─ 020                    │
+     ├─ 014 ─┘                           │               │                     │
+     │                                   │               └─ 021 ─┬─ 022 ─┬─ 023│
+     │                                   │                       │       ├─ 024│
+     │                                   │                       └─ 025 ─┘     │
+     │                                   │                           │         │
+     └───────────────────────────────────┴───────────────────────────┴─── 026 ◀┘
+                                                                           │
+                                                                          027 ─ 028 (Phase 2 완결)
 ```
 
-정확한 의존 관계는 §4·§5·§6 표의 `depends_on`이 SSOT이며, 위 그림은 흐름 요약입니다.
-
-- **015**(`:core:analysis`)는 **011**(sensor) · **013**(JNI 복구) · **014**(model)에 의존합니다.
-- **016**(`:feature:history`)은 **010**(ui) · **012**(data) · **014**(model)에 의존합니다.
-- **017**(`:feature:match`)은 **010** · **011** · **012** · **015**에 의존합니다.
-
-비순환이며, A그룹과 B그룹은 TASK-009 이후 서로 독립적으로 진행 가능합니다. 다만 **단일 task 처리 제약** 때문에 실제 실행은 순차입니다.
+정확한 의존 관계는 §4·§5·§6 표의 `depends_on`이 SSOT입니다.
 
 ---
 
 ## 8. 실행 규칙
 
-- PM은 계획 전체를 사용자에게 먼저 보고한 뒤 **첫 task 하나만 생성·개시**합니다(`prompts/pm-agent.md`). 위 16개를 한꺼번에 등록하는 것은 규약 위반입니다.
+- PM은 계획 전체를 사용자에게 먼저 보고한 뒤 **첫 task 하나만 생성·개시**합니다(`prompts/pm-agent.md`).
 - 각 task가 `DONE` 또는 `BLOCKED`에 도달한 뒤 다음 task를 생성합니다.
 - 기존 task의 요구사항 결함이 발견되면 신규 등록이 아니라 **Step 1A 명세 개정**(`AGENT_WORKFLOW.md` §5)으로 처리합니다.
 - **PM은 문서 변경을 인계 전에 커밋합니다.** 커밋되지 않은 변경은 경계 검사에서 Developer의 무단 수정과 구별되지 않아 원복됩니다(§8.1).
@@ -227,46 +225,18 @@ SPIKE-01 (정규 task 아님) ────────────────�
 ### 8.1 사례: 미커밋 PM 문서가 원복된 건 (TASK-013)
 
 TASK-013 진행 중 본 문서의 PM 수정본이 **Tester의 경계 위반 판정을 받아 Developer가 원복**했습니다.
-
-- **경위**: PM이 본 문서를 수정한 뒤 커밋하지 않은 상태로 `turn.json`을 Developer에게 넘겼습니다. Tester의 경계 검사는 `git status`/`git diff` 기반이므로, 워킹 트리에 남은 PM의 변경이 **Developer가 권한 없이 수정한 것으로 보였습니다.**
-- **판정의 타당성**: Tester가 옳았습니다. 증거만으로는 누가 수정했는지 구별할 수 없고, 실제로 TASK-013 명세(FR-8)는 `AI_README.md`와 `AGENT_WORKFLOW.md`만 허용했습니다.
-- **교훈**: 이는 `prompts/developer-agent.md`에서 고쳤던 **일괄 스테이징 결함과 같은 계열**입니다. 커밋되지 않은 상태가 task 경계를 넘어 새어나가면 소유자가 불분명해집니다. PM도 동일 규율을 따라야 합니다.
+- **교훈**: 커밋되지 않은 상태가 task 경계를 넘어 새어나가면 소유자가 불분명해집니다. PM도 동일 규율을 따라야 합니다.
 
 ### 8.2 A그룹 중간 점검 결과 (2026-08-07)
 
-TASK-015 완료 시점에 A그룹 전체를 감사한 결과입니다.
+TASK-015 완료 시점에 A그룹 전체를 감사한 결과이며, 식별된 기술 부채는 TASK-020에서 전원 일괄 정리 완료되었습니다.
 
-**확인된 것**
+### 8.3 최종 진행 현황 (2026-08-14 기준 — Phase 2 전체 20개 Task 완결)
 
-- `:app`에서 5개 모듈(`model`·`ui`·`sensor`·`data`·`analysis`)이 분리되었고, 선언(`verifyModuleDependencies`)과 실제 의존성이 일치합니다. 모듈 간 실제 참조는 `:core:analysis → :core:model` 하나뿐으로, 그래프가 계획보다 단순합니다.
-- `verifyModuleDependencies`·`verifyJniBindings` 두 검증 태스크가 자동화되었고, TASK-011·012·013·014·015의 **변이 검증이 모두 실제로 실패·복구**했습니다. 검사가 형식만 통과하는 것이 아님이 실증되었습니다.
-- `retry_count`는 009가 2, 013이 1(PM 절차 오류), 나머지 5건은 0입니다. 스캐폴딩 이후 안정적입니다.
-
-**주의: 빈 모듈의 초록색은 검증이 아닙니다**
-
-`:core:vision`·`:feature:match`·`:feature:history`·`:feature:lab`은 TASK-009에서 스캐폴딩만 되어 **소스가 0개**입니다. 이 모듈들은 `test`가 항상 성공하고 `verifyModuleDependencies`도 무조건 통과합니다. 016~018·B그룹이 실제 코드를 채우기 전까지 **전체 그린은 실제보다 낙관적으로 보입니다.**
-
-> **갱신(2026-08-08)**: TASK-017로 `:feature:history`는 소스를 갖게 되어 위 경고에서 해제되었습니다. 다만 이 모듈에는 **단위 테스트가 0건**이라 `test` 성공은 여전히 근거가 되지 못하며, 실질 검증은 모듈 단독 빌드(`:feature:history:assembleDebug`)와 의존성 규칙 변이로 대체했습니다. `:core:vision`·`:feature:match`·`:feature:lab` 3개는 경고가 그대로 유효합니다.
-
-**정리 대상(부채)**
-
-- **ProGuard 규칙 중복** — JNI keep 규칙이 `app/proguard-rules.pro`와 `core/analysis/consumer-rules.pro` 양쪽에 있습니다. 규칙이 대상 코드와 함께 이동하도록 모듈 쪽만 남기는 것이 원칙입니다.
-- **사문화된 ProGuard 규칙** — `...tennisdoc.data.db.**` 3줄은 가리키는 코드가 `main`에 존재하지 않습니다.
-- **`SwingHistoryRepository.CSV_TIMESTAMP_FORMAT`의 가시성** (TASK-016) — 테스트에서 기대값을 만들기 위해 `private`에서 공개 `val`로 넓혔습니다. `SimpleDateFormat`은 **스레드 안전하지 않으므로** 공개된 단일 인스턴스를 여러 호출자가 동시에 쓰면 깨집니다. 현재 사용처는 저장소 내부의 단일 IO 경로뿐이라 실제 위험은 없으나, 공개 API로 둘 이유는 없습니다. 테스트가 서식 문자열만 참조하도록 바꾸고 다시 좁히는 것이 맞습니다.
-- **`HistoryScreen(debugModeEnabled: Boolean = false)`의 기본값** (TASK-016) — ~~호출자가 전달을 누락해도 컴파일이 통과하고 디버그 UI가 조용히 꺼집니다.~~ **해소됨(TASK-017).** 기본값을 제거해 필수 인자로 만들었고, 인자를 빼면 `:app:compileDebugKotlin`이 실패함을 변이로 확인했습니다.
-- **사문화된 `hiltViewModel` import** (TASK-017) — `SessionDetailScreen.kt`가 `androidx.hilt.navigation.compose.hiltViewModel`을 import하지만, ViewModel 획득을 `:app`의 내비게이션 진입점으로 올린 뒤 **모듈 내 호출이 0건**입니다. 그 결과 `:feature:history`의 `hilt-navigation-compose` 의존성도 함께 사문화되었습니다. 위의 ProGuard 사문화 규칙과 **같은 계열**이며, 죽은 선언은 이후 어느 것이 살아 있는지 판단을 흐립니다. import와 의존성을 함께 제거하는 것이 맞습니다.
-
-위 항목들은 동작에는 무해하나, 죽은 규칙과 선언이 쌓이면 이후 어느 것이 살아 있는지 판단할 수 없게 됩니다. A그룹 완료(018) 후 일괄 정리합니다.
-
-> **`:core:vision`이 순수 JVM 모듈인 것은 결함이 아니라 설계입니다**(D-9.2). CameraX·MediaPipe Android SDK 래퍼는 `:core:vision`이 아니라 **`:feature:lab`** 에 둡니다. B그룹 명세 작성 시 이 경계를 혼동하지 마십시오.
-
----
-
-### 8.3 진행 현황 (2026-08-11 기준 — B그룹 전원 완결)
-
-- **A그룹 (TASK-009~018, 019, 020)**: 멀티모듈 분리, `:feature:*` 이관, Repository 인터페이스 추출, 기술 부채 정리 12개 태스크 전원 완료 (`DONE`).
-- **B그룹 (TASK-021~025)**: `:core:vision` (순수 Kotlin/JVM) 비전 알고리즘 포팅 5개 태스크 전원 완료 (`DONE`, 골든 픽스처 100% 검증 통과).
-- **다음 차례**: C그룹 (CameraX / MediaPipe Pose Landmarker 통합 — `TASK-026`부터 시작).
+- **A그룹 (TASK-009~020, 12개)**: 멀티모듈 분리, `:feature:*` 이관, Repository 인터페이스 추출, 기술 부채 정리 전원 완료 (`DONE`).
+- **B그룹 (TASK-021~025, 5개)**: `:core:vision` (순수 Kotlin/JVM) 비전 알고리즘 포팅 5개 태스크 전원 완료 (`DONE`, 골든 픽스처 100% 검증 통과).
+- **C그룹 (TASK-026~028, 3개)**: MediaPipe Pose Landmarker 통합, CameraX 파이프라인 및 `:app` 메인 내비게이션 통합 3개 태스크 전원 완료 (`DONE`).
+- **다음 차례**: Phase 3 (Lab 모드 MVP — 센서-비전 융합, 임팩트 앵커 동기화, Fusion 엔진).
 
 | Task | 내용 / 관련 모듈 | 상태 |
 |---|---|---|
@@ -279,56 +249,17 @@ TASK-015 완료 시점에 A그룹 전체를 감사한 결과입니다.
 | **TASK-024** | `:core:vision` 골반-어깨-손목 운동 체인 역학 분석 (`kinetic_chain.py`) | ✅ `DONE` (골든 픽스처 통과) |
 | **TASK-025** | `:core:vision` 스윙 종합 진단 및 피드백 태그 생성 (`swing_diagnosis.py`) | ✅ `DONE` (골든 픽스처 통과) |
 | **TASK-026** | `:feature:lab` MediaPipe Pose Landmarker SDK 연동 및 `PoseFrame` 추출 | ✅ `DONE` |
-| **TASK-027** | `:feature:lab` CameraX 프레임 파이프라인 및 Preview/Pose Overlay 구현 | ▶️ **진행 중 (`SPEC_READY` — Developer 인계)** |
-
-실제 등록 상태는 언제나 [`task-board.json`](task-board.json)이 SSOT입니다.
-
-### 8.3.1 A/B그룹 추가 테스트 gap-fill (2026-08-11)
-
-A·B그룹 QA 공백 보강을 수행했다. **실기기/계측·Edge Impulse 추론 정확도는 A그룹 리뷰 결정에 따라 제외.**
-
-| # | 항목 | 결과 |
-|---|---|---|
-| 1 | `:feature:match` ViewModel·simulateSwing 분기 | PASS |
-| 2 | 디버그 10회 탭 (공유 임계값) | PASS |
-| 3 | History·내비 계약 스모크 | PASS |
-| 4 | 비전 파이프라인 E2E | PASS |
-| 5 | 비전 경계·실패모드 | PASS |
-| 6 | 세션 상태 순수 로직 | PASS |
-| 7 | Compose UI 스모크 | 보류 |
-
-상세·명령·스위트 수(103 / 0 failures): [`docs/qa/A-B-group-gap-fill-report.md`](qa/A-B-group-gap-fill-report.md).
-
-### 8.4 TASK-017 결과 — 라이브러리 모듈 Hilt는 동작한다
-
-본 task의 최대 리스크는 기능 이관이 아니라 **이 저장소에 전례가 없던 "라이브러리 모듈에서의 Hilt"** 였습니다. 결과적으로 1회에 통과했고, 이후 `:feature:*` 이관(018·B그룹)은 더 이상 미검증 인프라를 다루지 않습니다.
-
-- **구성**: `feature/history/build.gradle.kts`에 `tennisdoc.android.library.compose` + KSP + Hilt 플러그인을 적용하고, 프로젝트 의존성은 `:core:model`·`:core:ui`·`:core:data` 3개로 한정했습니다. Hilt **제공자(`AppModule`)는 `:app`에 그대로 두었고**, feature 모듈에는 모듈을 신설하지 않았습니다 — 복제하면 동일 타입에 바인딩이 둘 생깁니다.
-- **`hiltViewModel()`의 위치**: `SessionDetailScreen`이 본문에서 스스로 ViewModel을 얻던 구조를 **파라미터 주입으로 바꾸고**, 호출을 `:app`의 `SESSION_DETAIL` composable로 올렸습니다. 그 지점은 `NavBackStackEntry` 스코프이므로 `SavedStateHandle`에 `sessionId`가 정상적으로 채워집니다. **이 스코프를 잘못 잡으면 상세 화면이 항상 빈 상태가 되며 컴파일로는 드러나지 않습니다** — 018에서 같은 패턴을 쓸 때 반드시 확인하십시오.
-
-**"Hilt가 설정된 것처럼 보이는" 상태를 검사로 배제했습니다**
-
-플러그인만 적용하고 컴파일러(`ksp`)를 빠뜨려도 애노테이션은 조용히 무시되고 빌드는 통과합니다. 그래서 명세는 **생성 산출물의 실재**를 인수 조건으로 요구했고, `feature/history/build/generated/ksp/`에서 `HistoryViewModel_Factory`·`SessionDetailViewModel_HiltModules` 등이 확인되었습니다. 018 이후의 feature 모듈 명세에도 이 조건을 유지하십시오.
-
-**변이 검증 2건이 실제로 실패했습니다**
-
-`:core:analysis` 의존성을 임시로 추가하자 `verifyModuleDependencies`가 `forbidden dependency`로 실패했고, `debugModeEnabled` 인자를 빼자 `:app:compileDebugKotlin`이 실패했습니다. 모듈 격리와 필수 인자화가 형식이 아니라 실효적임이 확인되었습니다.
-
-### 8.5 TASK-018 결과 — `:feature:match` 이관 및 D-2 보존 완결
-
-A그룹의 마지막 작업으로 Match 화면 및 관련 ViewModel을 `:feature:match` 모듈로 이관하고 v1 내비게이션 라우트에서 제거(비활성화)했습니다.
-
-- **결합 해소**: `PracticeScreen`이 `:app`의 `MainViewModel` 및 세션 관련 상태와 직접 결합되어 있던 것을 이벤트 콜백과 상태 파라미터 전달 방식으로 역전시켜 `:feature:match`가 `:core:model`, `:core:ui`, `:core:sensor`, `:core:data`, `:core:analysis`만 참조하는 깔끔한 모듈 경계를 완성했습니다.
-- **D-2 원칙 보존**: D-2 방침에 따라 코드를 삭제하지 않고 `:feature:match` 모듈로 격리 보존했으며, Engineering Mode 진입 경로(PracticeScreen 타이틀 10회 탭)를 보존하여 디버그 기능 및 History Mock 생성 기능이 손상되지 않도록 보호했습니다.
+| **TASK-027** | `:feature:lab` CameraX 프레임 파이프라인 및 Preview/Pose Overlay 구현 | ✅ `DONE` |
+| **TASK-028** | `:feature:lab` 내비게이션 통합 (`AppRoutes.LAB` 및 메인 BottomBar 배선) | ✅ `DONE` |
 
 ---
 
-## 9. 미확정 사항
+## 9. 미확정 사항 및 Phase 3 이관 항목
 
-- ~~**`SwingHistoryRepository`의 최종 소속**~~ — **해소됨.** `:core:data` 이전으로 확정하고 TASK-016 범위에 포함했습니다(§4.4).
-- **`service/SwingAnalysisForegroundService`·`session/`의 최종 소속** — D-9.1에서 Phase 3까지 판단 유보. A그룹 진행 중에는 `:app`에 잔류.
-- **CameraX·MediaPipe 의존성 도입 시점** — TASK-009(카탈로그 일괄) vs TASK-024(필요 시점). 도입 위치는 **`:feature:lab`으로 확정**되어 있습니다(D-9.2). `:core:vision`은 Android 의존 없는 순수 JVM 모듈로 유지합니다.
-- **SPIKE-01 결과에 따른 C그룹 재설계 여부.**
-- **ProGuard 규칙 정리(부채)** — 중복 1건·사문화 3줄. 상세와 정리 시점은 §8.2 참조.
-- **추론 결과 정확성의 검증 수단 부재** — §4.1의 결함이 단위 테스트를 모두 통과한 근본 원인입니다. TASK-013의 `verifyJniBindings`로 **바인딩 재발**은 막혔으나, 분류 결과가 올바른지는 실기기가 필요하며 여전히 확인할 방법이 없습니다.
+- ~~**`SwingHistoryRepository`의 최종 소속**~~ — **해소됨.** `:core:data` 이전으로 확정하고 TASK-016 범위에 포함 완료.
+- ~~**CameraX·MediaPipe 의존성 도입 시점**~~ — **해소됨.** TASK-026/027에서 `:feature:lab`에 도입 완료.
+- ~~**SPIKE-01 결과에 따른 C그룹 재설계 여부**~~ — **해소됨.** 480p 29.9fps PASS 확정으로 대안 전략 불필요 확인 완료.
+- ~~**ProGuard 규칙 정리(부채)**~~ — **해소됨.** TASK-020에서 일괄 정리 완료.
+- **`service/SwingAnalysisForegroundService`·`session/`의 최종 소속** — D-9.1에 따라 Phase 3 센서-비전 융합 파이프라인 설계 시 확정.
+- **실제 센서-비전 융합 및 추론 정확도 검증** — Phase 3 실기기 Ablation 테스트로 검증 진행.
 
