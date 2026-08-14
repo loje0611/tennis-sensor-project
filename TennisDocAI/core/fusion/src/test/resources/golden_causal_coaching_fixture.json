@@ -1,0 +1,181 @@
+[
+  {
+    "name": "rule1_early_body_open_face_open",
+    "drill_type": "FOREHAND_TOPSPIN",
+    "anchor": {
+      "vision_impact_timestamp_ms": 1130,
+      "sensor_impact_timestamp_ms": 1130,
+      "time_offset_ms": 0,
+      "confidence": 0.95,
+      "is_synchronized": true
+    },
+    "chain": {
+      "is_sequential": false,
+      "total_duration_ms": 130,
+      "energy_transfer_efficiency": 45.0,
+      "stages": [
+        {"stage": "HIP", "peak_timestamp_ms": 1040, "peak_value": 400.0},
+        {"stage": "SHOULDER", "peak_timestamp_ms": 1000, "peak_value": 600.0, "delay_from_previous_ms": -40},
+        {"stage": "WRIST", "peak_timestamp_ms": 1080, "peak_value": 900.0, "delay_from_previous_ms": 80},
+        {"stage": "RACKET", "peak_timestamp_ms": 1110, "peak_value": 1500.0, "delay_from_previous_ms": 30},
+        {"stage": "IMPACT", "peak_timestamp_ms": 1130, "peak_value": 20.0, "delay_from_previous_ms": 20}
+      ]
+    },
+    "racket_impact": {
+      "roll_deg": 12.0,
+      "pitch_deg": 0.0,
+      "yaw_deg": 0.0,
+      "face_state": "OPEN",
+      "deviation_deg": 12.0
+    },
+    "expected": {
+      "tags": ["FACE_OPEN", "EARLY_BODY_OPEN", "KINETIC_FAULT"],
+      "primary_cause": "상체 조기 회전으로 인한 타점 밀림 및 페이스 열림",
+      "feedback_contains": "골반 회전이 먼저 시작된 후",
+      "explanation_contains": "상체가 골반보다 일찍 열려"
+    }
+  },
+  {
+    "name": "rule2_late_contact_face_closed",
+    "drill_type": "FOREHAND_FLAT",
+    "anchor": {
+      "vision_impact_timestamp_ms": 1130,
+      "sensor_impact_timestamp_ms": 1130,
+      "time_offset_ms": 0,
+      "confidence": 0.95,
+      "is_synchronized": true
+    },
+    "chain": {
+      "is_sequential": true,
+      "total_duration_ms": 130,
+      "energy_transfer_efficiency": 85.0,
+      "stages": [
+        {"stage": "HIP", "peak_timestamp_ms": 1000, "peak_value": 400.0},
+        {"stage": "SHOULDER", "peak_timestamp_ms": 1040, "peak_value": 600.0, "delay_from_previous_ms": 40},
+        {"stage": "WRIST", "peak_timestamp_ms": 1080, "peak_value": 900.0, "delay_from_previous_ms": 40},
+        {"stage": "RACKET", "peak_timestamp_ms": 1110, "peak_value": 1500.0, "delay_from_previous_ms": 30},
+        {"stage": "IMPACT", "peak_timestamp_ms": 1130, "peak_value": 20.0, "delay_from_previous_ms": 20}
+      ]
+    },
+    "racket_impact": {
+      "roll_deg": -12.0,
+      "pitch_deg": 0.0,
+      "yaw_deg": 0.0,
+      "face_state": "CLOSED",
+      "deviation_deg": -12.0
+    },
+    "expected": {
+      "tags": ["FACE_CLOSED", "LATE_CONTACT"],
+      "primary_cause": "타점 후방 형성으로 인한 라켓 페이스 닫힘",
+      "feedback_contains": "몸 앞쪽에서 공을 맞추도록",
+      "explanation_contains": "임팩트 타점이 몸 뒤에서"
+    }
+  },
+  {
+    "name": "rule3_kinetic_power_leak",
+    "drill_type": "FOREHAND_TOPSPIN",
+    "anchor": {
+      "vision_impact_timestamp_ms": 1130,
+      "sensor_impact_timestamp_ms": 1130,
+      "time_offset_ms": 0,
+      "confidence": 0.95,
+      "is_synchronized": true
+    },
+    "chain": {
+      "is_sequential": true,
+      "total_duration_ms": 150,
+      "energy_transfer_efficiency": 55.0,
+      "stages": [
+        {"stage": "HIP", "peak_timestamp_ms": 1000, "peak_value": 400.0},
+        {"stage": "SHOULDER", "peak_timestamp_ms": 1100, "peak_value": 600.0, "delay_from_previous_ms": 100},
+        {"stage": "WRIST", "peak_timestamp_ms": 1140, "peak_value": 900.0, "delay_from_previous_ms": 40},
+        {"stage": "RACKET", "peak_timestamp_ms": 1170, "peak_value": 1500.0, "delay_from_previous_ms": 30},
+        {"stage": "IMPACT", "peak_timestamp_ms": 1190, "peak_value": 20.0, "delay_from_previous_ms": 20}
+      ]
+    },
+    "racket_impact": {
+      "roll_deg": 0.0,
+      "pitch_deg": 0.0,
+      "yaw_deg": 0.0,
+      "face_state": "SQUARE",
+      "deviation_deg": 0.0
+    },
+    "expected": {
+      "tags": ["POWER_LEAK", "CHAIN_TIMING_DELAY"],
+      "primary_cause": "신체 분절 간 가속 전달 지연으로 인한 스윙 파워 손실",
+      "feedback_contains": "손목과 라켓의 릴리즈 타이밍",
+      "explanation_contains": "스윙 파워가 감소"
+    }
+  },
+  {
+    "name": "rule4_optimal_clean_strike",
+    "drill_type": "FOREHAND_TOPSPIN",
+    "anchor": {
+      "vision_impact_timestamp_ms": 1130,
+      "sensor_impact_timestamp_ms": 1130,
+      "time_offset_ms": 0,
+      "confidence": 0.95,
+      "is_synchronized": true
+    },
+    "chain": {
+      "is_sequential": true,
+      "total_duration_ms": 130,
+      "energy_transfer_efficiency": 95.0,
+      "stages": [
+        {"stage": "HIP", "peak_timestamp_ms": 1000, "peak_value": 400.0},
+        {"stage": "SHOULDER", "peak_timestamp_ms": 1040, "peak_value": 600.0, "delay_from_previous_ms": 40},
+        {"stage": "WRIST", "peak_timestamp_ms": 1080, "peak_value": 900.0, "delay_from_previous_ms": 40},
+        {"stage": "RACKET", "peak_timestamp_ms": 1110, "peak_value": 1500.0, "delay_from_previous_ms": 30},
+        {"stage": "IMPACT", "peak_timestamp_ms": 1130, "peak_value": 20.0, "delay_from_previous_ms": 20}
+      ]
+    },
+    "racket_impact": {
+      "roll_deg": 0.0,
+      "pitch_deg": 0.0,
+      "yaw_deg": 0.0,
+      "face_state": "SQUARE",
+      "deviation_deg": 0.0
+    },
+    "expected": {
+      "tags": ["CLEAN_STRIKE", "OPTIMAL_CHAIN", "SQUARE_FACE"],
+      "primary_cause": "완벽한 5단계 운동 체인 및 스퀘어 임팩트",
+      "feedback_contains": "현재 폼을 유지하세요",
+      "explanation_contains": "골반부터 라켓까지 순차적으로"
+    }
+  },
+  {
+    "name": "sync_failed",
+    "drill_type": "FOREHAND_TOPSPIN",
+    "anchor": {
+      "vision_impact_timestamp_ms": 1000,
+      "sensor_impact_timestamp_ms": 1250,
+      "time_offset_ms": 250,
+      "confidence": 0.0,
+      "is_synchronized": false
+    },
+    "chain": {
+      "is_sequential": false,
+      "total_duration_ms": 0,
+      "energy_transfer_efficiency": 0.0,
+      "stages": [
+        {"stage": "HIP", "peak_timestamp_ms": 0, "peak_value": 0.0},
+        {"stage": "SHOULDER", "peak_timestamp_ms": 0, "peak_value": 0.0},
+        {"stage": "WRIST", "peak_timestamp_ms": 0, "peak_value": 0.0},
+        {"stage": "RACKET", "peak_timestamp_ms": 0, "peak_value": 0.0},
+        {"stage": "IMPACT", "peak_timestamp_ms": 0, "peak_value": 0.0}
+      ]
+    },
+    "racket_impact": {
+      "roll_deg": 0.0,
+      "pitch_deg": 0.0,
+      "yaw_deg": 0.0,
+      "face_state": "SQUARE",
+      "deviation_deg": 0.0
+    },
+    "expected": {
+      "tags": ["SYNC_FAILED"],
+      "primary_cause": "센서-비전 임팩트 시간 동기화 실패",
+      "feedback_contains": "센서 연결 및 카메라 앵글"
+    }
+  }
+]
