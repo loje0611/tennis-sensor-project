@@ -1,5 +1,6 @@
 package io.github.loje0611.tennisdoc.lab
 
+import androidx.camera.view.PreviewView
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
@@ -38,5 +39,9 @@ class LabCameraPreviewInstrumentedTest {
             composeRule.onAllNodes(hasText("FPS", substring = true)).fetchSemanticsNodes().isNotEmpty()
         }
         composeRule.onNodeWithText("FPS", substring = true).assertIsDisplayed()
+        org.junit.Assert.assertEquals(
+            PreviewView.ScaleType.FILL_CENTER,
+            DeviceTestUtils.previewViewScaleType(),
+        )
     }
 }

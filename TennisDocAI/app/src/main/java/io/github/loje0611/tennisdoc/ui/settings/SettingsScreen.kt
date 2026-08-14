@@ -1,5 +1,7 @@
 package io.github.loje0611.tennisdoc.ui.settings
 
+import android.Manifest
+import android.os.Build
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -40,15 +42,32 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import io.github.loje0611.tennisdoc.session.SwingAnalysisSessionState
 import io.github.loje0611.tennisdoc.core.ui.theme.MichromaFont
 import io.github.loje0611.tennisdoc.core.ui.theme.SwingTheme
 
+private fun bleRuntimePermissions(): List<String> = buildList {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        add(Manifest.permission.POST_NOTIFICATIONS)
+    }
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+        add(Manifest.permission.BLUETOOTH_SCAN)
+        add(Manifest.permission.BLUETOOTH_CONNECT)
+        add(Manifest.permission.ACCESS_FINE_LOCATION)
+    } else {
+        add(Manifest.permission.ACCESS_FINE_LOCATION)
+        add(Manifest.permission.BLUETOOTH)
+        add(Manifest.permission.BLUETOOTH_ADMIN)
+    }
+}
+
+@OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun SettingsScreen(
     viewModel: SettingsViewModel,
@@ -60,6 +79,8 @@ fun SettingsScreen(
     val step by viewModel.calibrationStep.collectAsStateWithLifecycle()
     val isDarkMode by viewModel.isDarkMode.collectAsStateWithLifecycle()
     val isDebugMode by SwingAnalysisSessionState.debugModeEnabled.collectAsStateWithLifecycle()
+
+    val permissionsState = rememberMultiplePermissionsState(bleRuntimePermissions())
 
     LaunchedEffect(Unit) {
         viewModel.calibrationResultEvent.collect { success ->
@@ -107,16 +128,32 @@ fun SettingsScreen(
                         )
                     }
                 } else {
-                    Text("라켓을 평평한 바닥에 가만히 내려놓은 상태에서 '시작'을 눌러주세요.")
+                    Column {
+                        Text("라켓을 평평한 바닥에 가만히 내려놓은 상태에서 '시작'을 눌러주세요.")
+                        if (!permissionsState.allPermissionsGranted) {
+                            Spacer(modifier = Modifier.height(12.dp))
+                            Text(
+                                text = "블루투스 및 위치 권한이 필요합니다.",
+                                color = SwingTheme.colors.danger,
+                                style = MaterialTheme.typography.bodySmall,
+                            )
+                        }
+                    }
                 }
             },
             confirmButton = {
                 if (step == CalibrationStep.IDLE) {
                     TextButton(
-                        onClick = { viewModel.startAutoCalibration() }
+                        onClick = {
+                            if (permissionsState.allPermissionsGranted) {
+                                viewModel.startAutoCalibration()
+                            } else {
+                                permissionsState.launchMultiplePermissionRequest()
+                            }
+                        }
                     ) {
                         Text(
-                            "시작",
+                            if (permissionsState.allPermissionsGranted) "시작" else "권한 허용",
                             color = SwingTheme.colors.neonPurpleSettings,
                             fontWeight = FontWeight.Bold
                         )

@@ -1,6 +1,7 @@
 package io.github.loje0611.tennisdoc.testutil
 
 import android.Manifest
+import android.os.Build
 import android.view.accessibility.AccessibilityNodeInfo
 import androidx.camera.view.PreviewView
 import androidx.test.espresso.Espresso.onView
@@ -26,6 +27,42 @@ object DeviceTestUtils {
             instrumentation.targetContext.packageName,
             Manifest.permission.CAMERA,
         )
+    }
+
+    fun grantBleRuntimePermissions() {
+        val instrumentation = InstrumentationRegistry.getInstrumentation()
+        val pkg = instrumentation.targetContext.packageName
+        if (Build.VERSION.SDK_INT >= 33) {
+            instrumentation.uiAutomation.grantRuntimePermission(pkg, Manifest.permission.POST_NOTIFICATIONS)
+        }
+        if (Build.VERSION.SDK_INT >= 31) {
+            instrumentation.uiAutomation.grantRuntimePermission(pkg, Manifest.permission.BLUETOOTH_SCAN)
+            instrumentation.uiAutomation.grantRuntimePermission(pkg, Manifest.permission.BLUETOOTH_CONNECT)
+            instrumentation.uiAutomation.grantRuntimePermission(pkg, Manifest.permission.ACCESS_FINE_LOCATION)
+        } else {
+            instrumentation.uiAutomation.grantRuntimePermission(pkg, Manifest.permission.ACCESS_FINE_LOCATION)
+        }
+    }
+
+    fun revokeBleRuntimePermissions() {
+        val instrumentation = InstrumentationRegistry.getInstrumentation()
+        val pkg = instrumentation.targetContext.packageName
+        if (Build.VERSION.SDK_INT >= 31) {
+            instrumentation.uiAutomation.revokeRuntimePermission(pkg, Manifest.permission.BLUETOOTH_SCAN)
+            instrumentation.uiAutomation.revokeRuntimePermission(pkg, Manifest.permission.BLUETOOTH_CONNECT)
+            instrumentation.uiAutomation.revokeRuntimePermission(pkg, Manifest.permission.ACCESS_FINE_LOCATION)
+        } else {
+            instrumentation.uiAutomation.revokeRuntimePermission(pkg, Manifest.permission.ACCESS_FINE_LOCATION)
+        }
+    }
+
+    fun previewViewScaleType(): PreviewView.ScaleType {
+        waitForPreviewViewDisplayed()
+        val holder = arrayOfNulls<PreviewView.ScaleType>(1)
+        onView(isAssignableFrom(PreviewView::class.java)).check { view, _ ->
+            holder[0] = (view as PreviewView).scaleType
+        }
+        return requireNotNull(holder[0]) { "PreviewView scaleType missing" }
     }
 
     fun waitForPreviewViewDisplayed(timeoutMs: Long = 20_000L) {

@@ -17,14 +17,20 @@ import java.lang.reflect.Proxy
 @Config(sdk = [28])
 class PoseAnalysisAnalyzerTest {
 
-    private fun createMockImageProxy(shouldThrowOnBitmap: Boolean, onClose: () -> Unit): ImageProxy {
+    private fun createMockImageProxy(
+        shouldThrowOnBitmap: Boolean,
+        rotationDegrees: Int = 0,
+        bitmapWidth: Int = 640,
+        bitmapHeight: Int = 480,
+        onClose: () -> Unit,
+    ): ImageProxy {
         val imageInfo = Proxy.newProxyInstance(
             ImageInfo::class.java.classLoader,
             arrayOf(ImageInfo::class.java)
         ) { _, method, _ ->
             when (method.name) {
                 "getTimestamp" -> 123456789L
-                "getRotationDegrees" -> 0
+                "getRotationDegrees" -> rotationDegrees
                 else -> null
             }
         } as ImageInfo
@@ -43,7 +49,7 @@ class PoseAnalysisAnalyzerTest {
                     if (shouldThrowOnBitmap) {
                         throw RuntimeException("Simulated bitmap failure")
                     }
-                    Bitmap.createBitmap(640, 480, Bitmap.Config.ARGB_8888)
+                    Bitmap.createBitmap(bitmapWidth, bitmapHeight, Bitmap.Config.ARGB_8888)
                 }
                 "hashCode" -> 1
                 "equals" -> false
@@ -60,11 +66,15 @@ class PoseAnalysisAnalyzerTest {
         var processImageCalled = false
         var lastFrameIndex: Long? = null
         var lastTimestampMs: Long? = null
+        var lastBitmapWidth: Int = -1
+        var lastBitmapHeight: Int = -1
         override val isInitialized: Boolean = true
         override fun processImage(bitmap: Bitmap, frameIndex: Long, timestampMs: Long): PoseFrame? {
             processImageCalled = true
             lastFrameIndex = frameIndex
             lastTimestampMs = timestampMs
+            lastBitmapWidth = bitmap.width
+            lastBitmapHeight = bitmap.height
             if (throwOnProcess) throw RuntimeException("landmarker failure")
             return returnFrame
         }
@@ -129,5 +139,44 @@ class PoseAnalysisAnalyzerTest {
             // processImage failure may propagate; close() must still run
         }
         assertTrue("ImageProxy.close() must be called when processImage throws", closeCalled)
+    }
+
+    @Test
+    fun analyze_rotatesBitmap90DegreesBeforeLandmarker() {
+        val stubWrapper = StubLandmarkerWrapper(PoseFrame(emptyList()))
+        val analyzer = PoseAnalysisAnalyzer(stubWrapper) { }
+
+        analyzer.analyze(
+            createMockImageProxy(
+                shouldThrowOnBitmap = false,
+                rotationDegrees = 90,
+                bitmapWidth = 640,
+                bitmapHeight = 480,
+                onClose = {},
+            ),
+        )
+
+        assertTrue(stubWrapper.processImageCalled)
+        assertEquals(480, stubWrapper.lastBitmapWidth)
+        assertEquals(640, stubWrapper.lastBitmapHeight)
+    }
+
+    @Test
+    fun analyze_keepsBitmapSizeWhenRotationIsZero() {
+        val stubWrapper = StubLandmarkerWrapper(PoseFrame(emptyList()))
+        val analyzer = PoseAnalysisAnalyzer(stubWrapper) { }
+
+        analyzer.analyze(
+            createMockImageProxy(
+                shouldThrowOnBitmap = false,
+                rotationDegrees = 0,
+                bitmapWidth = 640,
+                bitmapHeight = 480,
+                onClose = {},
+            ),
+        )
+
+        assertEquals(640, stubWrapper.lastBitmapWidth)
+        assertEquals(480, stubWrapper.lastBitmapHeight)
     }
 }

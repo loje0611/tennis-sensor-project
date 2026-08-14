@@ -14,7 +14,9 @@ import io.github.loje0611.tennisdoc.core.vision.model.PoseFrame
 @Composable
 fun PoseOverlayCanvas(
     poseFrame: PoseFrame?,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    videoAspectRatio: Float = 0.75f, // 3:4 portrait aspect ratio (480x640)
+    isFillCenter: Boolean = true
 ) {
     val pointColor = MaterialTheme.colorScheme.primary
     val lineColor = MaterialTheme.colorScheme.secondary
@@ -22,16 +24,52 @@ fun PoseOverlayCanvas(
     Canvas(modifier = modifier.fillMaxSize()) {
         if (poseFrame == null || poseFrame.landmarks.isEmpty()) return@Canvas
 
-        val w = size.width
-        val h = size.height
+        val viewWidth = size.width
+        val viewHeight = size.height
+        if (viewWidth <= 0f || viewHeight <= 0f) return@Canvas
+
+        val viewAspect = viewWidth / viewHeight
+
+        val displayedWidth: Float
+        val displayedHeight: Float
+        val offsetX: Float
+        val offsetY: Float
+
+        if (isFillCenter) {
+            if (viewAspect < videoAspectRatio) {
+                // View is taller than video (crop left & right)
+                displayedHeight = viewHeight
+                displayedWidth = viewHeight * videoAspectRatio
+                offsetX = (viewWidth - displayedWidth) / 2f
+                offsetY = 0f
+            } else {
+                // View is wider than video (crop top & bottom)
+                displayedWidth = viewWidth
+                displayedHeight = viewWidth / videoAspectRatio
+                offsetX = 0f
+                offsetY = (viewHeight - displayedHeight) / 2f
+            }
+        } else { // FIT_CENTER
+            if (viewAspect < videoAspectRatio) {
+                displayedWidth = viewWidth
+                displayedHeight = viewWidth / videoAspectRatio
+                offsetX = 0f
+                offsetY = (viewHeight - displayedHeight) / 2f
+            } else {
+                displayedHeight = viewHeight
+                displayedWidth = viewHeight * videoAspectRatio
+                offsetX = (viewWidth - displayedWidth) / 2f
+                offsetY = 0f
+            }
+        }
 
         val landmarks = poseFrame.landmarks
 
         fun getPoint(index: Int): Offset? {
             if (index !in landmarks.indices) return null
             val lm = landmarks[index]
-            if (lm.visibility < 0.5f) return null // Hide if low visibility
-            return Offset(lm.x * w, lm.y * h)
+            if (lm.visibility < 0.5f || lm.isNan) return null
+            return Offset(offsetX + lm.x * displayedWidth, offsetY + lm.y * displayedHeight)
         }
 
         fun drawBone(startIndex: Int, endIndex: Int) {
@@ -42,7 +80,7 @@ fun PoseOverlayCanvas(
                     color = lineColor,
                     start = start,
                     end = end,
-                    strokeWidth = 2.dp.toPx(),
+                    strokeWidth = 3.dp.toPx(),
                     cap = StrokeCap.Round
                 )
             }
