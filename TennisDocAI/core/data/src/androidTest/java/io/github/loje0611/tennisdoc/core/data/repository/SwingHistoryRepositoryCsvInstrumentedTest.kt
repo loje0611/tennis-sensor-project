@@ -33,7 +33,7 @@ class SwingHistoryRepositoryCsvInstrumentedTest {
         database = Room.inMemoryDatabaseBuilder(context, TennisDocDatabase::class.java)
             .allowMainThreadQueries()
             .build()
-        repository = SwingHistoryRepository(database)
+        repository = SwingHistoryRepositoryImpl(database)
     }
 
     @After

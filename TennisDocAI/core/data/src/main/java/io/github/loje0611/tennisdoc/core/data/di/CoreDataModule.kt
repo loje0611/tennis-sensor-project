@@ -8,6 +8,8 @@ import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import io.github.loje0611.tennisdoc.core.data.db.TennisDocDatabase
+import io.github.loje0611.tennisdoc.core.data.db.dao.LabRawRecordDao
+import io.github.loje0611.tennisdoc.core.data.db.dao.SwingSessionDao
 import io.github.loje0611.tennisdoc.core.data.repository.CalibrationStore
 import io.github.loje0611.tennisdoc.core.data.repository.SwingHistoryRepository
 import io.github.loje0611.tennisdoc.core.data.repository.SwingHistoryRepositoryImpl
@@ -29,6 +31,16 @@ abstract class CoreDataModule {
         @Singleton
         fun provideDatabase(@ApplicationContext context: Context): TennisDocDatabase =
             TennisDocDatabase.getInstance(context)
+
+        @Provides
+        @Singleton
+        fun provideSwingSessionDao(database: TennisDocDatabase): SwingSessionDao =
+            database.swingSessionDao()
+
+        @Provides
+        @Singleton
+        fun provideLabRawRecordDao(database: TennisDocDatabase): LabRawRecordDao =
+            database.labRawRecordDao()
 
         @Provides
         @Singleton

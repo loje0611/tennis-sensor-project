@@ -18,6 +18,8 @@ data class SwingSessionEntity(
     val durationMillis: Long = 0L,
     val forehandVolleyCount: Int = 0,
     val backhandVolleyCount: Int = 0,
+    val sessionType: String = "MATCH",
+    val drillType: String? = null,
 ) {
     companion object {
         private val SESSION_NAME_FORMAT = SimpleDateFormat("yyyy.MM.dd hh:mm a", Locale.US)
