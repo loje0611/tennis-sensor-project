@@ -541,6 +541,22 @@
       "retry_count": 0,
       "created_at": "2026-08-14T13:51:48Z",
       "updated_at": "2026-08-14T13:56:40Z"
+    },
+    {
+      "id": "TASK-037",
+      "title": "실시간 센서-비전 스트림 융합 파이프라인 연동",
+      "raw_request": "task 37 진행해",
+      "target_project": "TennisDocAI",
+      "depends_on": [
+        "TASK-030",
+        "TASK-034",
+        "TASK-036"
+      ],
+      "spec_path": "docs/specs/TASK-037-realtime-fusion-pipeline-integration.md",
+      "status": "SPEC_READY",
+      "retry_count": 0,
+      "created_at": "2026-08-14T13:58:08Z",
+      "updated_at": "2026-08-14T13:58:08Z"
     }
   ]
 }
