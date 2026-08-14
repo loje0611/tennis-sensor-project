@@ -1,0 +1,192 @@
+[
+  {
+    "name": "perfect_sequential_ac2",
+    "vision_fps": 25.0,
+    "is_right_hand": true,
+    "hip_peak_frame": 3,
+    "shoulder_peak_frame": 4,
+    "wrist_peak_frame": 5,
+    "total_frames": 60,
+    "imu": {
+      "start_ms": 0,
+      "duration_ms": 1000,
+      "step_ms": 10,
+      "racket_peak_ts": 210,
+      "impact_peak_ts": 230
+    },
+    "anchor": {
+      "vision_impact_timestamp_ms": 180,
+      "sensor_impact_timestamp_ms": 230,
+      "time_offset_ms": 0,
+      "confidence": 0.95,
+      "is_synchronized": true
+    },
+    "expected": {
+      "is_sequential": true,
+      "min_efficiency": 90.0,
+      "timestamps_ms": [100, 140, 180, 210, 230],
+      "stage_types": ["HIP", "SHOULDER", "WRIST", "RACKET", "IMPACT"],
+      "total_duration_ms": 130
+    }
+  },
+  {
+    "name": "early_shoulder_ac3",
+    "vision_fps": 30.0,
+    "is_right_hand": true,
+    "hip_peak_frame": 5,
+    "shoulder_peak_frame": 3,
+    "wrist_peak_frame": 6,
+    "total_frames": 60,
+    "imu": {
+      "start_ms": 0,
+      "duration_ms": 1000,
+      "step_ms": 10,
+      "racket_peak_ts": 250,
+      "impact_peak_ts": 280
+    },
+    "anchor": {
+      "vision_impact_timestamp_ms": 200,
+      "sensor_impact_timestamp_ms": 280,
+      "time_offset_ms": 0,
+      "confidence": 0.85,
+      "is_synchronized": true
+    },
+    "expected": {
+      "is_sequential": false,
+      "max_efficiency": 50.0,
+      "stage_types": ["HIP", "SHOULDER", "WRIST", "RACKET", "IMPACT"]
+    }
+  },
+  {
+    "name": "early_wrist_defect",
+    "vision_fps": 30.0,
+    "is_right_hand": true,
+    "hip_peak_frame": 3,
+    "shoulder_peak_frame": 6,
+    "wrist_peak_frame": 4,
+    "total_frames": 60,
+    "imu": {
+      "start_ms": 0,
+      "duration_ms": 1000,
+      "step_ms": 10,
+      "racket_peak_ts": 250,
+      "impact_peak_ts": 280
+    },
+    "anchor": {
+      "vision_impact_timestamp_ms": 200,
+      "sensor_impact_timestamp_ms": 280,
+      "time_offset_ms": 0,
+      "confidence": 0.85,
+      "is_synchronized": true
+    },
+    "expected": {
+      "is_sequential": false,
+      "max_efficiency": 50.0,
+      "stage_types": ["HIP", "SHOULDER", "WRIST", "RACKET", "IMPACT"]
+    }
+  },
+  {
+    "name": "sensor_offset_plus_50ms_ac4",
+    "vision_fps": 30.0,
+    "is_right_hand": true,
+    "hip_peak_frame": 3,
+    "shoulder_peak_frame": 4,
+    "wrist_peak_frame": 5,
+    "total_frames": 60,
+    "imu": {
+      "start_ms": 0,
+      "duration_ms": 1000,
+      "step_ms": 10,
+      "racket_peak_ts": 260,
+      "impact_peak_ts": 280
+    },
+    "anchor": {
+      "vision_impact_timestamp_ms": 166,
+      "sensor_impact_timestamp_ms": 280,
+      "time_offset_ms": 50,
+      "confidence": 0.90,
+      "is_synchronized": true
+    },
+    "expected": {
+      "is_sequential": true,
+      "stage_types": ["HIP", "SHOULDER", "WRIST", "RACKET", "IMPACT"],
+      "racket_timestamp_ms": 210,
+      "impact_timestamp_ms": 230
+    }
+  },
+  {
+    "name": "empty_poses_fallback",
+    "vision_fps": 30.0,
+    "is_right_hand": true,
+    "empty_poses": true,
+    "imu": {
+      "start_ms": 0,
+      "duration_ms": 1000,
+      "step_ms": 10,
+      "racket_peak_ts": 200,
+      "impact_peak_ts": 250
+    },
+    "anchor": {
+      "vision_impact_timestamp_ms": 0,
+      "sensor_impact_timestamp_ms": 0,
+      "time_offset_ms": 0,
+      "confidence": 0.0,
+      "is_synchronized": false
+    },
+    "expected": {
+      "is_sequential": false,
+      "efficiency": 0.0,
+      "stage_types": ["HIP", "SHOULDER", "WRIST", "RACKET", "IMPACT"]
+    }
+  },
+  {
+    "name": "empty_imu_fallback",
+    "vision_fps": 30.0,
+    "is_right_hand": true,
+    "hip_peak_frame": 3,
+    "shoulder_peak_frame": 4,
+    "wrist_peak_frame": 5,
+    "total_frames": 60,
+    "empty_imu": true,
+    "anchor": {
+      "vision_impact_timestamp_ms": 0,
+      "sensor_impact_timestamp_ms": 0,
+      "time_offset_ms": 0,
+      "confidence": 0.0,
+      "is_synchronized": false
+    },
+    "expected": {
+      "is_sequential": false,
+      "efficiency": 0.0,
+      "stage_types": ["HIP", "SHOULDER", "WRIST", "RACKET", "IMPACT"]
+    }
+  },
+  {
+    "name": "unsynchronized_anchor_fallback",
+    "vision_fps": 25.0,
+    "is_right_hand": true,
+    "hip_peak_frame": 3,
+    "shoulder_peak_frame": 4,
+    "wrist_peak_frame": 5,
+    "total_frames": 60,
+    "imu": {
+      "start_ms": 0,
+      "duration_ms": 1000,
+      "step_ms": 10,
+      "racket_peak_ts": 210,
+      "impact_peak_ts": 230
+    },
+    "anchor": {
+      "vision_impact_timestamp_ms": 180,
+      "sensor_impact_timestamp_ms": 230,
+      "time_offset_ms": 0,
+      "confidence": 0.0,
+      "is_synchronized": false
+    },
+    "expected": {
+      "is_sequential": false,
+      "efficiency": 0.0,
+      "stage_types": ["HIP", "SHOULDER", "WRIST", "RACKET", "IMPACT"]
+    }
+  }
+]
