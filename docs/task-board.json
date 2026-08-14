@@ -537,10 +537,10 @@
         "TASK-034"
       ],
       "spec_path": "docs/specs/TASK-036-personal-baseline-anomaly-detection.md",
-      "status": "SPEC_READY",
+      "status": "DONE",
       "retry_count": 0,
       "created_at": "2026-08-14T13:51:48Z",
-      "updated_at": "2026-08-14T13:51:48Z"
+      "updated_at": "2026-08-14T13:56:40Z"
     }
   ]
 }

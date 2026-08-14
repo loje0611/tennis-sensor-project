@@ -1,0 +1,40 @@
+{
+  "baseline_speeds": [1480, 1500, 1520, 1490, 1510, 1500, 1530, 1470, 1500, 1500],
+  "expected_mean": 1500.0,
+  "expected_std_dev": 17.638,
+  "std_dev_tolerance": 0.05,
+  "cases": [
+    {
+      "name": "normal_within_1_sigma",
+      "racket_speed": 1505.0,
+      "efficiency": 90.0,
+      "wrist_racket_delay_ms": 30,
+      "expected_severity": "NORMAL",
+      "expected_is_anomaly": false,
+      "max_abs_z": 1.5
+    },
+    {
+      "name": "critical_speed_drop",
+      "racket_speed": 1350.0,
+      "efficiency": 90.0,
+      "wrist_racket_delay_ms": 30,
+      "expected_severity": "CRITICAL",
+      "expected_is_anomaly": true,
+      "max_z": -2.5
+    },
+    {
+      "name": "fatigue_session_tail",
+      "recent_swings": [
+        {"racket_speed": 1200.0, "efficiency": 50.0, "wrist_racket_delay_ms": 80},
+        {"racket_speed": 1200.0, "efficiency": 50.0, "wrist_racket_delay_ms": 80},
+        {"racket_speed": 1200.0, "efficiency": 50.0, "wrist_racket_delay_ms": 80},
+        {"racket_speed": 1200.0, "efficiency": 50.0, "wrist_racket_delay_ms": 80},
+        {"racket_speed": 1200.0, "efficiency": 50.0, "wrist_racket_delay_ms": 80}
+      ],
+      "expected_is_fatigued": true,
+      "min_fatigue_score": 0.7,
+      "summary_contains": "피로 누적"
+    }
+  ],
+  "unreliable_sample_count": 3
+}
