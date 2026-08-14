@@ -1,8 +1,8 @@
 # TASK-027 QA Report — `:feature:lab` CameraX 프레임 파이프라인 및 Preview/Pose Overlay
 
-**Date:** 2026-08-13T06:43:23Z  
+**Date:** 2026-08-14T09:49:48Z  
 **Target:** `TennisDocAI`  
-**Spec:** `docs/specs/TASK-027-camerax-frame-pipeline.md` (v1)  
+**Spec:** `docs/specs/TASK-027-camerax-frame-pipeline.md` (v2)  
 **Result:** **QA_PASSED**
 
 ## Run 1 (spec v1)
@@ -63,3 +63,78 @@ Analyzer cases: `testAnalyze_callsCloseAndCallback_success`, `testAnalyze_callsC
 ## Verdict
 
 **QA_PASSED** — CameraX 의존성·480p/`KEEP_ONLY_LATEST` 설정이 컴파일되고, `PoseAnalysisAnalyzer`는 Mock 프레임에서 콜백과 `imageProxy.close()`를 항상 수행함이 실행으로 확인됨.
+
+## Run 2 (spec v2)
+
+**Date:** 2026-08-14T09:49:48Z  
+**Result:** **QA_PASSED**
+
+### Boundary Check
+
+Inspected `git diff --name-only` and `git status --short` (uncommitted tree at tester wake).
+
+| Path | Role | Verdict |
+|---|---|---|
+| `TennisDocAI/app/src/main/AndroidManifest.xml` | production/manifest | OK — FR-1 / AC-6 authorize `<uses-permission android.permission.CAMERA>` and `<uses-feature android.hardware.camera required=false>`. Diff is only those two declarations. |
+| `TennisDocAI/feature/lab/src/main/AndroidManifest.xml` (untracked) | production/manifest | OK — same FR-1 / AC-6 authorization; library-side duplicate of the required permission/feature. |
+| `docs/task-board.json`, `docs/turn.json` | agent state | OK |
+| `spike-mediapipe-benchmark/gradle/gradle-daemon-jvm.properties` | unrelated untracked | outside TASK-027; pre-existing; not a Developer test edit |
+| Test sources under `feature/lab/src/test/**` and `app/src/test/**` | test | Developer did not modify tests this cycle |
+
+No boundary violation. Manifest edits stay within FR-1 / AC-6 (permission + optional camera feature only).
+
+### Commands Executed
+
+```bash
+cd TennisDocAI
+export JAVA_HOME=/home/keunu/.gradle/jdks/eclipse_adoptium-21-amd64-linux.2
+./gradlew verifyModuleDependencies verifyJniBindings test assembleDebug
+# BUILD SUCCESSFUL in 11s
+
+./gradlew :feature:lab:test :feature:lab:assembleDebug --rerun-tasks
+# BUILD SUCCESSFUL in 7s
+```
+
+`verifyModuleDependencies` SUCCESS.  
+`verifyJniBindings` PASSED (4 ABIs, `EdgeImpulseNative`).  
+`assembleDebug` / `:app:assembleDebug` / `:feature:lab:assembleDebug` SUCCESS.
+
+`:feature:lab:testDebugUnitTest` (this cycle, `--rerun-tasks`)
+
+| Suite | Tests | Failures |
+|---|---|---|
+| `PoseAnalysisAnalyzerTest` | 3 | 0 |
+| `PoseLandmarkerWrapperTest` (TASK-026 회귀) | 7 | 0 |
+| **Total** | **10** | **0** |
+
+Analyzer cases: `testAnalyze_callsCloseAndCallback_success`, `testAnalyze_callsClose_whenBitmapFails`, `testAnalyze_callsClose_whenProcessImageThrows`.
+
+`:app:testDebugUnitTest` (this cycle)
+
+| Suite | Tests | Failures |
+|---|---|---|
+| `CameraManifestDeclarationTest` | 2 | 0 |
+
+Cases: `cameraPermissionIsRequested`, `cameraHardwareFeatureIsOptional`.  
+Full `test` across modules: **114 tests, 0 failures, 0 errors**.
+
+### Acceptance Criteria
+
+| # | Result | Evidence |
+|---|---|---|
+| AC-1 | PASS | CameraX 1.4.1 catalog aliases remain; `:feature:lab:assembleDebug` SUCCESS (this cycle `--rerun-tasks`) |
+| AC-2 | PASS | `PoseAnalysisAnalyzerTest` 3/0. success: wrapper `processImage` + callback `PoseFrame` + `close()`. bitmap 실패: callback `null`, wrapper 미호출, `close()`. `processImage` throw: `close()` |
+| AC-3 | PASS* | `:feature:lab:compileDebugKotlin` / `assembleDebug` compiled `LabScreen` (`AndroidView`+`PreviewView` FIT_CENTER, 640×480, `STRATEGY_KEEP_ONLY_LATEST`) with `PoseOverlayCanvas`. *라이브 카메라 픽셀은 미실행 (기기 없음; `:feature:lab`에 compose-ui-test 없음) |
+| AC-4 | PASS | Mock `ImageProxy` 3건 전부 그린 (위 AC-2, this-cycle XML timestamp `2026-08-14T09:49:55Z`) |
+| AC-5 | PASS | `:feature:lab:test` 10/0 + `verifyModuleDependencies` SUCCESS; full `test` 114/0 |
+| AC-6 | PASS | `CameraManifestDeclarationTest`: `PackageManager.getPackageInfo(GET_PERMISSIONS)`에 `CAMERA` 포함; `GET_CONFIGURATIONS`의 `FEATURE_CAMERA`가 `FLAG_REQUIRED` 없음 (`required=false`). OS 권한 팝업 자체는 기기 없어 단위 테스트로 대체 (`AI_README` 기기 부재 규칙) |
+| AC-7 | PASS | `./gradlew assembleDebug` (`:app:assembleDebug`) SUCCESS |
+
+### Notes (not this-cycle failures)
+
+- 카메라 바인딩 실패 시 spec §7의 UI 에러 카드 대신 `printStackTrace()`만 수행 (v1과 동일).
+- 라이브 Preview/권한 다이얼로그 픽셀은 에뮬레이터·실기기 없이 관측하지 않음.
+
+## Verdict (Run 2)
+
+**QA_PASSED** — spec v2 매니페스트 권한/피처가 머지된 앱 아티팩트의 `PackageManager`로 확인되고, Analyzer `close()`/콜백·모듈 테스트·`:app:assembleDebug`가 이 사이클에서 실행되어 통과함.
