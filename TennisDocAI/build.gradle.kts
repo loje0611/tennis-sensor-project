@@ -14,10 +14,11 @@ tasks.register("verifyModuleDependencies") {
         ":core:data" to setOf(":core:model"),
         ":core:vision" to emptySet(),
         ":core:analysis" to setOf(":core:model", ":core:sensor"),
+        ":core:fusion" to setOf(":core:model", ":core:vision", ":core:analysis"),
         ":feature:match" to setOf(":core:model", ":core:ui", ":core:sensor", ":core:data", ":core:analysis"),
         ":feature:history" to setOf(":core:model", ":core:ui", ":core:data"),
-        ":feature:lab" to setOf(":core:model", ":core:ui", ":core:vision", ":core:data", ":core:analysis"),
-        ":app" to setOf(":core:model", ":core:ui", ":core:sensor", ":core:data", ":core:analysis", ":core:vision", ":feature:match", ":feature:history", ":feature:lab")
+        ":feature:lab" to setOf(":core:model", ":core:ui", ":core:vision", ":core:data", ":core:analysis", ":core:fusion"),
+        ":app" to setOf(":core:model", ":core:ui", ":core:sensor", ":core:data", ":core:analysis", ":core:vision", ":core:fusion", ":feature:match", ":feature:history", ":feature:lab")
     )
 
     doLast {
@@ -108,4 +109,3 @@ tasks.register("verifyJniBindings") {
         println("verifyJniBindings PASSED: Verified 4 ABIs (${requiredAbis.joinToString()}) with class descriptor '$expectedClassDescriptor'")
     }
 }
-
