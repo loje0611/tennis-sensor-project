@@ -1,18 +1,51 @@
 package io.github.loje0611.tennisdoc.session
 
-import io.github.loje0611.tennisdoc.core.sensor.BleConnectionState
+import android.util.Log
+import io.github.loje0611.tennisdoc.core.data.db.entity.SwingSessionEntity
+import io.github.loje0611.tennisdoc.core.data.repository.SwingHistoryRepository
+import io.github.loje0611.tennisdoc.core.model.DrillType
+import io.github.loje0611.tennisdoc.core.model.SessionType
 import io.github.loje0611.tennisdoc.core.model.SwingClassificationKeys
+import io.github.loje0611.tennisdoc.core.sensor.BleConnectionState
+import java.util.UUID
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 /**
- * 포그라운드 서비스와 UI(ViewModel)가 동일한 BLE·스윙 상태를 구독하기 위한 앱 프로세스 내 싱글톤 브리지.
+ * 포그라운드 서비스와 UI(ViewModel)가 동일한 BLE·스윙 상태 및 명시적 세션 라이프사이클을 공유하기 위한 싱글톤 브리지.
  */
 object SwingAnalysisSessionState {
 
+    @Volatile
+    var historyRepository: SwingHistoryRepository? = null
+
+    private val sessionScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    private var durationJob: Job? = null
+
+    // ── 세션 라이프사이클 상태 (FR-2) ──────────────────────────────────
+    private val _activeSessionId = MutableStateFlow<String?>(null)
+    val activeSessionId: StateFlow<String?> = _activeSessionId.asStateFlow()
+
+    private val _activeSessionType = MutableStateFlow<SessionType?>(null)
+    val activeSessionType: StateFlow<SessionType?> = _activeSessionType.asStateFlow()
+
+    private val _activeDrillType = MutableStateFlow<DrillType?>(null)
+    val activeDrillType: StateFlow<DrillType?> = _activeDrillType.asStateFlow()
+
+    private val _isSessionActive = MutableStateFlow(false)
+    val isSessionActive: StateFlow<Boolean> = _isSessionActive.asStateFlow()
+
+    // ── BLE 및 센서 파이프라인 상태 ────────────────────────────────────
     private val _connectionState = MutableStateFlow<BleConnectionState>(BleConnectionState.Disconnected)
     val connectionState: StateFlow<BleConnectionState> = _connectionState.asStateFlow()
 
@@ -31,7 +64,6 @@ object SwingAnalysisSessionState {
     private val _sessionDurationSeconds = MutableStateFlow(0L)
     val sessionDurationSeconds: StateFlow<Long> = _sessionDurationSeconds.asStateFlow()
 
-    /** 서비스 내부에서만 읽기/쓰기. UI에 Flow 노출하지 않음. */
     @Volatile
     var sessionStartTimeMillis: Long = 0L
         private set
@@ -44,6 +76,135 @@ object SwingAnalysisSessionState {
 
     private val _lastRawSwingData = MutableStateFlow("")
     val lastRawSwingData: StateFlow<String> = _lastRawSwingData.asStateFlow()
+
+    // ── 명시적 세션 제어 API (FR-2) ───────────────────────────────────
+
+    fun startSession(type: SessionType, drillType: DrillType? = null): String {
+        val sid = UUID.randomUUID().toString()
+        val startTime = System.currentTimeMillis()
+        sessionStartTimeMillis = startTime
+
+        _activeSessionId.value = sid
+        _activeSessionType.value = type
+        _activeDrillType.value = drillType
+        _isSessionActive.value = true
+        _swingCount.value = 0
+        _swingBreakdown.value = emptyMap()
+        _sessionDurationSeconds.value = 0L
+
+        startDurationJob()
+
+        val repo = historyRepository
+        if (repo != null) {
+            sessionScope.launch {
+                try {
+                    val provisional = SwingSessionEntity(
+                        sessionId = sid,
+                        sessionName = SwingSessionEntity.formatSessionName(startTime),
+                        startTime = startTime,
+                        sessionType = type.name,
+                        drillType = drillType?.name,
+                    )
+                    repo.insertProvisionalSession(provisional)
+                } catch (e: Exception) {
+                    Log.w("SwingSessionState", "Failed to insert provisional session", e)
+                }
+            }
+        }
+        return sid
+    }
+
+    fun finishSession() {
+        val sid = _activeSessionId.value ?: return
+        val totalSwings = _swingCount.value
+        val durationSecs = _sessionDurationSeconds.value
+        val startTime = sessionStartTimeMillis
+        val breakdownMap = _swingBreakdown.value
+
+        stopDurationJob()
+        _isSessionActive.value = false
+        _activeSessionId.value = null
+        _activeSessionType.value = null
+        _activeDrillType.value = null
+
+        val repo = historyRepository
+        if (repo != null) {
+            sessionScope.launch {
+                withContext(NonCancellable) {
+                    if (totalSwings > 0 && durationSecs > 0 && startTime > 0) {
+                        val endTime = System.currentTimeMillis()
+                        val breakdownNormalized = breakdownMap.mapKeys { SwingClassificationKeys.normalize(it.key) }
+                        val fhVolley = breakdownNormalized["forehand volley"] ?: 0
+                        val bhVolley = breakdownNormalized["backhand volley"] ?: 0
+                        try {
+                            repo.finalizeSession(
+                                sessionId = sid,
+                                endTime = endTime,
+                                totalSwingCount = totalSwings,
+                                durationMillis = durationSecs * 1000L,
+                                fhVolley = fhVolley,
+                                bhVolley = bhVolley,
+                                breakdownNormalized = breakdownNormalized,
+                            )
+                        } catch (e: Exception) {
+                            Log.w("SwingSessionState", "Failed to finalize session", e)
+                        }
+                    } else {
+                        try {
+                            repo.deleteSession(sid)
+                        } catch (e: Exception) {
+                            Log.w("SwingSessionState", "Failed to delete empty session", e)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    fun cancelSession() {
+        val sid = _activeSessionId.value
+        stopDurationJob()
+        _isSessionActive.value = false
+        _activeSessionId.value = null
+        _activeSessionType.value = null
+        _activeDrillType.value = null
+        _swingCount.value = 0
+        _swingBreakdown.value = emptyMap()
+        _sessionDurationSeconds.value = 0L
+        sessionStartTimeMillis = 0L
+
+        if (sid != null) {
+            val repo = historyRepository
+            if (repo != null) {
+                sessionScope.launch {
+                    withContext(NonCancellable) {
+                        try {
+                            repo.deleteSession(sid)
+                        } catch (e: Exception) {
+                            Log.w("SwingSessionState", "Failed to delete canceled session", e)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private fun startDurationJob() {
+        durationJob?.cancel()
+        durationJob = sessionScope.launch(Dispatchers.Default) {
+            var seconds = 0L
+            while (_isSessionActive.value) {
+                _sessionDurationSeconds.value = seconds
+                kotlinx.coroutines.delay(1000L)
+                seconds++
+            }
+        }
+    }
+
+    private fun stopDurationJob() {
+        durationJob?.cancel()
+        durationJob = null
+    }
 
     fun setDebugMode(enabled: Boolean) {
         _debugModeEnabled.value = enabled
@@ -106,6 +267,11 @@ object SwingAnalysisSessionState {
     }
 
     fun resetSessionUiState() {
+        stopDurationJob()
+        _isSessionActive.value = false
+        _activeSessionId.value = null
+        _activeSessionType.value = null
+        _activeDrillType.value = null
         _connectionState.value = BleConnectionState.Disconnected
         _detectedSwingLabel.value = ""
         _pipelineRunning.value = false

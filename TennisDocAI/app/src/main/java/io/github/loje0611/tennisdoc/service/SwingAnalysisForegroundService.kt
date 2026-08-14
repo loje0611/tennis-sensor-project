@@ -41,24 +41,18 @@ import io.github.loje0611.tennisdoc.core.sensor.SensorDataSource
 import io.github.loje0611.tennisdoc.session.SwingAnalysisSessionState
 import io.github.loje0611.tennisdoc.core.ui.SwingLabelFormatter
 import io.github.loje0611.tennisdoc.core.data.db.entity.SwingEventEntity
-import io.github.loje0611.tennisdoc.core.data.db.entity.SwingSessionEntity
 import io.github.loje0611.tennisdoc.core.data.repository.CalibrationStore
 import io.github.loje0611.tennisdoc.core.data.repository.SwingHistoryRepository
 import dagger.hilt.android.AndroidEntryPoint
 import java.util.Locale
 import javax.inject.Inject
-import java.util.UUID
 import java.util.concurrent.atomic.AtomicBoolean
-import java.util.concurrent.atomic.AtomicReference
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 /**
  * 화면이 꺼져도 BLE 수신 → 버퍼 → JNI 추론 → TTS까지 유지하는 포그라운드 서비스.
@@ -80,13 +74,11 @@ class SwingAnalysisForegroundService : Service() {
     private var kinematicsBuffer: SwingKinematicsBuffer? = null
     private var volleyDetector: VolleyDetector? = null
     private var kinematicAnalyzer: KinematicAnalyzer? = null
-    private val currentSessionId = AtomicReference<String?>(null)
     private val sensorChannel = Channel<FloatArray>(capacity = Channel.BUFFERED)
 
     private var tts: TextToSpeech? = null
     private val ttsReady = AtomicBoolean(false)
 
-    private var durationJob: Job? = null
     private var pipelineStarted = false
     private var isMockMode = false
     private val sensorReadyFired = AtomicBoolean(false)
@@ -96,6 +88,7 @@ class SwingAnalysisForegroundService : Service() {
     override fun onCreate() {
         super.onCreate()
         createNotificationChannel()
+        SwingAnalysisSessionState.historyRepository = historyRepository
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -112,7 +105,7 @@ class SwingAnalysisForegroundService : Service() {
                 serviceScope.launch(Dispatchers.Default) {
                     buffer?.applyDebugSimulatedCooldown()
                     SwingAnalysisSessionState.updateSwingLabel(swingType)
-                    if (!shouldSuppressTtsForIdle(swingType)) {
+                    if (!shouldSuppressTtsForIdle(swingType) && SwingAnalysisSessionState.isSessionActive.value) {
                         SwingAnalysisSessionState.incrementSwingCount(swingType)
                     }
                     if (buffer != null) {
@@ -175,7 +168,6 @@ class SwingAnalysisForegroundService : Service() {
         kinematicAnalyzer = ka
         swingInferenceBuffer = SwingInferenceBuffer(vd)
         kinematicsBuffer = SwingKinematicsBuffer()
-        currentSessionId.set(null)
         sensorReadyFired.set(false)
         SwingAnalysisSessionState.clearSensorReady()
         SwingAnalysisSessionState.setPipelineRunning(true)
@@ -221,7 +213,7 @@ class SwingAnalysisForegroundService : Service() {
                     SwingAnalysisSessionState.updateSwingLabel(label)
 
                     val isIdle = shouldSuppressTtsForIdle(label)
-                    if (!isIdle) {
+                    if (!isIdle && SwingAnalysisSessionState.isSessionActive.value) {
                         SwingAnalysisSessionState.incrementSwingCount(label)
                     }
                     speakSwingClassification(label)
@@ -236,31 +228,7 @@ class SwingAnalysisForegroundService : Service() {
         val onConnectionState: (BleConnectionState) -> Unit = { state ->
             SwingAnalysisSessionState.updateConnection(state)
             if (state is BleConnectionState.Connected) {
-                val connectTime = System.currentTimeMillis()
-                SwingAnalysisSessionState.updateSessionStartTime(connectTime)
-                val sid = UUID.randomUUID().toString()
-                currentSessionId.set(sid)
-                serviceScope.launch(Dispatchers.IO) {
-                    try {
-                        val provisional = SwingSessionEntity(
-                            sessionId = sid,
-                            sessionName = SwingSessionEntity.formatSessionName(connectTime),
-                            startTime = connectTime,
-                        )
-                        historyRepository.insertProvisionalSession(provisional)
-                    } catch (e: Exception) {
-                        Log.w(TAG, "Provisional session insert failed", e)
-                    }
-                }
-                durationJob?.cancel()
-                durationJob = serviceScope.launch(Dispatchers.Default) {
-                    var seconds = 0L
-                    while (SwingAnalysisSessionState.connectionState.value.isConnected) {
-                        SwingAnalysisSessionState.updateSessionDuration(seconds)
-                        kotlinx.coroutines.delay(1000L)
-                        seconds++
-                    }
-                }
+                // BLE connected: sensor pipeline is ready, session lifecycle is managed explicitly (FR-1)
             }
             if (state.isDisconnectedOrError) {
                 serviceScope.launch(Dispatchers.Default) {
@@ -299,8 +267,6 @@ class SwingAnalysisForegroundService : Service() {
     private fun stopAnalysisPipeline() {
         pipelineStarted = false
         SwingAnalysisSessionState.setPipelineRunning(false)
-        durationJob?.cancel()
-        durationJob = null
         sensorChannel.close()
         dataSource?.release()
         dataSource = null
@@ -313,58 +279,14 @@ class SwingAnalysisForegroundService : Service() {
         engine?.stop()
         engine?.shutdown()
 
-        val totalSwings = SwingAnalysisSessionState.swingCount.value
-        val durationSecs = SwingAnalysisSessionState.sessionDurationSeconds.value
-        val startTime = SwingAnalysisSessionState.sessionStartTimeMillis
-        val breakdownMap = SwingAnalysisSessionState.swingBreakdown.value
-
-        val savedSessionId = currentSessionId.getAndSet(null)
-        val savedVolleyDetector = volleyDetector
-        val wasMock = isMockMode
         isMockMode = false
         volleyDetector = null
         kinematicAnalyzer = null
 
-        if (totalSwings > 0 && durationSecs > 0 && startTime > 0 && savedSessionId != null) {
-            val endTime = System.currentTimeMillis()
-
-            val breakdownNormalized = breakdownMap.mapKeys { SwingClassificationKeys.normalize(it.key) }
-            val fhVolley = breakdownNormalized["forehand volley"] ?: 0
-            val bhVolley = breakdownNormalized["backhand volley"] ?: 0
-
-            serviceScope.launch(Dispatchers.IO) {
-                withContext(NonCancellable) {
-                    try {
-                        historyRepository.finalizeSession(
-                            sessionId = savedSessionId,
-                            endTime = endTime,
-                            totalSwingCount = totalSwings,
-                            durationMillis = durationSecs * 1000L,
-                            fhVolley = fhVolley,
-                            bhVolley = bhVolley,
-                            breakdownNormalized = breakdownNormalized,
-                        )
-                    } catch (e: Exception) {
-                        Log.w(TAG, "Session finalize failed", e)
-                    }
-                    SwingAnalysisSessionState.resetSessionUiState()
-                }
-            }
+        if (SwingAnalysisSessionState.isSessionActive.value) {
+            SwingAnalysisSessionState.finishSession()
         } else {
-            if (savedSessionId != null) {
-                serviceScope.launch(Dispatchers.IO) {
-                    withContext(NonCancellable) {
-                        try {
-                            historyRepository.deleteSession(savedSessionId)
-                        } catch (e: Exception) {
-                            Log.w(TAG, "Session delete failed", e)
-                        }
-                        SwingAnalysisSessionState.resetSessionUiState()
-                    }
-                }
-            } else {
-                SwingAnalysisSessionState.resetSessionUiState()
-            }
+            SwingAnalysisSessionState.resetSessionUiState()
         }
     }
 
@@ -404,8 +326,8 @@ class SwingAnalysisForegroundService : Service() {
                 accelThresholdSq = vd.accelThresholdSq,
             )
 
-            val sid = currentSessionId.get()
-            if (sid != null && metrics != null) {
+            val sid = SwingAnalysisSessionState.activeSessionId.value
+            if (sid != null && metrics != null && SwingAnalysisSessionState.isSessionActive.value) {
                 val normalizedKey = SwingClassificationKeys.normalize(label)
                 val rawForEvent = if (SwingClassificationKeys.isVolleyCategory(normalizedKey)) {
                     detectorRaw.withFallback(computedRaw)
@@ -451,7 +373,9 @@ class SwingAnalysisForegroundService : Service() {
             if (SwingClassificationKeys.isIdle(label)) return@launch
 
             SwingAnalysisSessionState.updateSwingLabel(label)
-            SwingAnalysisSessionState.incrementSwingCount(label)
+            if (SwingAnalysisSessionState.isSessionActive.value) {
+                SwingAnalysisSessionState.incrementSwingCount(label)
+            }
             speakSwingClassification(label)
             processSwingEvent(label, kBuffer, vd, ka)
         }

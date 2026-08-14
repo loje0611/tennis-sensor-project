@@ -3,8 +3,11 @@ package io.github.loje0611.tennisdoc.core.data.repository
 import io.github.loje0611.tennisdoc.core.data.db.entity.SwingEventEntity
 import io.github.loje0611.tennisdoc.core.data.db.entity.SwingMetricsAvg
 import io.github.loje0611.tennisdoc.core.data.db.entity.SwingSessionEntity
+import io.github.loje0611.tennisdoc.core.model.DrillType
+import io.github.loje0611.tennisdoc.core.model.SessionType
 import io.github.loje0611.tennisdoc.core.model.SwingMetrics
 import kotlinx.coroutines.flow.Flow
+import java.util.UUID
 
 interface SwingHistoryRepository {
     companion object {
@@ -24,6 +27,23 @@ interface SwingHistoryRepository {
     suspend fun getSessionDetail(sessionId: String): SessionDetailData?
 
     suspend fun deleteSession(sessionId: String)
+
+    suspend fun startSession(
+        sessionType: SessionType = SessionType.MATCH,
+        drillType: DrillType? = null,
+        startTimeMillis: Long = System.currentTimeMillis(),
+    ): String {
+        val sid = UUID.randomUUID().toString()
+        val session = SwingSessionEntity(
+            sessionId = sid,
+            sessionName = SwingSessionEntity.formatSessionName(startTimeMillis),
+            startTime = startTimeMillis,
+            sessionType = sessionType.name,
+            drillType = drillType?.name,
+        )
+        insertProvisionalSession(session)
+        return sid
+    }
 
     suspend fun insertProvisionalSession(session: SwingSessionEntity)
 
