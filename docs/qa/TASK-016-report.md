@@ -106,3 +106,28 @@ cd TennisDocAI
 ### Evidence
 전체 76/0. CSV **실경로 계측 실행**은 환경 제약으로 보류.
 
+---
+
+## Run 3 (device connectedAndroidTest — supplemental)
+
+**Date:** 2026-08-14T09:58:09Z  
+**Device:** SM-N981N (Galaxy Note20, Android 13, wireless adb `192.168.68.100:44775`)  
+**Result:** **PASS** (supplemental; original `QA_PASSED` unchanged)  
+**Note:** 기존 계측 테스트 실행. CSV 테스트는 TASK-019 이후 `SwingHistoryRepository`가 인터페이스가 되어 `SwingHistoryRepository(database)` 생성자가 컴파일되지 않음. 테스트만 `SwingHistoryRepositoryImpl(database)`로 교체(단정·기대값 변경 없음).
+
+### Commands Executed
+
+```bash
+cd TennisDocAI
+./gradlew :app:connectedDebugAndroidTest :core:data:connectedDebugAndroidTest
+# BUILD SUCCESSFUL in 56s
+```
+
+`:core:data:connectedDebugAndroidTest` — `SwingHistoryRepositoryCsvInstrumentedTest` **1/0**
+
+| Test | Result |
+|---|---|
+| `generateCsvStringSerializesHeaderAndEvent` | PASS — 헤더 `CSV_HEADER` 일치, 이벤트 1행이 `forehand topspin,85,90,78,88,92,80,12.50,250,350.5` 포함 |
+
+같은 실행에서 `SwingSessionDaoTest` 6/0, `ExampleInstrumentedTest` 1/0도 통과(TASK-012 Run 3 참고).
+

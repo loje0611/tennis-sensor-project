@@ -100,7 +100,7 @@ export JAVA_HOME=/home/keunu/.gradle/jdks/eclipse_adoptium-21-amd64-linux.2
 
 ## Run 2 (spec v1) — FAIL-1 재검증
 
-**Date:** 2026-08-14T14:29:27Z
+**Date:** 2026-08-14T14:30:26Z
 
 ### Boundary Check
 

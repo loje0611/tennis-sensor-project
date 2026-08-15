@@ -132,3 +132,13 @@ cd TennisDocAI
 ### Note
 Uses the same `AppRoutes` + callback wiring pattern as `AppNavHost` (Hilt 없는 스모크). Full `AppNavHost`+Hilt Activity 계측은 기기/`adb` Linux 바이너리 부재로 미실행.
 
+---
+
+## Run 3 (device connectedAndroidTest — supplemental)
+
+**Date:** 2026-08-14T10:10:27Z  
+**Device:** SM-N981N  
+**Result:** **PASS** (supplemental; original `QA_PASSED` unchanged)
+
+`AppNavigationInstrumentedTest.bottomBar_navigatesLabHistorySettings` PASS: 실기기 Hilt `MainActivity`에서 History 화면 타이틀까지 하단바 이동을 확인함.
+

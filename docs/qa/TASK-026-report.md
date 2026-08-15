@@ -128,3 +128,13 @@ Test XML (`testDebugUnitTest`): **7** tests, **0** failures, **0** errors:
 
 **QA_PASSED** — Run 1 실패 두 건(UnsatisfiedLinkError 래핑, 생산 매퍼 단위 테스트)이 실행 증거와 함께 해소됨.
 
+---
+
+## Run 3 (device connectedAndroidTest — supplemental)
+
+**Date:** 2026-08-14T10:10:27Z  
+**Device:** SM-N981N  
+**Result:** **PASS** (supplemental; original `QA_PASSED` unchanged)
+
+`MediaPipePoseLandmarkerInstrumentedTest.realWrapper_initializesNativeSdkAndProcessesBitmap` **PASS** (0.356s): 실기기에서 `MediaPipePoseLandmarkerWrapper` 네이티브 init, 640×480 비트맵 `processImage`가 `PoseFrame` 반환, recycled bitmap → `null`, `close()` idempotent.
+

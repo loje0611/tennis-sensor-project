@@ -106,3 +106,13 @@ cd TennisDocAI
 ### Evidence
 `verifyJniBindings` + analysis 단위 테스트 그린. 분류 품질 E2E는 미실행(기기 없음).
 
+---
+
+## Run 3 (device connectedAndroidTest — supplemental)
+
+**Date:** 2026-08-14T10:10:27Z  
+**Device:** SM-N981N  
+**Result:** **PASS** (supplemental; original `QA_PASSED` unchanged)
+
+`EdgeImpulseNativeInstrumentedTest`: `nativeLibraryLoadsAndClassifiesOnDevice` PASS (`libswingsense_ei.so` 로드, `FLAT_SIZE` 제로 입력 → 알려진 7개 레이블 중 하나), `wrongFeatureSizeReturnsEmptyString` PASS.
+

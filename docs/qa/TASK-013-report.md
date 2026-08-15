@@ -132,3 +132,13 @@ cd TennisDocAI
 해당 스위트 포함 전체 76/0. `verifyJniBindings` 재통과.
 추론 **정확성**은 여전히 실기기 영역(계획 §4.1·§9) — 이번 보완으로도 미해소.
 
+---
+
+## Run 3 (device connectedAndroidTest — supplemental)
+
+**Date:** 2026-08-14T10:10:27Z  
+**Device:** SM-N981N  
+**Result:** **PASS** (supplemental; original `QA_PASSED` unchanged)
+
+`EdgeImpulseNative.runClassifier`가 실 ABI에서 비어 있지 않은 알려진 레이블을 반환함 (`EdgeImpulseNativeInstrumentedTest`). 라벨 품질/골든 스윙 정확도는 여전히 별도 데이터셋 영역.
+

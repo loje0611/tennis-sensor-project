@@ -117,3 +117,42 @@ cd TennisDocAI
 
 이전 B그룹 완료 시점 리포트 기준선(약 90건) 대비 JVM 단위 테스트가 보강됨.  
 실기기 `connectedAndroidTest`·Edge Impulse 추론 정확도는 **의도적으로 범위 밖**.
+
+---
+
+## Supplemental: connectedAndroidTest on device (2026-08-14)
+
+당시 범위 밖이었던 기존 계측 테스트를 SM-N981N 무선 디버깅에서 실행함. 생산 코드 미변경.
+
+```bash
+cd TennisDocAI
+./gradlew :app:connectedDebugAndroidTest :core:data:connectedDebugAndroidTest
+# BUILD SUCCESSFUL in 56s
+```
+
+| Suite | Tests | Failures |
+|---|---|---|
+| `ExampleInstrumentedTest` | 1 | 0 |
+| `SwingSessionDaoTest` | 6 | 0 |
+| `SwingHistoryRepositoryCsvInstrumentedTest` | 1 | 0 |
+| **Total** | **8** | **0** |
+
+상세: `docs/qa/TASK-012-report.md` Run 3, `docs/qa/TASK-016-report.md` Run 3.  
+카메라/MediaPipe/Edge Impulse E2E는 여전히 미작성·미실행.
+
+---
+
+## Supplemental: new device E2E (2026-08-14T10:10:27Z)
+
+SM-N981N에서 신규 `:app` 계측 테스트 실행. `./gradlew :app:connectedDebugAndroidTest` **BUILD SUCCESSFUL**, **7/0**.
+
+| Suite | Tests | Result |
+|---|---|---|
+| `LabCameraPreviewInstrumentedTest` | 1 | PreviewView STREAMING + FPS 칩 |
+| `LabCameraPermissionInstrumentedTest` | 1 | 권한 안내 → OS 다이얼로그 → 프리뷰 |
+| `MediaPipePoseLandmarkerInstrumentedTest` | 1 | 실기기 PoseLandmarker init/`processImage` |
+| `EdgeImpulseNativeInstrumentedTest` | 2 | `libswingsense_ei.so` 분류 + 잘못된 입력 폴백 |
+| `AppNavigationInstrumentedTest` | 1 | Lab/History/Settings Hilt Activity 내비 |
+| `ExampleInstrumentedTest` | 1 | 패키지 스모크 |
+
+상세: TASK-013/015/026/027/028 리포트 supplemental runs.

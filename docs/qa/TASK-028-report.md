@@ -58,3 +58,13 @@ cd TennisDocAI
 ## Verdict
 
 **QA_PASSED** — `AppRoutes.LAB` 계약, Lab 탭 이동, `LabScreen` JVM 로드, 모듈 그래프·앱 빌드가 실행 증거와 함께 통과함.
+
+---
+
+## Run 2 (device connectedAndroidTest — supplemental)
+
+**Date:** 2026-08-14T10:10:27Z  
+**Device:** SM-N981N  
+**Result:** **PASS** (supplemental; original `QA_PASSED` unchanged)
+
+`AppNavigationInstrumentedTest.bottomBar_navigatesLabHistorySettings` PASS: 실기기 Hilt `MainActivity`에서 Lab ↔ History ↔ Settings 하단바 이동 후 Lab `PreviewView` 복귀.

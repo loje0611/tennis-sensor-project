@@ -138,3 +138,26 @@ Full `test` across modules: **114 tests, 0 failures, 0 errors**.
 ## Verdict (Run 2)
 
 **QA_PASSED** — spec v2 매니페스트 권한/피처가 머지된 앱 아티팩트의 `PackageManager`로 확인되고, Analyzer `close()`/콜백·모듈 테스트·`:app:assembleDebug`가 이 사이클에서 실행되어 통과함.
+
+---
+
+## Run 3 (device connectedAndroidTest — supplemental)
+
+**Date:** 2026-08-14T10:10:27Z  
+**Device:** SM-N981N (Galaxy Note20, Android 13, wireless adb `192.168.68.100:44775`)  
+**Result:** **PASS** (supplemental; original `QA_PASSED` unchanged)
+
+### Commands Executed
+
+```bash
+cd TennisDocAI
+./gradlew :app:connectedDebugAndroidTest
+# BUILD SUCCESSFUL in 31s — 7 tests, 0 failures
+```
+
+| Test | Result |
+|---|---|
+| `LabCameraPreviewInstrumentedTest.labScreen_withCameraGranted_streamsPreviewAndShowsFpsChip` | PASS — `PreviewView.StreamState.STREAMING` + FPS 칩 표시 |
+| `LabCameraPermissionInstrumentedTest.labScreen_withoutCamera_showsRationaleAndSystemPermissionDialog` | PASS — 안내 문구/`권한 허용` → OS 권한 다이얼로그 Allow → 프리뷰 STREAMING |
+
+AC-3 라이브 프리뷰와 AC-6 OS 권한 팝업을 실기기에서 실행으로 확인함.

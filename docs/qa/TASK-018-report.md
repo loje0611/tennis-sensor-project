@@ -224,3 +224,13 @@ cd TennisDocAI
 ### Note
 Uses the same `AppRoutes` + callback wiring pattern as `AppNavHost` (Hilt 없는 스모크). Full `AppNavHost`+Hilt Activity 계측은 기기/`adb` Linux 바이너리 부재로 미실행.
 
+---
+
+## Run 4 (device connectedAndroidTest — supplemental)
+
+**Date:** 2026-08-14T10:10:27Z  
+**Device:** SM-N981N  
+**Result:** **PASS** (supplemental; original `QA_PASSED` unchanged)
+
+동일 `AppNavigationInstrumentedTest`가 Hilt `AppNavHost`를 실기기에서 기동함. Match v1 비활성(D-2)은 이 스위트에서 Settings/History/Lab만 노출되는 것으로 회귀 확인.
+

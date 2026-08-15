@@ -89,6 +89,7 @@ Confirm `next_agent` is `tester` and extract the `task_id`. Then read `docs/task
    - **Case A: the test command ran to completion, ALL tests passed, and every criterion has executed evidence**
      - Change task `status` to `QA_PASSED` and update `updated_at` in `docs/task-board.json`.
      - **Handoff**: Safely update `docs/turn.json` to `{"next_agent": "developer", "task_id": "{TASK-ID}"}`.
+     - **Device APK (when Human follow-up needs a physical device):** After handoff, connect wireless adb and `cd TennisDocAI && ./gradlew :app:installDebug`. Use `/home/keunu/Android/Sdk/platform-tools/adb` and `JAVA_HOME=/home/keunu/.gradle/jdks/eclipse_adoptium-21-amd64-linux.2`. Prefer the host:port the user last gave (default host `192.168.68.100`). Skip this when the task has no on-device UI path.
 
    - **Case B: Tests fail or acceptance criteria are missing**
      - Increment `retry_count` by 1. Document failures in `docs/qa/{TASK-ID}-report.md`.

@@ -107,3 +107,35 @@ cd TennisDocAI
 Room DAO 계측 테스트는 기기 부재로 미실행. JVM 스위트 및 `:core:data` CSV 계약 테스트(2)는 통과.
 추가된 `SwingHistoryRepositoryCsvInstrumentedTest`는 **컴파일 성공**, `connectedDebugAndroidTest`는 adb 없어 미실행.
 
+---
+
+## Run 3 (device connectedAndroidTest — supplemental)
+
+**Date:** 2026-08-14T09:58:09Z  
+**Device:** SM-N981N (Galaxy Note20, Android 13, wireless adb `192.168.68.100:44775`)  
+**Result:** **PASS** (supplemental; original `QA_PASSED` unchanged)  
+**Note:** 기존 `androidTest` 실행만. 생산 코드 미변경. `SwingSessionDaoTest` assertion은 spec AC-15 범위 밖이었으나 기기 연결 후 실행함.
+
+### Commands Executed
+
+```bash
+cd TennisDocAI
+./gradlew :app:connectedDebugAndroidTest :core:data:connectedDebugAndroidTest
+# BUILD SUCCESSFUL in 56s
+```
+
+`:core:data:connectedDebugAndroidTest` — `SwingSessionDaoTest` **6/0**
+
+| Test | Result |
+|---|---|
+| `insertAndRetrieveSession` | PASS |
+| `observeSessionsReturnsDescendingOrder` | PASS |
+| `averageMetricsReturnsCorrectAverage` | PASS |
+| `finalizeSessionUpdatesFields` | PASS |
+| `exportQueryIncludesVolleyAndSupportsOptionalRange` | PASS |
+| `deleteSessionCascadesBreakdownAndEvents` | PASS |
+
+`:app:connectedDebugAndroidTest` — `ExampleInstrumentedTest.useAppContext` **1/0** (패키지 `io.github.loje0611.tennisdoc`).
+
+`appops set androidx.test.services MANAGE_EXTERNAL_STORAGE allow` 가 UID 부재로 255를 반환했으나 테스트 실행·결과는 영향 없음.
+

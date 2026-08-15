@@ -179,11 +179,21 @@ io.github.loje0611.tennisdoc.lab.LabCameraPreviewInstrumentedTest
 |---|---|---|
 | FAIL-1 회전 | PASS | `analyze_rotatesBitmap90DegreesBeforeLandmarker`: 640×480 + rotation 90 → landmarker에 480×640 전달. `analyze_keepsBitmapSizeWhenRotationIsZero` 640×480 유지 |
 | FAIL-1 Preview scale | PASS | `labScreen_withCameraGranted_streamsPreviewAndShowsFpsChip`: PreviewView `FILL_CENTER`, FPS 칩 표시 |
-| FAIL-1 몸에 붙음 (시각) | **사람 확인 필요** | 자동화는 사람 실루엣 정렬을 판정하지 못함 |
+| FAIL-1 몸에 붙음 (시각) | PASS | 사용자 실기기: Lab에서 관절 오버레이가 몸에 붙음 (2026-08-14) |
 | FAIL-2 권한 게이트 | PASS | `calibrationDialog_withoutBlePermission_asksForPermissionInsteadOfScanning`: Settings → Sensor Calibration → 「블루투스 및 위치 권한이 필요합니다.」+「권한 허용」, 「시작」 없음 (권한 없을 때 스캔 진입 안 함) |
-| FAIL-2 실센서 GATT | **사람 확인 필요** | 권한 허용 후 실제 센서 연결·CAL 완료는 하드웨어 필요 |
+| FAIL-2 실센서 GATT | PASS | 사용자 실기기: Settings 캘리브레이션이 권한 허용 후 센서에 연결됨 |
 | AC-1~AC-7 | PASS (Run 1 유지) | JVM/Room 0 failures |
+
+### Human follow-up (2026-08-14, SM-N981N)
+
+| 항목 | Result | 관측 |
+|---|---|---|
+| A. 캘리브레이션만 수행 후 History | PASS | 새 세션이 생성되지 않음 |
+| B. Mock BLE 스윙 (세션 미시작) 후 History | PASS | 새 세션이 생성되지 않음 |
+| C. Lab/Settings 측정 시작 버튼 | N/A | 버튼 없음. Spec §5 UX는 이번 구현 범위에 없음 (Match 탭도 v1 내비 비활성) |
+
+시작/종료 UI가 없어 빈 세션 discard·측정 중 BLE 끊김·LAB 세션이 History에 확정되는 경로는 아직 실기기에서 불가.
 
 ## Verdict
 
-**QA_PASSED** — Run 2 FAIL-1/FAIL-2의 자동 재현 경로(회전, FILL_CENTER, Settings 권한 게이트)는 통과. 관절이 몸에 붙는지·실 BLE GATT는 아래 수동 순서.
+**QA_PASSED** — FAIL-1/FAIL-2 자동·수동 모두 통과. BLE 연결만으로는 History 세션이 생기지 않음. 명시적 세션 시작 버튼은 후속 작업.
