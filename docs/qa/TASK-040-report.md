@@ -80,3 +80,51 @@ History → Lab 세션 카드 → 스윙 카드 → 동기 리플레이 → 뒤�
 ## Verdict
 
 **QA_PASSED** (`retry_count` 유지 0). History 카드·Lab 상세 스윙 리스트·`LAB_REPLAY` 왕복 내비게이션이 선언 명령 0 failures로 확인됨.
+
+## Run 2 (spec v2) — FR-4 / AC-7 Mock Lab 세션
+
+**Date:** 2026-08-15T08:57:44Z  
+**Result:** **QA_PASSED**
+
+### Boundary Check
+
+Inspected commit `208376d` (`feat(history): update MockDataGenerator for LAB session and raw records (TASK-040 v2)`).
+
+| Path | Role | Verdict |
+|---|---|---|
+| `MockDataGenerator.kt` | production | OK — FR-4: `sessionType=LAB`, `drillType=FOREHAND`, 10× LabRawRecord (50 IMU / 30 pose) |
+| `HistoryViewModelTest.kt` | test (Developer, Tester 강화) | **Accepted** — spec §1.2 / AC-5·AC-7. LAB/FOREHAND/10 records assertion **추가**, 약화 없음. Tester가 50Hz·30fps·impactOffsetMs 검사 강화 |
+| `LabCameraModeUiTest.kt` | test | leftover Tester TASK-041 강화분 커밋. TASK-040 assertion 약화 없음 |
+
+경계 위반으로 `QA_FAILED`할 항목 없음.
+
+### Commands Executed
+
+```bash
+cd TennisDocAI
+export JAVA_HOME=/home/keunu/.gradle/jdks/eclipse_adoptium-21-amd64-linux.2
+./gradlew :feature:history:test :feature:lab:test :app:testDebugUnitTest verifyModuleDependencies :app:assembleDebug --rerun-tasks
+# BUILD SUCCESSFUL in 26s
+```
+
+`:feature:history:test` — **10 tests, 0 failures** (timestamp `2026-08-15T08:57:18Z`) including `HistoryViewModelTest` 3/0.  
+`:feature:lab:test` — **44 tests, 0 failures** (timestamp `2026-08-15T08:57:23Z`).  
+`:app:testDebugUnitTest` — **53 tests, 0 failures** (timestamp `2026-08-15T08:57:34Z`) including `MockLabSessionReplayTest` 1/0.  
+`verifyModuleDependencies` SUCCESS.  
+`:app:assembleDebug` SUCCESS.
+
+### Acceptance Criteria (v2)
+
+| # | Result | Evidence |
+|---|---|---|
+| AC-1~6 | PASS | Run 1 유지. 선언 명령 0 failures |
+| AC-7 | PASS | `HistoryViewModelTest.insertMockSessionData…`: LAB / FOREHAND / 10 records, 각 레코드 IMU `"ts"` 50개·`"landmarks"` 30개·`impactOffsetMs=500`. `MockLabSessionReplayTest.ac7_…`: SessionDetail 스윙 10개, `LabReplayViewModel` fusedSwing pose 30 / IMU 50, route `lab_replay/{sessionId}/{recordId}` |
+
+### Human follow-up (실기기)
+
+History 디버그 `[Mock]` → Lab 「포핸드 훈련」카드 → 세션 상세 스윙 #1 → 동기 리플레이(스켈레톤·IMU).
+
+## Verdict (Run 2)
+
+**QA_PASSED** (`retry_count` 유지 0). spec v2 Mock Lab 세션·원시 레코드가 생성되고 리플레이에 pose/IMU가 로드된다.
+
