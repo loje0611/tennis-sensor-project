@@ -65,5 +65,13 @@ class HistoryViewModelTest {
         viewModel.mockInsertInProgress.first { !it }
         
         assertEquals(1, sessions.size)
+        val createdSession = sessions[0]
+        assertEquals("LAB", createdSession.sessionType)
+        assertEquals("FOREHAND", createdSession.drillType)
+        assertEquals(10, createdSession.totalSwingCount)
+
+        val rawRecords = repository.getLabRawRecordsForSession(createdSession.sessionId).first()
+        assertEquals(10, rawRecords.size)
+        assertTrue(rawRecords.all { it.drillType == "FOREHAND" && it.imuRawJson.isNotBlank() && it.visionPosesJson.isNotBlank() })
     }
 }

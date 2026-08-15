@@ -21,6 +21,7 @@ import io.github.loje0611.tennisdoc.feature.lab.ui.PoseOverlayCanvas
 import io.github.loje0611.tennisdoc.feature.lab.ui.SessionCompletionDialog
 import io.github.loje0611.tennisdoc.feature.lab.ui.SessionCompletionSummary
 import io.github.loje0611.tennisdoc.feature.lab.ui.SetupCountdownOverlay
+import io.github.loje0611.tennisdoc.navigation.AppRoutes
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -169,6 +170,10 @@ class LabCameraModeUiTest {
         composeTestRule.onNodeWithText("🎬 리플레이 보기").performClick()
         assertEquals("sess-lab-xyz", navigatedSessionId)
         assertEquals(101L, navigatedRecordId)
+        assertEquals(
+            "lab_replay/sess-lab-xyz/101",
+            AppRoutes.createLabReplayRoute(navigatedSessionId, navigatedRecordId),
+        )
         assertTrue(dismissed)
     }
 

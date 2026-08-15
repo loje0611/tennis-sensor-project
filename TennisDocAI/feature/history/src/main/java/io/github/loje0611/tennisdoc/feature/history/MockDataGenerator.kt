@@ -109,14 +109,16 @@ object MockDataGenerator {
             sessionName = SwingSessionEntity.formatSessionName(startTime),
             startTime = startTime,
             endTime = endTime,
-            totalSwingCount = MOCK_SWING_COUNT,
+            totalSwingCount = 10,
             durationMillis = durationMs,
             forehandVolleyCount = fhVolley,
             backhandVolleyCount = bhVolley,
+            sessionType = "LAB",
+            drillType = "FOREHAND"
         )
 
-        val intervalMs = durationMs / MOCK_SWING_COUNT
-        val events = swings.mapIndexed { index, category ->
+        val intervalMs = durationMs / 10
+        val events = swings.take(10).mapIndexed { index, category ->
             val m = randomMetrics(category, rng)
             val isVolley = category.contains("volley")
             SwingEventEntity(
@@ -140,5 +142,52 @@ object MockDataGenerator {
         }
 
         repository.insertMockSession(session, breakdownMap, events)
+
+        // FR-4: Insert 10 LabRawRecordEntity items for Lab Replay & SessionDetail
+        for (i in 0 until 10) {
+            val swingTime = startTime + intervalMs * i + 1000L
+            val imuSamplesJson = buildString {
+                append("[")
+                for (s in 0 until 50) {
+                    val ts = swingTime + s * 20L
+                    val ax = String.format(java.util.Locale.US, "%.2f", rng.nextFloat() * 2f - 1f)
+                    val ay = String.format(java.util.Locale.US, "%.2f", rng.nextFloat() * 2f - 1f)
+                    val az = String.format(java.util.Locale.US, "%.2f", 1f + rng.nextFloat() * 2f)
+                    val gx = String.format(java.util.Locale.US, "%.1f", rng.nextFloat() * 200f - 100f)
+                    val gy = String.format(java.util.Locale.US, "%.1f", rng.nextFloat() * 500f + 200f)
+                    val gz = String.format(java.util.Locale.US, "%.1f", rng.nextFloat() * 200f - 100f)
+                    append("""{"ts":$ts,"ax":$ax,"ay":$ay,"az":$az,"gx":$gx,"gy":$gy,"gz":$gz}""")
+                    if (s < 49) append(",")
+                }
+                append("]")
+            }
+
+            val visionPosesJson = buildString {
+                append("[")
+                for (f in 0 until 30) {
+                    append("""{"landmarks":[""")
+                    for (lm in 0 until 33) {
+                        val x = String.format(java.util.Locale.US, "%.3f", 0.5f + (rng.nextFloat() - 0.5f) * 0.2f)
+                        val y = String.format(java.util.Locale.US, "%.3f", 0.5f + (rng.nextFloat() - 0.5f) * 0.2f)
+                        val z = String.format(java.util.Locale.US, "%.3f", (rng.nextFloat() - 0.5f) * 0.1f)
+                        append("""{"x":$x,"y":$y,"z":$z,"v":0.95}""")
+                        if (lm < 32) append(",")
+                    }
+                    append("]}")
+                    if (f < 29) append(",")
+                }
+                append("]")
+            }
+
+            val rawRecord = io.github.loje0611.tennisdoc.core.data.db.entity.LabRawRecordEntity(
+                sessionId = sessionId,
+                drillType = "FOREHAND",
+                timestampMillis = swingTime,
+                imuRawJson = imuSamplesJson,
+                visionPosesJson = visionPosesJson,
+                impactOffsetMs = 500L
+            )
+            repository.insertLabRawRecord(rawRecord)
+        }
     }
 }
