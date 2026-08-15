@@ -202,8 +202,8 @@ fun AppNavHost() {
                 LabScreen(
                     viewModel = labViewModel,
                     modifier = Modifier.padding(innerPadding),
-                    onNavigateToReplay = { sessionId ->
-                        navController.navigate(AppRoutes.sessionDetail(sessionId))
+                    onNavigateToReplay = { sessionId, recordId ->
+                        navController.navigate(AppRoutes.labReplay(sessionId, recordId))
                     }
                 )
             }

@@ -23,6 +23,7 @@ interface LabFusionPipeline {
     val latestFusedSwing: StateFlow<FusedSwing?>
     val latestAnomalyReport: StateFlow<BaselineComparisonReport?>
     val currentBaseline: StateFlow<PersonalBaseline?>
+    val latestRecordedId: StateFlow<Long?>
 
     fun feedPoseFrame(frame: PoseFrame)
     fun feedImuSample(sample: ImuDataPoint)
@@ -46,6 +47,9 @@ class LabFusionPipelineImpl(
 
     private val _currentBaseline = MutableStateFlow<PersonalBaseline?>(null)
     override val currentBaseline: StateFlow<PersonalBaseline?> = _currentBaseline.asStateFlow()
+
+    private val _latestRecordedId = MutableStateFlow<Long?>(null)
+    override val latestRecordedId: StateFlow<Long?> = _latestRecordedId.asStateFlow()
 
     override fun feedPoseFrame(frame: PoseFrame) {
         buffer.addPoseFrame(frame)
@@ -80,7 +84,8 @@ class LabFusionPipelineImpl(
                         visionPosesJson = serializePoses(poses),
                         impactOffsetMs = fused.anchor.timeOffsetMs
                     )
-                    dao.insert(record)
+                    val insertedId = dao.insert(record)
+                    _latestRecordedId.value = insertedId
                 } catch (_: Exception) {
                     // Fail-safe logging for Room DB insert
                 }
@@ -94,6 +99,7 @@ class LabFusionPipelineImpl(
         buffer.clear()
         _latestFusedSwing.value = null
         _latestAnomalyReport.value = null
+        _latestRecordedId.value = null
     }
 
     private fun serializeImu(samples: List<ImuDataPoint>): String {

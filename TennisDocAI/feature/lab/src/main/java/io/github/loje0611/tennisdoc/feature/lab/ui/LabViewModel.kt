@@ -9,6 +9,8 @@ import io.github.loje0611.tennisdoc.core.fusion.model.ImuDataPoint
 import io.github.loje0611.tennisdoc.core.model.DrillType
 import io.github.loje0611.tennisdoc.core.model.SessionType
 import io.github.loje0611.tennisdoc.core.vision.model.PoseFrame
+import io.github.loje0611.tennisdoc.feature.lab.audio.DefaultLabAudioFeedbackPort
+import io.github.loje0611.tennisdoc.feature.lab.audio.LabAudioFeedbackPort
 import io.github.loje0611.tennisdoc.feature.lab.pipeline.LabFusionPipeline
 import io.github.loje0611.tennisdoc.feature.lab.session.LabSessionPort
 import javax.inject.Inject
@@ -26,7 +28,8 @@ import kotlinx.coroutines.launch
 @HiltViewModel
 class LabViewModel @Inject constructor(
     val pipeline: LabFusionPipeline,
-    val sessionPort: LabSessionPort? = null
+    val sessionPort: LabSessionPort? = null,
+    val audioPort: LabAudioFeedbackPort = DefaultLabAudioFeedbackPort()
 ) : ViewModel() {
 
     private val _selectedDrill = MutableStateFlow(DrillType.FOREHAND)
@@ -136,9 +139,11 @@ class LabViewModel @Inject constructor(
             countdownJob = viewModelScope.launch {
                 for (sec in 5 downTo 1) {
                     _countdownSeconds.value = sec
+                    audioPort.playCountdownTick(sec)
                     delay(1000L)
                 }
                 _countdownSeconds.value = 0
+                audioPort.playCountdownStart()
                 delay(500L)
                 _countdownSeconds.value = null
                 executeActualStartSession()
@@ -180,6 +185,7 @@ class LabViewModel @Inject constructor(
         val currentSessionId = uiState.value.activeSessionId ?: "lab-session"
         val durationSec = uiState.value.sessionDurationSeconds
         val drillName = _selectedDrill.value.toDisplayName()
+        val latestId = pipeline.latestRecordedId.value ?: 1L
 
         _completionSummary.value = SessionCompletionSummary(
             sessionId = currentSessionId,
@@ -187,7 +193,8 @@ class LabViewModel @Inject constructor(
             totalSwingCount = totalSwings,
             durationSeconds = durationSec,
             squareRatePercent = squareRate,
-            averageEnergyEfficiency = avgEfficiency
+            averageEnergyEfficiency = avgEfficiency,
+            latestRecordId = latestId
         )
 
         val port = sessionPort
@@ -232,7 +239,9 @@ class LabViewModel @Inject constructor(
             val fused = pipeline.onSwingTriggered(targetSessionId, targetDrill)
             if (fused != null) {
                 sessionSwings.add(fused)
+                val feedback = fused.diagnosis?.coachingFeedback ?: "훌륭한 임팩트입니다."
                 if (_cameraFacingMode.value == CameraFacingMode.FRONT) {
+                    audioPort.speakCoaching(feedback)
                     val faceState = fused.racketImpact.faceState.name
                     val isSquare = faceState == "SQUARE"
                     val angle = fused.racketImpact.deviationDeg
@@ -254,6 +263,7 @@ class LabViewModel @Inject constructor(
                         _farFieldHud.value = null
                     }
                 } else {
+                    audioPort.playImpactBeep()
                     _farFieldHud.value = null
                 }
             }

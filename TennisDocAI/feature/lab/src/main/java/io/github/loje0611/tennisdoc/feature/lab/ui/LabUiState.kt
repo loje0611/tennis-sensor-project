@@ -23,7 +23,8 @@ data class SessionCompletionSummary(
     val totalSwingCount: Int,
     val durationSeconds: Long,
     val squareRatePercent: Int,
-    val averageEnergyEfficiency: Float
+    val averageEnergyEfficiency: Float,
+    val latestRecordId: Long = 1L
 )
 
 data class LabUiState(

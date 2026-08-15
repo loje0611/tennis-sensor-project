@@ -22,4 +22,10 @@ object LabModule {
             labRawRecordDao = labRawRecordDao
         )
     }
+
+    @Provides
+    @Singleton
+    fun provideLabAudioFeedbackPort(): io.github.loje0611.tennisdoc.feature.lab.audio.LabAudioFeedbackPort {
+        return io.github.loje0611.tennisdoc.feature.lab.audio.DefaultLabAudioFeedbackPort()
+    }
 }

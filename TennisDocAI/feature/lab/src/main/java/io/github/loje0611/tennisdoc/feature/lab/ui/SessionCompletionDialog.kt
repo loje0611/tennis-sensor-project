@@ -29,7 +29,7 @@ import androidx.compose.ui.unit.dp
 fun SessionCompletionDialog(
     summary: SessionCompletionSummary?,
     onDismiss: () -> Unit,
-    onNavigateToReplay: (sessionId: String) -> Unit,
+    onNavigateToReplay: (sessionId: String, recordId: Long) -> Unit,
     modifier: Modifier = Modifier
 ) {
     if (summary == null) return
@@ -94,7 +94,7 @@ fun SessionCompletionDialog(
             Button(
                 onClick = {
                     onDismiss()
-                    onNavigateToReplay(summary.sessionId)
+                    onNavigateToReplay(summary.sessionId, summary.latestRecordId)
                 },
                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
                 shape = RoundedCornerShape(8.dp)

@@ -65,7 +65,7 @@ private fun labBleRuntimePermissions(): List<String> = buildList {
 fun LabScreen(
     viewModel: LabViewModel? = null,
     modifier: Modifier = Modifier,
-    onNavigateToReplay: (String) -> Unit = {}
+    onNavigateToReplay: (sessionId: String, recordId: Long) -> Unit = { _, _ -> }
 ) {
     val cameraPermissionState = rememberPermissionState(Manifest.permission.CAMERA)
     val blePermissionsState = rememberMultiplePermissionsState(labBleRuntimePermissions())
@@ -126,7 +126,7 @@ private fun CameraPreviewWithOverlay(
     viewModel: LabViewModel?,
     blePermissionsGranted: Boolean,
     onRequestBlePermissions: () -> Unit,
-    onNavigateToReplay: (String) -> Unit,
+    onNavigateToReplay: (sessionId: String, recordId: Long) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current

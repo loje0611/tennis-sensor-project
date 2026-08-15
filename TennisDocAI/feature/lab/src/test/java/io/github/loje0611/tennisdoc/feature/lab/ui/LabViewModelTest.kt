@@ -124,6 +124,9 @@ class LabViewModelTest {
         private val _currentBaseline = MutableStateFlow<PersonalBaseline?>(null)
         override val currentBaseline: StateFlow<PersonalBaseline?> = _currentBaseline.asStateFlow()
 
+        private val _latestRecordedId = MutableStateFlow<Long?>(null)
+        override val latestRecordedId: StateFlow<Long?> = _latestRecordedId.asStateFlow()
+
         var fedPoses = mutableListOf<PoseFrame>()
         var fedImu = mutableListOf<ImuDataPoint>()
 
@@ -162,6 +165,7 @@ class LabViewModelTest {
                 diagnosis = diagnosis
             )
             _latestFusedSwing.value = swing
+            _latestRecordedId.value = 101L
             _latestAnomalyReport.value = BaselineComparisonReport(
                 drillType = drillType,
                 anomalies = listOf(
@@ -186,6 +190,7 @@ class LabViewModelTest {
             fedImu.clear()
             _latestFusedSwing.value = null
             _latestAnomalyReport.value = null
+            _latestRecordedId.value = null
         }
 
         fun emitAnomalyReport(report: BaselineComparisonReport) {
@@ -377,21 +382,25 @@ class LabViewModelTest {
         val started = viewModel.startSession()
         assertTrue(started)
 
-        // Countdown starts at 5
         testScheduler.runCurrent()
         assertEquals(5, viewModel.uiState.value.countdownSeconds)
         assertFalse(viewModel.uiState.value.isSessionActive)
 
-        // Advance 1s -> 4
+        for (expected in 4 downTo 1) {
+            testScheduler.advanceTimeBy(1000L)
+            testScheduler.runCurrent()
+            assertEquals(expected, viewModel.uiState.value.countdownSeconds)
+            assertFalse(viewModel.uiState.value.isSessionActive)
+        }
+
         testScheduler.advanceTimeBy(1000L)
         testScheduler.runCurrent()
-        assertEquals(4, viewModel.uiState.value.countdownSeconds)
+        assertEquals(0, viewModel.uiState.value.countdownSeconds)
+        assertFalse(viewModel.uiState.value.isSessionActive)
 
-        // Advance remaining 4s + 500ms
-        testScheduler.advanceTimeBy(4500L)
+        testScheduler.advanceTimeBy(500L)
         testScheduler.advanceUntilIdle()
 
-        // Countdown completed and session is now active
         assertEquals(null, viewModel.uiState.value.countdownSeconds)
         assertTrue(viewModel.uiState.value.isSessionActive)
     }
@@ -489,10 +498,47 @@ class LabViewModelTest {
         assertEquals(1, summary!!.totalSwingCount)
         assertEquals(100, summary.squareRatePercent)
         assertEquals(90f, summary.averageEnergyEfficiency)
+        assertEquals(101L, summary.latestRecordId)
 
         viewModel.dismissCompletionSummary()
         testScheduler.advanceUntilIdle()
         assertEquals(null, viewModel.uiState.value.completionSummary)
+    }
+
+    @Test
+    fun `TASK-041 AC-6 FRONT camera swing triggers TTS utterance and BACK camera swing is muted`() = runTest {
+        val fakePipeline = FakeLabFusionPipeline()
+        val fakePort = FakeLabSessionPort()
+        val fakeAudio = object : io.github.loje0611.tennisdoc.feature.lab.audio.LabAudioFeedbackPort {
+            var spoken: String? = null
+            var beepPlayed: Boolean = false
+            override val lastSpokenUtterance: String? get() = spoken
+            override fun speakCoaching(text: String) { spoken = text }
+            override fun playImpactBeep() { beepPlayed = true }
+            override fun playCountdownTick(second: Int) {}
+            override fun playCountdownStart() {}
+            override fun release() {}
+        }
+        val viewModel = LabViewModel(fakePipeline, fakePort, fakeAudio)
+        testScheduler.advanceUntilIdle()
+
+        // 1. FRONT camera: TTS is spoken
+        viewModel.setCameraFacing(CameraFacingMode.FRONT)
+        testScheduler.advanceUntilIdle()
+        viewModel.triggerSwing()
+        testScheduler.advanceUntilIdle()
+        assertEquals("훌륭한 임팩트입니다.", fakeAudio.spoken)
+        assertFalse(fakeAudio.beepPlayed)
+
+        // 2. BACK camera: TTS is muted, impact beep is played
+        fakeAudio.spoken = null
+        fakeAudio.beepPlayed = false
+        viewModel.setCameraFacing(CameraFacingMode.BACK)
+        testScheduler.advanceUntilIdle()
+        viewModel.triggerSwing()
+        testScheduler.advanceUntilIdle()
+        assertEquals(null, fakeAudio.spoken) // Muted
+        assertTrue(fakeAudio.beepPlayed)
     }
 
     @Test
