@@ -177,4 +177,34 @@ class SessionDetailViewModelTest {
         assertEquals(2, state.labDetailState.swingItems[1].swingIndex)
         assertFalse(state.labDetailState.isLoading)
     }
+
+    @Test
+    fun `when LAB session has no raw records, swing list stays empty`() = runTest {
+        val testSessionId = UUID.randomUUID().toString()
+        repository.insertProvisionalSession(
+            SwingSessionEntity(
+                sessionId = testSessionId,
+                sessionName = "Empty Lab",
+                startTime = 1000L,
+                sessionType = "LAB",
+                drillType = "BACKHAND",
+                totalSwingCount = 0,
+                durationMillis = 0L,
+            )
+        )
+
+        val viewModel = SessionDetailViewModel(
+            SavedStateHandle(mapOf("sessionId" to testSessionId)),
+            repository,
+            fakeCoachingGenerator,
+        )
+
+        val state = viewModel.uiState.first { !it.loading && !it.labDetailState.isLoading }
+
+        assertFalse(state.notFound)
+        assertEquals("LAB", state.session?.sessionType)
+        assertTrue(state.labDetailState.swingItems.isEmpty())
+        assertEquals(0, state.labDetailState.squareRatePercent)
+        assertEquals(0f, state.labDetailState.averageEnergyEfficiency, 0.01f)
+    }
 }
