@@ -1,6 +1,7 @@
 package io.github.loje0611.tennisdoc.feature.lab.ui
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -24,6 +25,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import io.github.loje0611.tennisdoc.core.ui.theme.MichromaFont
 
 @Composable
 fun SessionCompletionDialog(
@@ -44,29 +46,36 @@ fun SessionCompletionDialog(
             Text(
                 text = "🎯 ${summary.drillName} 훈련 완료!",
                 style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFF1A1A1E)
             )
         },
         text = {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(vertical = 8.dp)
+                    .padding(vertical = 4.dp)
             ) {
                 Text(
                     text = "훈련이 성공적으로 기록되었습니다. 요약 결과를 확인하세요.",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = Color(0xFF555560)
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
 
                 Card(
                     colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                        containerColor = Color(0xFFF8FAFC)
                     ),
-                    shape = RoundedCornerShape(12.dp),
-                    modifier = Modifier.fillMaxWidth()
+                    shape = RoundedCornerShape(16.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .border(
+                            width = 1.dp,
+                            color = Color(0x330066FF),
+                            shape = RoundedCornerShape(16.dp)
+                        )
                 ) {
                     Column(
                         modifier = Modifier
@@ -74,17 +83,19 @@ fun SessionCompletionDialog(
                             .padding(16.dp),
                         verticalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
-                        MetricRow(label = "총 스윙 수", value = "${summary.totalSwingCount}회")
-                        MetricRow(label = "훈련 소요 시간", value = durationText)
+                        MetricRow(label = "총 스윙 수", value = "${summary.totalSwingCount}회", isMichroma = true)
+                        MetricRow(label = "훈련 소요 시간", value = durationText, isMichroma = true)
                         MetricRow(
                             label = "정타율 (SQUARE)",
                             value = "${summary.squareRatePercent}%",
-                            valueColor = Color(0xFF00E676)
+                            valueColor = Color(0xFF10B981),
+                            isMichroma = true
                         )
                         MetricRow(
                             label = "평균 체인 효율",
                             value = String.format("%.1f%%", summary.averageEnergyEfficiency),
-                            valueColor = MaterialTheme.colorScheme.primary
+                            valueColor = Color(0xFF0066FF),
+                            isMichroma = true
                         )
                     }
                 }
@@ -96,20 +107,22 @@ fun SessionCompletionDialog(
                     onDismiss()
                     onNavigateToReplay(summary.sessionId, summary.latestRecordId)
                 },
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
-                shape = RoundedCornerShape(8.dp)
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0066FF)),
+                shape = RoundedCornerShape(10.dp)
             ) {
-                Text(text = "🎬 리플레이 보기", fontWeight = FontWeight.Bold)
+                Text(text = "🎬 리플레이 보기", fontWeight = FontWeight.Bold, color = Color.White)
             }
         },
         dismissButton = {
             OutlinedButton(
                 onClick = onDismiss,
-                shape = RoundedCornerShape(8.dp)
+                shape = RoundedCornerShape(10.dp)
             ) {
-                Text(text = "닫기 / 새 훈련")
+                Text(text = "닫기 / 새 훈련", color = Color(0xFF555560))
             }
         },
+        containerColor = Color.White,
+        shape = RoundedCornerShape(20.dp),
         modifier = modifier
     )
 }
@@ -118,7 +131,8 @@ fun SessionCompletionDialog(
 private fun MetricRow(
     label: String,
     value: String,
-    valueColor: Color = Color.Unspecified
+    valueColor: Color = Color(0xFF1A1A1E),
+    isMichroma: Boolean = false
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -128,13 +142,15 @@ private fun MetricRow(
         Text(
             text = label,
             style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            fontWeight = FontWeight.Medium,
+            color = Color(0xFF555560)
         )
         Text(
             text = value,
-            style = MaterialTheme.typography.titleMedium,
+            style = MaterialTheme.typography.bodyLarge,
+            fontFamily = if (isMichroma) MichromaFont else null,
             fontWeight = FontWeight.Bold,
-            color = if (valueColor != Color.Unspecified) valueColor else MaterialTheme.colorScheme.onSurface
+            color = valueColor
         )
     }
 }

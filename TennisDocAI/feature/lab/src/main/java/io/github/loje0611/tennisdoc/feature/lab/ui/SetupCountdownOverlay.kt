@@ -68,6 +68,7 @@ fun SetupCountdownOverlay(
                 Text(
                     text = text,
                     fontSize = if (sec > 0) 110.sp else 72.sp,
+                    fontFamily = io.github.loje0611.tennisdoc.core.ui.theme.MichromaFont,
                     fontWeight = FontWeight.Black,
                     color = color
                 )

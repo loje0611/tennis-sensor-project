@@ -73,5 +73,12 @@ class HistoryViewModelTest {
         val rawRecords = repository.getLabRawRecordsForSession(createdSession.sessionId).first()
         assertEquals(10, rawRecords.size)
         assertTrue(rawRecords.all { it.drillType == "FOREHAND" && it.imuRawJson.isNotBlank() && it.visionPosesJson.isNotBlank() })
+        assertTrue(rawRecords.all { it.impactOffsetMs == 500L })
+        assertTrue(
+            rawRecords.all { record ->
+                Regex(""""ts"\s*:""").findAll(record.imuRawJson).count() == 50 &&
+                    Regex(""""landmarks"""").findAll(record.visionPosesJson).count() == 30
+            }
+        )
     }
 }

@@ -25,6 +25,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import io.github.loje0611.tennisdoc.core.ui.theme.MichromaFont
 
 @Composable
 fun FarFieldFeedbackOverlay(
@@ -54,7 +55,7 @@ fun FarFieldFeedbackOverlay(
         ) {
             Card(
                 colors = CardDefaults.cardColors(
-                    containerColor = Color.Black.copy(alpha = 0.85f)
+                    containerColor = Color(0xF5FFFFFF) // Pure White Frosted Glass
                 ),
                 shape = RoundedCornerShape(24.dp),
                 modifier = Modifier
@@ -85,16 +86,18 @@ fun FarFieldFeedbackOverlay(
                     Text(
                         text = "효율 ${hudState.energyEfficiency.toInt()}%",
                         fontSize = 36.sp,
+                        fontFamily = MichromaFont,
                         fontWeight = FontWeight.Bold,
-                        color = Color.White
+                        color = Color(0xFF1A1A1E)
                     )
 
-                    Spacer(modifier = Modifier.height(6.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
 
                     Text(
                         text = if (hudState.isSquare) "🟢 완벽한 정타 & 에너지 전달" else "🔴 페이스 각도 보정이 필요합니다",
                         style = MaterialTheme.typography.titleSmall,
-                        color = Color.White.copy(alpha = 0.8f)
+                        fontWeight = FontWeight.SemiBold,
+                        color = Color(0xFF555560)
                     )
                 }
             }
