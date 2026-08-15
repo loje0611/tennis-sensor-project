@@ -168,3 +168,80 @@ Lab 탭에 ViewModel이 연결되었으므로 아래 순서로 보면 됩니다.
 ## Verdict (Run 2)
 
 **QA_PASSED** — FAIL-1(Lab 탭 ViewModel 미주입)이 해소되었고, 드릴 선택·세션 시작/종료·융합 `uiState` 바인딩 JVM 테스트가 모두 통과한다.
+
+## Run 3 (spec v3)
+
+**Date:** 2026-08-15T05:45:15Z  
+**Spec revision:** v3 (auto-connect, 단일 측정 시작/종료, debug-only FPS)  
+**Result:** **QA_PASSED**
+
+### Boundary Check
+
+Inspected `git diff --name-only` and `git status --short` at tester wake (`next_agent=tester`, `task_id=TASK-038`, `retry_count=0`, `status=DEV_DONE`).
+
+| Path | Role | Verdict |
+|---|---|---|
+| `feature/lab/ui/LabScreen.kt`, `LabSessionControlHeader.kt`, `LabViewModel.kt`, `LabUiState.kt` | production | OK — AC-8/9/10, FR-2 |
+| `feature/lab/session/LabSessionPort.kt`, `app/.../LabSessionPortImpl.kt` | production | OK — `isDebugModeEnabled`, connect/disconnect |
+| `feature/lab/.../LabViewModelTest.kt` | test (Developer) | **Accepted** — spec §1.2 · AC-9 · AC-10. fake에 `isDebugModeEnabled` 추가, 미연결 `startSession`에 `connectCalled` 강화, AC-10 `uiState` 테스트 추가. assertion 약화 없음 |
+| `app/.../LabSessionPortImplTest.kt` | test (Developer) | **Accepted** — spec AC-10 / §1.2 debug 토글. `isDebugModeEnabledReflectsSessionState` 추가. 기존 LAB 세션 전달 assertion 유지 |
+| `app/.../LabDrillGuideUiTest.kt` | test (Tester) | Tester가 AC-8에 맞게 「센서 연결」버튼 기대를 제거하고 인디케이터+단일 측정 버튼 검증으로 교체 |
+| `docs/task-board.json`, `docs/turn.json` | workflow | 보드/턴 |
+| `docs/specs/**` | PM | 이번 사이클에서 Tester 미수정 |
+| `.cursor/`, `spike-mediapipe-benchmark/gradle/gradle-daemon-jvm.properties` | leftover | TASK-038과 무관 |
+
+경계 위반으로 `QA_FAILED`할 항목 없음.
+
+### Commands Executed
+
+```bash
+cd TennisDocAI
+export JAVA_HOME=/home/keunu/.gradle/jdks/eclipse_adoptium-21-amd64-linux.2
+./gradlew :feature:lab:test :app:testDebugUnitTest verifyModuleDependencies :app:assembleDebug --rerun-tasks
+# BUILD SUCCESSFUL in 41s
+```
+
+`:feature:lab:test` — **25 tests, 0 failures** (timestamp `2026-08-15T05:44:32Z`)
+
+| Suite | Tests | Failures |
+|---|---|---|
+| `LabViewModelTest` | 8 | 0 |
+| 회귀 (`LabFusion*` / `Pose*`) | 17 | 0 |
+
+`:app:testDebugUnitTest` — **32 tests, 0 failures** (timestamp `2026-08-15T05:44:42Z`)
+
+| Suite | Tests | Failures |
+|---|---|---|
+| `LabDrillGuideUiTest` | 4 | 0 |
+| `LabSessionPortImplTest` | 2 | 0 |
+| 회귀 | 26 | 0 |
+
+`verifyModuleDependencies` SUCCESS.  
+`:app:assembleDebug` SUCCESS.
+
+### Acceptance Criteria
+
+| # | Result | Evidence |
+|---|---|---|
+| AC-1 | PASS | lab `compileDebugKotlin` + `LabDrillGuideUiTest`가 `DrillSelectorBar`·`LabSessionControlHeader` 렌더. assembleDebug SUCCESS |
+| AC-2 | PASS | `LabViewModelTest` `AC-2…`: 세션 중 드릴 변경 무시. `LabDrillGuideUiTest` `ac1AndAc2…`: 「포핸드 플랫」 선택 후 세션 중 칩 disabled |
+| AC-3 | PASS | `LabViewModelTest` `AC-3…`: 연결 상태에서 `startSession` → `lastStartType=LAB`. `LabDrillGuideUiTest` `ac3…`: 「측정 시작」→「측정 종료」 단일 버튼 토글 |
+| AC-4 | PASS | `LabViewModelTest` `AC-4 AC-5…`: `faceState=SQUARE`, coaching 문구 `uiState` 노출 |
+| AC-5 | PASS | `LabViewModelTest` `AC-5 fatigued or critical…`: `isFatigued` / `CRITICAL`이 `latestAnomalyReport`에 노출 |
+| AC-6 | PASS | lab **25/0**, app **32/0** (`LabViewModelTest` 8 + `LabDrillGuideUiTest` 4) |
+| AC-7 | PASS | 선언 명령 BUILD SUCCESSFUL, 0 failures |
+| AC-8 | PASS | `LabDrillGuideUiTest` `ac8_disconnected…`: 「센서 미연결」+「측정 시작」, 「센서 연결」노드 0개. `ac8_scanningAndConnected…`: 「센서 찾는 중...」→「센서 연결됨」, 「센서 연결」노드 0개. `LabViewModelTest` `connectSensorForwardsToSessionPort`: `connectCalled` + `isSensorScanning`. 진입 시 auto-connect LaunchedEffect는 카메라 바인딩 경로라 JVM에서 LabScreen 전체를 compose하지 않음 — 실기기 확인 |
+| AC-9 | PASS | `LabViewModelTest` `startSessionIsRejectedWhenSensorDisconnected`: `startSession()==false`, `isSessionActive==false`, `lastStartType==null`, `connectCalled==true`. `LabDrillGuideUiTest` `ac8_disconnected…`: 미연결에서 「측정 시작」클릭이 `onStartSession` 호출. Toast 문자열은 LabScreen 카메라 오버레이 핸들러에 있어 ShadowToast JVM 미실행 — 실기기 확인 |
+| AC-10 | PASS | `LabViewModelTest` `AC-10 isDebugModeEnabled updates uiState`: 기본 `false` → port `true` 후 `uiState.isDebugModeEnabled==true`. `LabSessionPortImplTest` `isDebugModeEnabledReflectsSessionState`: `setDebugMode(true/false)`가 port에 반영. FPS 텍스트 오버레이는 카메라 프리뷰 내부라 JVM에서 노드 미compose — 실기기에서 debug on/off로 확인 |
+
+### Human follow-up (실기기)
+
+1. Lab 탭 진입 → 카메라·근처 기기(BLE) 권한 허용  
+2. 별도 「센서 연결」버튼 없이 상태가 **센서 찾는 중...** → **센서 연결됨**으로 바뀌는지  
+3. 미연결이면 **측정 시작** 시 「센서를 먼저 연결해 주세요」토스트, 세션이 시작되지 않는지  
+4. 연결 후 **측정 시작** → **측정 종료** 토글, 세션 중 드릴 칩 비활성  
+5. 일반 모드에서 FPS/ms 오버레이가 없고, 개발자(debug) 모드에서만 보이는지  
+
+## Verdict (Run 3)
+
+**QA_PASSED** (`retry_count` 유지 0). spec v3 AC-8/9/10 JVM 증거가 선언 명령 0 failures로 통과했다. auto-connect·Toast·FPS 오버레이 픽셀은 실기기 Human follow-up.

@@ -11,6 +11,7 @@ interface LabSessionPort {
     val swingCount: StateFlow<Int>
     val isSensorConnected: StateFlow<Boolean>
     val isSensorScanning: StateFlow<Boolean>
+    val isDebugModeEnabled: StateFlow<Boolean>
 
     fun startSession(type: SessionType = SessionType.LAB, drillType: DrillType): String
     fun finishSession()

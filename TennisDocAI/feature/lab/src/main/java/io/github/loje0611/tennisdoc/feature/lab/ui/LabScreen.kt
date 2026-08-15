@@ -140,6 +140,13 @@ private fun CameraPreviewWithOverlay(
         MediaPipePoseLandmarkerWrapper(context)
     }
 
+    // Auto-connect sensor when BLE permission is granted and sensor is not connected
+    LaunchedEffect(blePermissionsGranted, uiState.isSensorConnected, uiState.isSensorScanning) {
+        if (blePermissionsGranted && !uiState.isSensorConnected && !uiState.isSensorScanning) {
+            viewModel?.connectSensor()
+        }
+    }
+
     DisposableEffect(lifecycleOwner) {
         val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
             if (event == androidx.lifecycle.Lifecycle.Event.ON_STOP || 
@@ -257,7 +264,6 @@ private fun CameraPreviewWithOverlay(
                         onRequestBlePermissions()
                     }
                 },
-                onCancelSensorConnect = { viewModel?.disconnectSensor() },
                 onStartSession = {
                     val started = viewModel?.startSession() ?: false
                     if (!started) {
@@ -278,23 +284,25 @@ private fun CameraPreviewWithOverlay(
                 onSelectDrill = { viewModel?.selectDrill(it) }
             )
 
-            // FPS Overlay
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
-                contentAlignment = Alignment.TopStart
-            ) {
+            // FPS Overlay (개발자 모드 활성화 시에만 노출)
+            if (uiState.isDebugModeEnabled) {
                 Box(
                     modifier = Modifier
-                        .background(Color.Black.copy(alpha = 0.5f), RoundedCornerShape(4.dp))
-                        .padding(horizontal = 8.dp, vertical = 4.dp)
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp),
+                    contentAlignment = Alignment.TopStart
                 ) {
-                    Text(
-                        text = fpsText,
-                        color = Color.White,
-                        style = MaterialTheme.typography.bodySmall
-                    )
+                    Box(
+                        modifier = Modifier
+                            .background(Color.Black.copy(alpha = 0.5f), RoundedCornerShape(4.dp))
+                            .padding(horizontal = 8.dp, vertical = 4.dp)
+                    ) {
+                        Text(
+                            text = fpsText,
+                            color = Color.White,
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    }
                 }
             }
 

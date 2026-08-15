@@ -7,6 +7,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
@@ -100,8 +101,8 @@ class LabDrillGuideUiTest {
     }
 
     @Test
-    fun disconnectedHeaderShowsConnectButtonAndInvokesCallback() {
-        var connectClicked = false
+    fun ac8_disconnectedHeaderShowsStatusAndStartButtonWithoutConnectButton() {
+        var startClicked = false
 
         composeRule.setContent {
             MaterialTheme {
@@ -112,17 +113,54 @@ class LabDrillGuideUiTest {
                     swingCount = 0,
                     isSensorConnected = false,
                     isSensorScanning = false,
-                    onConnectSensor = { connectClicked = true },
-                    onStartSession = {},
+                    onStartSession = { startClicked = true },
                     onFinishSession = {}
                 )
             }
         }
 
         composeRule.onNodeWithText("센서 미연결").assertIsDisplayed()
-        composeRule.onNodeWithText("센서 연결").assertIsDisplayed()
-        composeRule.onNodeWithText("센서 연결").performClick()
+        composeRule.onNodeWithText("측정 시작").assertIsDisplayed()
+        assertEquals(0, composeRule.onAllNodesWithText("센서 연결").fetchSemanticsNodes().size)
+        assertEquals(0, composeRule.onAllNodesWithText("측정 종료").fetchSemanticsNodes().size)
+
+        composeRule.onNodeWithText("측정 시작").performClick()
         composeRule.waitForIdle()
-        assertTrue(connectClicked)
+        assertTrue(startClicked)
+    }
+
+    @Test
+    fun ac8_scanningAndConnectedHeadersShowIndicatorWithoutConnectButton() {
+        var scanning by mutableStateOf(true)
+        var connected by mutableStateOf(false)
+
+        composeRule.setContent {
+            MaterialTheme {
+                LabSessionControlHeader(
+                    selectedDrill = DrillType.FOREHAND_TOPSPIN,
+                    isSessionActive = false,
+                    sessionDurationSeconds = 0L,
+                    swingCount = 0,
+                    isSensorConnected = connected,
+                    isSensorScanning = scanning,
+                    onStartSession = {},
+                    onFinishSession = {}
+                )
+            }
+        }
+
+        composeRule.onNodeWithText("센서 찾는 중...").assertIsDisplayed()
+        composeRule.onNodeWithText("측정 시작").assertIsDisplayed()
+        assertEquals(0, composeRule.onAllNodesWithText("센서 연결").fetchSemanticsNodes().size)
+
+        scanning = false
+        connected = true
+        composeRule.waitForIdle()
+
+        composeRule.onNodeWithText("센서 연결됨").assertIsDisplayed()
+        composeRule.onNodeWithText("측정 시작").assertIsDisplayed()
+        assertEquals(0, composeRule.onAllNodesWithText("센서 연결").fetchSemanticsNodes().size)
+        assertEquals(0, composeRule.onAllNodesWithText("센서 찾는 중...").fetchSemanticsNodes().size)
+        assertEquals(0, composeRule.onAllNodesWithText("센서 미연결").fetchSemanticsNodes().size)
     }
 }

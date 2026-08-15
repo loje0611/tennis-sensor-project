@@ -69,8 +69,8 @@ fun LabSessionControlHeader(
                     horizontalArrangement = Arrangement.spacedBy(6.dp),
                     modifier = Modifier
                         .heightIn(min = 48.dp)
-                        .clickable(enabled = !isSensorConnected) {
-                            if (isSensorScanning) onCancelSensorConnect() else onConnectSensor()
+                        .clickable(enabled = !isSensorConnected && !isSensorScanning) {
+                            onConnectSensor()
                         }
                 ) {
                     Box(
@@ -104,40 +104,19 @@ fun LabSessionControlHeader(
                 }
             }
 
-            Column(
-                horizontalAlignment = Alignment.End,
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+            Button(
+                onClick = {
+                    if (isSessionActive) onFinishSession() else onStartSession()
+                },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = if (isSessionActive) Color(0xFFD32F2F) else Color(0xFF388E3C)
+                ),
+                shape = RoundedCornerShape(8.dp)
             ) {
-                if (!isSensorConnected) {
-                    Button(
-                        onClick = {
-                            if (isSensorScanning) onCancelSensorConnect() else onConnectSensor()
-                        },
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = if (isSensorScanning) Color(0xFF5D4037) else Color(0xFF1565C0)
-                        ),
-                        shape = RoundedCornerShape(8.dp)
-                    ) {
-                        Text(
-                            text = if (isSensorScanning) "연결 취소" else "센서 연결",
-                            color = Color.White
-                        )
-                    }
-                }
-                Button(
-                    onClick = {
-                        if (isSessionActive) onFinishSession() else onStartSession()
-                    },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = if (isSessionActive) Color(0xFFD32F2F) else Color(0xFF388E3C)
-                    ),
-                    shape = RoundedCornerShape(8.dp)
-                ) {
-                    Text(
-                        text = if (isSessionActive) "측정 종료" else "측정 시작",
-                        color = Color.White
-                    )
-                }
+                Text(
+                    text = if (isSessionActive) "측정 종료" else "측정 시작",
+                    color = Color.White
+                )
             }
         }
     }

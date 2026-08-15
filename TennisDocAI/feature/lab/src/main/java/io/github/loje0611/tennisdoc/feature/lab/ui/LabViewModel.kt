@@ -35,6 +35,7 @@ class LabViewModel @Inject constructor(
     private val _localSwingCount = MutableStateFlow(0)
     private val _localSensorConnected = MutableStateFlow(false)
     private val _localSensorScanning = MutableStateFlow(false)
+    private val _localDebugModeEnabled = MutableStateFlow(false)
 
     val uiState: StateFlow<LabUiState> = combine(
         _selectedDrill,
@@ -44,6 +45,7 @@ class LabViewModel @Inject constructor(
         sessionPort?.swingCount ?: _localSwingCount,
         sessionPort?.isSensorConnected ?: _localSensorConnected,
         sessionPort?.isSensorScanning ?: _localSensorScanning,
+        sessionPort?.isDebugModeEnabled ?: _localDebugModeEnabled,
         pipeline.latestFusedSwing,
         pipeline.latestAnomalyReport
     ) { array ->
@@ -56,8 +58,9 @@ class LabViewModel @Inject constructor(
             swingCount = array[4] as Int,
             isSensorConnected = array[5] as Boolean,
             isSensorScanning = array[6] as Boolean,
-            latestFusedSwing = array[7] as FusedSwing?,
-            latestAnomalyReport = array[8] as BaselineComparisonReport?
+            isDebugModeEnabled = array[7] as Boolean,
+            latestFusedSwing = array[8] as FusedSwing?,
+            latestAnomalyReport = array[9] as BaselineComparisonReport?
         )
     }.stateIn(
         scope = viewModelScope,
@@ -82,6 +85,7 @@ class LabViewModel @Inject constructor(
     fun startSession(): Boolean {
         val connected = sessionPort?.isSensorConnected?.value ?: _localSensorConnected.value
         if (!connected) {
+            connectSensor()
             return false
         }
         val drill = _selectedDrill.value

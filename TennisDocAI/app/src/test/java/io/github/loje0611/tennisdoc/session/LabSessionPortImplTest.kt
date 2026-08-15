@@ -41,4 +41,16 @@ class LabSessionPortImplTest {
         assertFalse(port.isSessionActive.value)
         assertFalse(SwingAnalysisSessionState.isSessionActive.value)
     }
+
+    @Test
+    fun isDebugModeEnabledReflectsSessionState() {
+        val port = LabSessionPortImpl(RuntimeEnvironment.getApplication())
+        assertFalse(port.isDebugModeEnabled.value)
+
+        SwingAnalysisSessionState.setDebugMode(true)
+        assertTrue(port.isDebugModeEnabled.value)
+
+        SwingAnalysisSessionState.setDebugMode(false)
+        assertFalse(port.isDebugModeEnabled.value)
+    }
 }

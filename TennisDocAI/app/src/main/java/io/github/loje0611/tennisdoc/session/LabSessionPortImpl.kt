@@ -39,6 +39,7 @@ class LabSessionPortImpl @Inject constructor(
             started = SharingStarted.Eagerly,
             initialValue = SwingAnalysisSessionState.connectionState.value is BleConnectionState.Scanning
         )
+    override val isDebugModeEnabled: StateFlow<Boolean> = SwingAnalysisSessionState.debugModeEnabled
 
     override fun startSession(type: SessionType, drillType: DrillType): String {
         return SwingAnalysisSessionState.startSession(type, drillType)

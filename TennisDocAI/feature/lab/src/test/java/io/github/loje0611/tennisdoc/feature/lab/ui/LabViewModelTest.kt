@@ -71,6 +71,9 @@ class LabViewModelTest {
         private val _isSensorScanning = MutableStateFlow(false)
         override val isSensorScanning: StateFlow<Boolean> = _isSensorScanning.asStateFlow()
 
+        private val _isDebugModeEnabled = MutableStateFlow(false)
+        override val isDebugModeEnabled: StateFlow<Boolean> = _isDebugModeEnabled.asStateFlow()
+
         var lastStartType: SessionType? = null
         var lastStartDrill: DrillType? = null
         var connectCalled = false
@@ -79,6 +82,10 @@ class LabViewModelTest {
         fun setSensorConnected(connected: Boolean) {
             _isSensorConnected.value = connected
             if (connected) _isSensorScanning.value = false
+        }
+
+        fun setDebugModeEnabled(enabled: Boolean) {
+            _isDebugModeEnabled.value = enabled
         }
 
         override fun startSession(type: SessionType, drillType: DrillType): String {
@@ -310,6 +317,7 @@ class LabViewModelTest {
         testScheduler.advanceUntilIdle()
         assertFalse(viewModel.uiState.value.isSessionActive)
         assertEquals(null, fakePort.lastStartType)
+        assertTrue(fakePort.connectCalled)
     }
 
     @Test
@@ -323,5 +331,20 @@ class LabViewModelTest {
         testScheduler.advanceUntilIdle()
         assertTrue(fakePort.connectCalled)
         assertTrue(viewModel.uiState.value.isSensorScanning)
+    }
+
+    @Test
+    fun `AC-10 isDebugModeEnabled updates uiState`() = runTest {
+        val fakePipeline = FakeLabFusionPipeline()
+        val fakePort = FakeLabSessionPort()
+        val viewModel = LabViewModel(fakePipeline, fakePort)
+        testScheduler.advanceUntilIdle()
+
+        assertFalse(viewModel.uiState.value.isDebugModeEnabled)
+
+        fakePort.setDebugModeEnabled(true)
+        testScheduler.advanceUntilIdle()
+
+        assertTrue(viewModel.uiState.value.isDebugModeEnabled)
     }
 }
