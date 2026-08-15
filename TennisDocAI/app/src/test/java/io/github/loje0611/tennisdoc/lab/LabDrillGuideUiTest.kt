@@ -31,7 +31,7 @@ class LabDrillGuideUiTest {
 
     @Test
     fun ac1AndAc2_drillSelectorUpdatesSelectionAndDisablesDuringSession() {
-        var selected by mutableStateOf(DrillType.FOREHAND_TOPSPIN)
+        var selected by mutableStateOf(DrillType.FOREHAND)
         var sessionActive by mutableStateOf(false)
 
         composeRule.setContent {
@@ -44,17 +44,17 @@ class LabDrillGuideUiTest {
             }
         }
 
-        composeRule.onNodeWithText("포핸드 플랫").performScrollTo().performClick()
+        composeRule.onNodeWithText("백핸드").performScrollTo().performClick()
         composeRule.waitForIdle()
-        assertEquals(DrillType.FOREHAND_FLAT, selected)
+        assertEquals(DrillType.BACKHAND, selected)
 
         sessionActive = true
         composeRule.waitForIdle()
 
-        composeRule.onNodeWithText("포핸드 플랫").performScrollTo().assertIsNotEnabled()
-        composeRule.onNodeWithText("백핸드 탑스핀").performScrollTo().performClick()
+        composeRule.onNodeWithText("백핸드").performScrollTo().assertIsNotEnabled()
+        composeRule.onNodeWithText("서브").performScrollTo().performClick()
         composeRule.waitForIdle()
-        assertEquals(DrillType.FOREHAND_FLAT, selected)
+        assertEquals(DrillType.BACKHAND, selected)
     }
 
     @Test
@@ -66,7 +66,7 @@ class LabDrillGuideUiTest {
         composeRule.setContent {
             MaterialTheme {
                 LabSessionControlHeader(
-                    selectedDrill = DrillType.FOREHAND_TOPSPIN,
+                    selectedDrill = DrillType.FOREHAND,
                     isSessionActive = sessionActive,
                     sessionDurationSeconds = 65L,
                     swingCount = 3,
@@ -85,7 +85,7 @@ class LabDrillGuideUiTest {
 
         composeRule.onNodeWithText("측정 시작").assertIsDisplayed()
         composeRule.onNodeWithText("센서 연결됨").assertIsDisplayed()
-        composeRule.onNodeWithText("목표: 포핸드 탑스핀").assertIsDisplayed()
+        composeRule.onNodeWithText("목표: 포핸드").assertIsDisplayed()
 
         composeRule.onNodeWithText("측정 시작").performClick()
         composeRule.waitForIdle()
@@ -107,7 +107,7 @@ class LabDrillGuideUiTest {
         composeRule.setContent {
             MaterialTheme {
                 LabSessionControlHeader(
-                    selectedDrill = DrillType.FOREHAND_TOPSPIN,
+                    selectedDrill = DrillType.FOREHAND,
                     isSessionActive = false,
                     sessionDurationSeconds = 0L,
                     swingCount = 0,
@@ -137,7 +137,7 @@ class LabDrillGuideUiTest {
         composeRule.setContent {
             MaterialTheme {
                 LabSessionControlHeader(
-                    selectedDrill = DrillType.FOREHAND_TOPSPIN,
+                    selectedDrill = DrillType.FOREHAND,
                     isSessionActive = false,
                     sessionDurationSeconds = 0L,
                     swingCount = 0,

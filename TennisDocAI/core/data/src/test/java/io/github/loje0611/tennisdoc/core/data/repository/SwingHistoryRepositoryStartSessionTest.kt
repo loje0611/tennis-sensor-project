@@ -23,14 +23,14 @@ class SwingHistoryRepositoryStartSessionTest {
 
         val sid = repo.startSession(
             sessionType = SessionType.LAB,
-            drillType = DrillType.FOREHAND_TOPSPIN,
+            drillType = DrillType.FOREHAND,
             startTimeMillis = start,
         )
 
         val inserted = repo.provisional.single()
         assertEquals(sid, inserted.sessionId)
         assertEquals(SessionType.LAB.name, inserted.sessionType)
-        assertEquals(DrillType.FOREHAND_TOPSPIN.name, inserted.drillType)
+        assertEquals(DrillType.FOREHAND.name, inserted.drillType)
         assertEquals(start, inserted.startTime)
         assertNull(inserted.endTime)
         assertEquals(0, inserted.totalSwingCount)
@@ -52,7 +52,7 @@ class SwingHistoryRepositoryStartSessionTest {
         val repo = RecordingRepo()
         val sid = repo.startSession(
             sessionType = SessionType.LAB,
-            drillType = DrillType.FOREHAND_TOPSPIN,
+            drillType = DrillType.FOREHAND,
             startTimeMillis = 10L,
         )
 
@@ -68,7 +68,7 @@ class SwingHistoryRepositoryStartSessionTest {
 
         val stored = repo.getSessionDetail(sid)!!.session
         assertEquals(SessionType.LAB.name, stored.sessionType)
-        assertEquals(DrillType.FOREHAND_TOPSPIN.name, stored.drillType)
+        assertEquals(DrillType.FOREHAND.name, stored.drillType)
         assertEquals(20L, stored.endTime)
         assertEquals(3, stored.totalSwingCount)
         assertEquals(4_000L, stored.durationMillis)

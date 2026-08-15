@@ -38,7 +38,7 @@ class CausalCoachingEngineTest {
         val racketImpact = RacketImpactOrientation(12f, 0f, 0f, RacketFaceState.OPEN, 12f)
 
         val diagnosis = engine.diagnose(
-            DrillType.FOREHAND_TOPSPIN,
+            DrillType.FOREHAND,
             anchor,
             chain,
             racketImpact,
@@ -60,7 +60,7 @@ class CausalCoachingEngineTest {
         val racketImpact = RacketImpactOrientation(-12f, 0f, 0f, RacketFaceState.CLOSED, -12f)
 
         val diagnosis = engine.diagnose(
-            DrillType.FOREHAND_FLAT,
+            DrillType.FOREHAND,
             anchor,
             chain,
             racketImpact,
@@ -83,7 +83,7 @@ class CausalCoachingEngineTest {
         val racketImpact = RacketImpactOrientation(0f, 0f, 0f, RacketFaceState.SQUARE, 0f)
 
         val diagnosis = engine.diagnose(
-            DrillType.FOREHAND_TOPSPIN,
+            DrillType.FOREHAND,
             anchor,
             chain,
             racketImpact,
@@ -104,7 +104,7 @@ class CausalCoachingEngineTest {
         val racketImpact = RacketImpactOrientation(0f, 0f, 0f, RacketFaceState.SQUARE, 0f)
 
         val diagnosis = engine.diagnose(
-            DrillType.FOREHAND_TOPSPIN,
+            DrillType.FOREHAND,
             anchor,
             chain,
             racketImpact,
@@ -126,7 +126,7 @@ class CausalCoachingEngineTest {
         val racketImpact = RacketImpactOrientation(0f, 0f, 0f, RacketFaceState.SQUARE, 0f)
 
         val diagnosis = engine.diagnose(
-            DrillType.FOREHAND_TOPSPIN,
+            DrillType.FOREHAND,
             anchor,
             chain,
             racketImpact,

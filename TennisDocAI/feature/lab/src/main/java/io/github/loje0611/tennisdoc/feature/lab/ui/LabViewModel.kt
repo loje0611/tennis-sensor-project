@@ -26,7 +26,7 @@ class LabViewModel @Inject constructor(
     val sessionPort: LabSessionPort? = null
 ) : ViewModel() {
 
-    private val _selectedDrill = MutableStateFlow(DrillType.FOREHAND_TOPSPIN)
+    private val _selectedDrill = MutableStateFlow(DrillType.FOREHAND)
     val selectedDrill: StateFlow<DrillType> = _selectedDrill.asStateFlow()
 
     private val _localIsSessionActive = MutableStateFlow(false)

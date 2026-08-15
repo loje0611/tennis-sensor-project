@@ -30,11 +30,11 @@ class LabSessionPortImplTest {
     @Test
     fun startSessionForwardsLabTypeAndSelectedDrill() {
         val port = LabSessionPortImpl(RuntimeEnvironment.getApplication())
-        val sid = port.startSession(SessionType.LAB, DrillType.VOLLEY)
+        val sid = port.startSession(SessionType.LAB, DrillType.FOREHAND_VOLLEY)
 
         assertEquals(sid, SwingAnalysisSessionState.activeSessionId.value)
         assertEquals(SessionType.LAB, SwingAnalysisSessionState.activeSessionType.value)
-        assertEquals(DrillType.VOLLEY, SwingAnalysisSessionState.activeDrillType.value)
+        assertEquals(DrillType.FOREHAND_VOLLEY, SwingAnalysisSessionState.activeDrillType.value)
         assertTrue(port.isSessionActive.value)
 
         port.finishSession()

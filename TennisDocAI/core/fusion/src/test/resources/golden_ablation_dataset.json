@@ -1,7 +1,7 @@
 [
   {
     "test_case_id": "case-1-face-open",
-    "drill_type": "FOREHAND_TOPSPIN",
+    "drill_type": "FOREHAND",
     "hip_peak_frame": 5,
     "shoulder_peak_frame": 3,
     "wrist_peak_frame": 6,
@@ -19,7 +19,7 @@
   },
   {
     "test_case_id": "case-2-face-closed",
-    "drill_type": "FOREHAND_FLAT",
+    "drill_type": "FOREHAND",
     "hip_peak_frame": 3,
     "shoulder_peak_frame": 4,
     "wrist_peak_frame": 5,
@@ -37,7 +37,7 @@
   },
   {
     "test_case_id": "case-3-power-leak",
-    "drill_type": "FOREHAND_TOPSPIN",
+    "drill_type": "FOREHAND",
     "hip_peak_frame": 2,
     "shoulder_peak_frame": 3,
     "wrist_peak_frame": 4,
@@ -55,7 +55,7 @@
   },
   {
     "test_case_id": "case-4-clean-strike",
-    "drill_type": "FOREHAND_TOPSPIN",
+    "drill_type": "FOREHAND",
     "hip_peak_frame": 3,
     "shoulder_peak_frame": 4,
     "wrist_peak_frame": 5,
@@ -73,7 +73,7 @@
   },
   {
     "test_case_id": "case-5-unsync",
-    "drill_type": "FOREHAND_TOPSPIN",
+    "drill_type": "FOREHAND",
     "hip_peak_frame": 3,
     "shoulder_peak_frame": 4,
     "wrist_peak_frame": 5,

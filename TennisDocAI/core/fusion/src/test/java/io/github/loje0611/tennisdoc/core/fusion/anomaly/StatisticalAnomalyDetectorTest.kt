@@ -45,7 +45,7 @@ class StatisticalAnomalyDetectorTest {
         return FusedSwing(
             swingId = "test-swing",
             sessionId = "session-1",
-            drillType = DrillType.FOREHAND_TOPSPIN,
+            drillType = DrillType.FOREHAND,
             anchor = anchor,
             kineticChain = chain,
             racketImpact = orientation,

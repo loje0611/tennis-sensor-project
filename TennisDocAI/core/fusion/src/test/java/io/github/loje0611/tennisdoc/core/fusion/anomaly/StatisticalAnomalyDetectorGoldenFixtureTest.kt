@@ -125,7 +125,7 @@ class StatisticalAnomalyDetectorGoldenFixtureTest {
         return FusedSwing(
             swingId = "test-swing",
             sessionId = "session-1",
-            drillType = DrillType.FOREHAND_TOPSPIN,
+            drillType = DrillType.FOREHAND,
             anchor = SyncAnchor(1000L, 1000L, 0L, 0.95f, true),
             kineticChain = KineticChain5Stage(stages, true, totalDuration, efficiency),
             racketImpact = RacketImpactOrientation(2f, 0f, 0f, RacketFaceState.SQUARE, 2f),

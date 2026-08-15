@@ -56,14 +56,14 @@ class FusionEngineImplTest {
         val imu = createImuSequence()
 
         val fusedSwing = fusionEngine.fuse(
-            DrillType.FOREHAND_TOPSPIN,
+            DrillType.FOREHAND,
             poses,
             imu
         )
 
         assertNotNull(fusedSwing.swingId)
         assertTrue(fusedSwing.sessionId.startsWith("fusion-session-"))
-        assertEquals(DrillType.FOREHAND_TOPSPIN, fusedSwing.drillType)
+        assertEquals(DrillType.FOREHAND, fusedSwing.drillType)
         assertNotNull(fusedSwing.anchor)
         assertEquals(5, fusedSwing.kineticChain.stages.size)
         assertNotNull(fusedSwing.racketImpact)

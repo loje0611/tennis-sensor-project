@@ -1,7 +1,7 @@
 [
   {
     "name": "rule1_early_body_open_face_open",
-    "drill_type": "FOREHAND_TOPSPIN",
+    "drill_type": "FOREHAND",
     "anchor": {
       "vision_impact_timestamp_ms": 1130,
       "sensor_impact_timestamp_ms": 1130,
@@ -37,7 +37,7 @@
   },
   {
     "name": "rule2_late_contact_face_closed",
-    "drill_type": "FOREHAND_FLAT",
+    "drill_type": "FOREHAND",
     "anchor": {
       "vision_impact_timestamp_ms": 1130,
       "sensor_impact_timestamp_ms": 1130,
@@ -73,7 +73,7 @@
   },
   {
     "name": "rule3_kinetic_power_leak",
-    "drill_type": "FOREHAND_TOPSPIN",
+    "drill_type": "FOREHAND",
     "anchor": {
       "vision_impact_timestamp_ms": 1130,
       "sensor_impact_timestamp_ms": 1130,
@@ -109,7 +109,7 @@
   },
   {
     "name": "rule4_optimal_clean_strike",
-    "drill_type": "FOREHAND_TOPSPIN",
+    "drill_type": "FOREHAND",
     "anchor": {
       "vision_impact_timestamp_ms": 1130,
       "sensor_impact_timestamp_ms": 1130,
@@ -145,7 +145,7 @@
   },
   {
     "name": "sync_failed",
-    "drill_type": "FOREHAND_TOPSPIN",
+    "drill_type": "FOREHAND",
     "anchor": {
       "vision_impact_timestamp_ms": 1000,
       "sensor_impact_timestamp_ms": 1250,

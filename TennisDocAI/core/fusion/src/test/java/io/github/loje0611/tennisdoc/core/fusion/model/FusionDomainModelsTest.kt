@@ -102,7 +102,7 @@ class FusionDomainModelsTest {
         val swing = FusedSwing(
             swingId = "swing-1",
             sessionId = "session-1",
-            drillType = DrillType.FOREHAND_FLAT,
+            drillType = DrillType.FOREHAND,
             anchor = SyncAnchor(
                 visionImpactTimestampMs = 1000L,
                 sensorImpactTimestampMs = 1040L,
@@ -127,7 +127,7 @@ class FusionDomainModelsTest {
 
         assertEquals("swing-1", swing.swingId)
         assertEquals("session-1", swing.sessionId)
-        assertEquals(DrillType.FOREHAND_FLAT, swing.drillType)
+        assertEquals(DrillType.FOREHAND, swing.drillType)
         assertEquals(40L, swing.anchor.timeOffsetMs)
         assertTrue(swing.anchor.isSynchronized)
         assertEquals(5, swing.kineticChain.stages.size)

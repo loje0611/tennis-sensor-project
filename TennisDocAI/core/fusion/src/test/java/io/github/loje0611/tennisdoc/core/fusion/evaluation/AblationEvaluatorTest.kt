@@ -47,7 +47,7 @@ class AblationEvaluatorTest {
         return FusedSwing(
             swingId = "test-swing",
             sessionId = "test-session",
-            drillType = DrillType.FOREHAND_TOPSPIN,
+            drillType = DrillType.FOREHAND,
             anchor = anchor,
             kineticChain = chain,
             racketImpact = orientation,
@@ -193,7 +193,7 @@ class AblationEvaluatorTest {
             // Case 1: Early Body Open + Face Open
             AblationTestCase(
                 testCaseId = "case-1-face-open",
-                drillType = DrillType.FOREHAND_TOPSPIN,
+                drillType = DrillType.FOREHAND,
                 poses = createPoseSequence(hip = 5, shoulder = 3, wrist = 6),
                 imuSamples = createImuSequence(racketTs = 250L, impactTs = 280L, gyroY = 600f),
                 visionOnlyTags = listOf("EARLY_BODY_OPEN"),
@@ -202,7 +202,7 @@ class AblationEvaluatorTest {
             // Case 2: Late Contact + Face Closed
             AblationTestCase(
                 testCaseId = "case-2-face-closed",
-                drillType = DrillType.FOREHAND_FLAT,
+                drillType = DrillType.FOREHAND,
                 poses = createPoseSequence(hip = 3, shoulder = 4, wrist = 5),
                 imuSamples = createImuSequence(racketTs = 210L, impactTs = 230L, gyroY = -600f),
                 visionOnlyTags = listOf("LATE_CONTACT"),
@@ -211,7 +211,7 @@ class AblationEvaluatorTest {
             // Case 3: Power Leak (timing delay)
             AblationTestCase(
                 testCaseId = "case-3-power-leak",
-                drillType = DrillType.FOREHAND_TOPSPIN,
+                drillType = DrillType.FOREHAND,
                 poses = createPoseSequence(hip = 2, shoulder = 3, wrist = 4),
                 imuSamples = createImuSequence(racketTs = 310L, impactTs = 230L, gyroY = 0f),
                 visionOnlyTags = listOf("SLOW_SWING"),
@@ -220,7 +220,7 @@ class AblationEvaluatorTest {
             // Case 4: Clean Strike (perfect sequence + square face)
             AblationTestCase(
                 testCaseId = "case-4-clean-strike",
-                drillType = DrillType.FOREHAND_TOPSPIN,
+                drillType = DrillType.FOREHAND,
                 poses = createPoseSequence(hip = 3, shoulder = 4, wrist = 5),
                 imuSamples = createImuSequence(racketTs = 210L, impactTs = 230L, gyroY = 50f),
                 visionOnlyTags = listOf("GOOD_SWING"),
@@ -229,7 +229,7 @@ class AblationEvaluatorTest {
             // Case 5: Unsynchronized Fallback
             AblationTestCase(
                 testCaseId = "case-5-unsync",
-                drillType = DrillType.FOREHAND_TOPSPIN,
+                drillType = DrillType.FOREHAND,
                 poses = createPoseSequence(hip = 3, shoulder = 4, wrist = 5),
                 imuSamples = createImuSequence(racketTs = 800L, impactTs = 850L, gyroY = 0f), // sensor 850ms vs vision 166ms (diff > 150ms)
                 visionOnlyTags = listOf("UNKNOWN"),

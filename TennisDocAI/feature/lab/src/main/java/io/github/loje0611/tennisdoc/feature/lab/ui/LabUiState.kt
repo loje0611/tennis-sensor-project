@@ -5,7 +5,7 @@ import io.github.loje0611.tennisdoc.core.fusion.model.FusedSwing
 import io.github.loje0611.tennisdoc.core.model.DrillType
 
 data class LabUiState(
-    val selectedDrill: DrillType = DrillType.FOREHAND_TOPSPIN,
+    val selectedDrill: DrillType = DrillType.FOREHAND,
     val isSessionActive: Boolean = false,
     val activeSessionId: String? = null,
     val sessionDurationSeconds: Long = 0L,

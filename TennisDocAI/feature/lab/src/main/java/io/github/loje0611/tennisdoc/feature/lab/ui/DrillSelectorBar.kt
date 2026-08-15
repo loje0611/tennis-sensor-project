@@ -22,14 +22,11 @@ fun DrillSelectorBar(
     modifier: Modifier = Modifier
 ) {
     val drillOptions = listOf(
-        DrillType.FOREHAND_TOPSPIN,
-        DrillType.FOREHAND_FLAT,
-        DrillType.FOREHAND_SLICE,
-        DrillType.BACKHAND_TOPSPIN,
-        DrillType.BACKHAND_FLAT,
-        DrillType.BACKHAND_SLICE,
+        DrillType.FOREHAND,
+        DrillType.BACKHAND,
         DrillType.SERVE,
-        DrillType.VOLLEY
+        DrillType.FOREHAND_VOLLEY,
+        DrillType.BACKHAND_VOLLEY
     )
 
     Row(
@@ -60,18 +57,5 @@ fun DrillSelectorBar(
                 )
             )
         }
-    }
-}
-
-fun DrillType.toDisplayName(): String {
-    return when (this) {
-        DrillType.FOREHAND_TOPSPIN -> "포핸드 탑스핀"
-        DrillType.FOREHAND_FLAT -> "포핸드 플랫"
-        DrillType.FOREHAND_SLICE -> "포핸드 슬라이스"
-        DrillType.BACKHAND_TOPSPIN -> "백핸드 탑스핀"
-        DrillType.BACKHAND_FLAT -> "백핸드 플랫"
-        DrillType.BACKHAND_SLICE -> "백핸드 슬라이스"
-        DrillType.SERVE -> "서브"
-        DrillType.VOLLEY -> "발리"
     }
 }

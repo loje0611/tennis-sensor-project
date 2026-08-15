@@ -38,12 +38,12 @@ class SessionLifecycleTest {
 
         val sid = SwingAnalysisSessionState.startSession(
             SessionType.LAB,
-            DrillType.FOREHAND_TOPSPIN,
+            DrillType.FOREHAND,
         )
 
         assertEquals(sid, SwingAnalysisSessionState.activeSessionId.value)
         assertEquals(SessionType.LAB, SwingAnalysisSessionState.activeSessionType.value)
-        assertEquals(DrillType.FOREHAND_TOPSPIN, SwingAnalysisSessionState.activeDrillType.value)
+        assertEquals(DrillType.FOREHAND, SwingAnalysisSessionState.activeDrillType.value)
         assertTrue(SwingAnalysisSessionState.isSessionActive.value)
         assertEquals(0, SwingAnalysisSessionState.swingCount.value)
         assertTrue(sid.isNotBlank())
@@ -85,7 +85,7 @@ class SessionLifecycleTest {
     fun startSessionLabForehandTopspinInsertsTypedProvisionalRow() {
         val sid = SwingAnalysisSessionState.startSession(
             SessionType.LAB,
-            DrillType.FOREHAND_TOPSPIN,
+            DrillType.FOREHAND,
         )
 
         assertTrue(SwingAnalysisSessionState.isSessionActive.value)
@@ -94,7 +94,7 @@ class SessionLifecycleTest {
         val inserted = repo.provisionalInserts.single()
         assertEquals(sid, inserted.sessionId)
         assertEquals(SessionType.LAB.name, inserted.sessionType)
-        assertEquals(DrillType.FOREHAND_TOPSPIN.name, inserted.drillType)
+        assertEquals(DrillType.FOREHAND.name, inserted.drillType)
         assertTrue(inserted.startTime > 0L)
         assertNull(inserted.endTime)
         assertEquals(0, inserted.totalSwingCount)
@@ -118,7 +118,7 @@ class SessionLifecycleTest {
     fun finishSessionFinalizesCountsAndPreservesSessionAndDrillType() {
         val sid = SwingAnalysisSessionState.startSession(
             SessionType.LAB,
-            DrillType.FOREHAND_TOPSPIN,
+            DrillType.FOREHAND,
         )
         awaitUntil { repo.provisionalInserts.any { it.sessionId == sid } }
 
@@ -145,7 +145,7 @@ class SessionLifecycleTest {
         val stored = repo.getSessionDetailBlocking(sid)
         assertNotNull(stored)
         assertEquals(SessionType.LAB.name, stored!!.session.sessionType)
-        assertEquals(DrillType.FOREHAND_TOPSPIN.name, stored.session.drillType)
+        assertEquals(DrillType.FOREHAND.name, stored.session.drillType)
         assertEquals(2, stored.session.totalSwingCount)
         assertEquals(5_000L, stored.session.durationMillis)
         assertEquals(call.endTime, stored.session.endTime)

@@ -85,7 +85,7 @@ class LabFusionPipelineTest {
 
         val swing = pipeline.onSwingTriggered(
             sessionId = "session-test-123",
-            drillType = DrillType.FOREHAND_TOPSPIN
+            drillType = DrillType.FOREHAND
         )
 
         assertNotNull(swing)
@@ -94,7 +94,7 @@ class LabFusionPipelineTest {
         // AC-4: Anomaly report is generated
         val anomalyReport = pipeline.latestAnomalyReport.value
         assertNotNull(anomalyReport)
-        assertEquals(DrillType.FOREHAND_TOPSPIN, anomalyReport!!.drillType)
+        assertEquals(DrillType.FOREHAND, anomalyReport!!.drillType)
 
         // Advance dispatcher for DB insert
         testScheduler.advanceUntilIdle()
@@ -103,7 +103,7 @@ class LabFusionPipelineTest {
         assertEquals(1, fakeDao.insertedRecords.size)
         val record = fakeDao.insertedRecords.first()
         assertEquals("session-test-123", record.sessionId)
-        assertEquals("FOREHAND_TOPSPIN", record.drillType)
+        assertEquals("FOREHAND", record.drillType)
         assertTrue(record.imuRawJson.contains("gx"))
         assertTrue(record.visionPosesJson.contains("landmarks"))
         assertNotNull(pipeline.currentBaseline.value)
@@ -131,7 +131,7 @@ class LabFusionPipelineTest {
     fun `reset clears fused swing and anomaly report`() = runTest {
         val pipeline = LabFusionPipelineImpl()
         pipeline.feedImuSample(generateMockImu(0L, 100f, 1f))
-        pipeline.onSwingTriggered("session-reset", DrillType.VOLLEY)
+        pipeline.onSwingTriggered("session-reset", DrillType.FOREHAND_VOLLEY)
         assertNotNull(pipeline.latestFusedSwing.value)
 
         pipeline.reset()

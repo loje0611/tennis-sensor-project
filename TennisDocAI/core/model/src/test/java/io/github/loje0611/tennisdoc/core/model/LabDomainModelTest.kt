@@ -16,14 +16,11 @@ class LabDomainModelTest {
         val names = DrillType.entries.map { it.name }.toSet()
         assertEquals(
             setOf(
-                "FOREHAND_FLAT",
-                "FOREHAND_TOPSPIN",
-                "FOREHAND_SLICE",
-                "BACKHAND_FLAT",
-                "BACKHAND_TOPSPIN",
-                "BACKHAND_SLICE",
+                "FOREHAND",
+                "BACKHAND",
                 "SERVE",
-                "VOLLEY",
+                "FOREHAND_VOLLEY",
+                "BACKHAND_VOLLEY",
             ),
             names,
         )
@@ -34,14 +31,14 @@ class LabDomainModelTest {
         val record = LabRawSwingRecord(
             id = 9L,
             sessionId = "lab-session",
-            drillType = DrillType.FOREHAND_TOPSPIN,
+            drillType = DrillType.FOREHAND,
             timestampMillis = 1_700_000_000_000L,
             imuRawJson = """[{"ax":1}]""",
             visionPosesJson = """[{"landmarks":[]}]""",
             impactOffsetMs = 40L,
         )
         assertEquals("lab-session", record.sessionId)
-        assertEquals(DrillType.FOREHAND_TOPSPIN, record.drillType)
+        assertEquals(DrillType.FOREHAND, record.drillType)
         assertEquals("""[{"ax":1}]""", record.imuRawJson)
         assertEquals("""[{"landmarks":[]}]""", record.visionPosesJson)
         assertEquals(40L, record.impactOffsetMs)

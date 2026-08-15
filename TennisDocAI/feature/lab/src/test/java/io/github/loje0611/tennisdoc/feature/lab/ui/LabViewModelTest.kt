@@ -207,7 +207,7 @@ class LabViewModelTest {
         assertTrue(viewModel.uiState.value.isSessionActive)
 
         // Drill selection attempt while session is active should be ignored
-        viewModel.selectDrill(DrillType.BACKHAND_TOPSPIN)
+        viewModel.selectDrill(DrillType.BACKHAND)
         assertEquals(DrillType.SERVE, viewModel.selectedDrill.value)
     }
 
@@ -250,7 +250,7 @@ class LabViewModelTest {
         assertEquals("훌륭한 임팩트입니다.", ui.latestFusedSwing!!.diagnosis?.coachingFeedback)
 
         assertNotNull(ui.latestAnomalyReport)
-        assertEquals(DrillType.FOREHAND_TOPSPIN, ui.latestAnomalyReport!!.drillType)
+        assertEquals(DrillType.FOREHAND, ui.latestAnomalyReport!!.drillType)
     }
 
     @Test
@@ -262,7 +262,7 @@ class LabViewModelTest {
 
         fakePipeline.emitAnomalyReport(
             BaselineComparisonReport(
-                drillType = DrillType.FOREHAND_TOPSPIN,
+                drillType = DrillType.FOREHAND,
                 anomalies = listOf(
                     AnomalyResult(
                         metricKey = "racketSpeed",

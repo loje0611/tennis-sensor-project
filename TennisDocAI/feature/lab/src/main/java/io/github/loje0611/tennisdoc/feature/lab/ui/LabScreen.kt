@@ -164,6 +164,9 @@ private fun CameraPreviewWithOverlay(
             lifecycleOwner.lifecycle.removeObserver(observer)
             cameraExecutor.shutdown()
             landmarkerWrapper.close()
+            if (!uiState.isSessionActive) {
+                viewModel?.disconnectSensor()
+            }
         }
     }
 

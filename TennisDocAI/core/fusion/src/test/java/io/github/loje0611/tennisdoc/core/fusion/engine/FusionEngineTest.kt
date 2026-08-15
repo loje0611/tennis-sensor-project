@@ -98,14 +98,14 @@ class FusionEngineTest {
         )
 
         val result = engine.fuse(
-            drillType = DrillType.FOREHAND_TOPSPIN,
+            drillType = DrillType.FOREHAND,
             poses = dummyPoses,
             imuSamples = dummyImu
         )
 
         assertNotNull(result.swingId)
         assertEquals("test-session-1", result.sessionId)
-        assertEquals(DrillType.FOREHAND_TOPSPIN, result.drillType)
+        assertEquals(DrillType.FOREHAND, result.drillType)
         assertTrue(result.anchor.isSynchronized)
         assertEquals(10L, result.anchor.timeOffsetMs)
         assertEquals(5, result.kineticChain.stages.size)
@@ -143,7 +143,7 @@ class FusionEngineTest {
         )
 
         val result = engine.fuse(
-            drillType = DrillType.VOLLEY,
+            drillType = DrillType.FOREHAND_VOLLEY,
             poses = emptyList(),
             imuSamples = imu,
         )
@@ -160,7 +160,7 @@ class FusionEngineTest {
         val poses = listOf(PoseFrame(landmarks = listOf(PoseLandmark(0.1f, 0.2f, 0.3f, 0.9f))))
 
         val result = engine.fuse(
-            drillType = DrillType.BACKHAND_SLICE,
+            drillType = DrillType.BACKHAND,
             poses = poses,
             imuSamples = emptyList(),
         )
