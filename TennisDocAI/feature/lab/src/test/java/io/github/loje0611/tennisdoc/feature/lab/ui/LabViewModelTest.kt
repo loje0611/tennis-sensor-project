@@ -347,4 +347,170 @@ class LabViewModelTest {
 
         assertTrue(viewModel.uiState.value.isDebugModeEnabled)
     }
+
+    @Test
+    fun `TASK-041 AC-1 camera facing mode toggles between FRONT and BACK`() = runTest {
+        val fakePipeline = FakeLabFusionPipeline()
+        val fakePort = FakeLabSessionPort()
+        val viewModel = LabViewModel(fakePipeline, fakePort)
+        testScheduler.advanceUntilIdle()
+
+        assertEquals(CameraFacingMode.FRONT, viewModel.uiState.value.cameraFacingMode)
+
+        viewModel.toggleCameraFacing()
+        testScheduler.advanceUntilIdle()
+        assertEquals(CameraFacingMode.BACK, viewModel.uiState.value.cameraFacingMode)
+
+        viewModel.toggleCameraFacing()
+        testScheduler.advanceUntilIdle()
+        assertEquals(CameraFacingMode.FRONT, viewModel.uiState.value.cameraFacingMode)
+    }
+
+    @Test
+    fun `TASK-041 AC-3 FRONT camera startSession triggers 5 second countdown before starting`() = runTest {
+        val fakePipeline = FakeLabFusionPipeline()
+        val fakePort = FakeLabSessionPort()
+        val viewModel = LabViewModel(fakePipeline, fakePort)
+        testScheduler.advanceUntilIdle()
+
+        viewModel.setCameraFacing(CameraFacingMode.FRONT)
+        val started = viewModel.startSession()
+        assertTrue(started)
+
+        // Countdown starts at 5
+        testScheduler.runCurrent()
+        assertEquals(5, viewModel.uiState.value.countdownSeconds)
+        assertFalse(viewModel.uiState.value.isSessionActive)
+
+        // Advance 1s -> 4
+        testScheduler.advanceTimeBy(1000L)
+        testScheduler.runCurrent()
+        assertEquals(4, viewModel.uiState.value.countdownSeconds)
+
+        // Advance remaining 4s + 500ms
+        testScheduler.advanceTimeBy(4500L)
+        testScheduler.advanceUntilIdle()
+
+        // Countdown completed and session is now active
+        assertEquals(null, viewModel.uiState.value.countdownSeconds)
+        assertTrue(viewModel.uiState.value.isSessionActive)
+    }
+
+    @Test
+    fun `TASK-041 AC-4 BACK camera startSession starts immediately without countdown`() = runTest {
+        val fakePipeline = FakeLabFusionPipeline()
+        val fakePort = FakeLabSessionPort()
+        val viewModel = LabViewModel(fakePipeline, fakePort)
+        testScheduler.advanceUntilIdle()
+
+        viewModel.setCameraFacing(CameraFacingMode.BACK)
+        val started = viewModel.startSession()
+        assertTrue(started)
+
+        testScheduler.advanceUntilIdle()
+        assertEquals(null, viewModel.uiState.value.countdownSeconds)
+        assertTrue(viewModel.uiState.value.isSessionActive)
+    }
+
+    @Test
+    fun `TASK-041 cancelCountdown stops countdown and session does not start`() = runTest {
+        val fakePipeline = FakeLabFusionPipeline()
+        val fakePort = FakeLabSessionPort()
+        val viewModel = LabViewModel(fakePipeline, fakePort)
+        testScheduler.advanceUntilIdle()
+
+        viewModel.setCameraFacing(CameraFacingMode.FRONT)
+        viewModel.startSession()
+        testScheduler.runCurrent()
+        assertEquals(5, viewModel.uiState.value.countdownSeconds)
+
+        viewModel.cancelCountdown()
+        testScheduler.advanceUntilIdle()
+
+        assertEquals(null, viewModel.uiState.value.countdownSeconds)
+        assertFalse(viewModel.uiState.value.isSessionActive)
+    }
+
+    @Test
+    fun `TASK-041 AC-5 FRONT camera swing produces farFieldHud with auto timeout`() = runTest {
+        val fakePipeline = FakeLabFusionPipeline()
+        val fakePort = FakeLabSessionPort()
+        val viewModel = LabViewModel(fakePipeline, fakePort)
+        testScheduler.advanceUntilIdle()
+
+        viewModel.setCameraFacing(CameraFacingMode.FRONT)
+        testScheduler.advanceUntilIdle()
+
+        viewModel.triggerSwing()
+        testScheduler.runCurrent()
+
+        val hud = viewModel.uiState.value.farFieldHud
+        assertNotNull(hud)
+        assertTrue(hud!!.isSquare)
+        assertEquals(90f, hud.energyEfficiency)
+
+        // After 3 seconds, HUD is cleared
+        testScheduler.advanceTimeBy(3000L)
+        testScheduler.runCurrent()
+        assertEquals(null, viewModel.uiState.value.farFieldHud)
+    }
+
+    @Test
+    fun `TASK-041 AC-5 BACK camera swing does not produce farFieldHud`() = runTest {
+        val fakePipeline = FakeLabFusionPipeline()
+        val fakePort = FakeLabSessionPort()
+        val viewModel = LabViewModel(fakePipeline, fakePort)
+        viewModel.setCameraFacing(CameraFacingMode.BACK)
+        testScheduler.advanceUntilIdle()
+
+        viewModel.triggerSwing()
+        testScheduler.advanceUntilIdle()
+
+        assertEquals(null, viewModel.uiState.value.farFieldHud)
+    }
+
+    @Test
+    fun `TASK-041 AC-7 finishSession produces SessionCompletionSummary and dismiss clears it`() = runTest {
+        val fakePipeline = FakeLabFusionPipeline()
+        val fakePort = FakeLabSessionPort()
+        val viewModel = LabViewModel(fakePipeline, fakePort)
+        viewModel.setCameraFacing(CameraFacingMode.BACK)
+        viewModel.startSession()
+        testScheduler.advanceUntilIdle()
+
+        viewModel.triggerSwing()
+        testScheduler.advanceUntilIdle()
+
+        viewModel.finishSession()
+        testScheduler.advanceUntilIdle()
+
+        val summary = viewModel.uiState.value.completionSummary
+        assertNotNull(summary)
+        assertEquals(1, summary!!.totalSwingCount)
+        assertEquals(100, summary.squareRatePercent)
+        assertEquals(90f, summary.averageEnergyEfficiency)
+
+        viewModel.dismissCompletionSummary()
+        testScheduler.advanceUntilIdle()
+        assertEquals(null, viewModel.uiState.value.completionSummary)
+    }
+
+    @Test
+    fun `TASK-041 onPoseDetected detects body framing status`() = runTest {
+        val fakePipeline = FakeLabFusionPipeline()
+        val fakePort = FakeLabSessionPort()
+        val viewModel = LabViewModel(fakePipeline, fakePort)
+
+        // Landmarks without enough points
+        val incompletePose = PoseFrame(landmarks = listOf(PoseLandmark(0.5f, 0.5f, 0f, 0.9f)))
+        viewModel.onPoseDetected(incompletePose)
+        testScheduler.advanceUntilIdle()
+        assertFalse(viewModel.uiState.value.isBodyFramed)
+
+        // Full 33 landmarks with key points visible
+        val fullLandmarks = (0 until 33).map { PoseLandmark(0.5f, 0.5f, 0f, 0.9f) }
+        viewModel.onPoseDetected(PoseFrame(landmarks = fullLandmarks))
+        testScheduler.advanceUntilIdle()
+        assertTrue(viewModel.uiState.value.isBodyFramed)
+    }
 }

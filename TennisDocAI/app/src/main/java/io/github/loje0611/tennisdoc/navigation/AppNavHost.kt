@@ -201,7 +201,10 @@ fun AppNavHost() {
                 val labViewModel: LabViewModel = hiltViewModel()
                 LabScreen(
                     viewModel = labViewModel,
-                    modifier = Modifier.padding(innerPadding)
+                    modifier = Modifier.padding(innerPadding),
+                    onNavigateToReplay = { sessionId ->
+                        navController.navigate(AppRoutes.sessionDetail(sessionId))
+                    }
                 )
             }
             

@@ -12,12 +12,15 @@ import io.github.loje0611.tennisdoc.core.vision.model.PoseFrame
 import io.github.loje0611.tennisdoc.feature.lab.pipeline.LabFusionPipeline
 import io.github.loje0611.tennisdoc.feature.lab.session.LabSessionPort
 import javax.inject.Inject
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 @HiltViewModel
@@ -37,30 +40,54 @@ class LabViewModel @Inject constructor(
     private val _localSensorScanning = MutableStateFlow(false)
     private val _localDebugModeEnabled = MutableStateFlow(false)
 
+    private val _cameraFacingMode = MutableStateFlow(CameraFacingMode.FRONT)
+    private val _countdownSeconds = MutableStateFlow<Int?>(null)
+    private val _farFieldHud = MutableStateFlow<FarFieldHudState?>(null)
+    private val _completionSummary = MutableStateFlow<SessionCompletionSummary?>(null)
+    private val _isBodyFramed = MutableStateFlow(false)
+
+    private val sessionSwings = mutableListOf<FusedSwing>()
+    private var countdownJob: Job? = null
+    private var hudJob: Job? = null
+
     val uiState: StateFlow<LabUiState> = combine(
-        _selectedDrill,
-        sessionPort?.isSessionActive ?: _localIsSessionActive,
-        sessionPort?.activeSessionId ?: _localSessionId,
-        sessionPort?.sessionDurationSeconds ?: _localSessionDuration,
-        sessionPort?.swingCount ?: _localSwingCount,
-        sessionPort?.isSensorConnected ?: _localSensorConnected,
-        sessionPort?.isSensorScanning ?: _localSensorScanning,
-        sessionPort?.isDebugModeEnabled ?: _localDebugModeEnabled,
-        pipeline.latestFusedSwing,
-        pipeline.latestAnomalyReport
-    ) { array ->
+        combine(
+            _selectedDrill,
+            sessionPort?.isSessionActive ?: _localIsSessionActive,
+            sessionPort?.activeSessionId ?: _localSessionId,
+            sessionPort?.sessionDurationSeconds ?: _localSessionDuration,
+            sessionPort?.swingCount ?: _localSwingCount,
+            sessionPort?.isSensorConnected ?: _localSensorConnected,
+            sessionPort?.isSensorScanning ?: _localSensorScanning
+        ) { arr -> arr },
+        combine(
+            sessionPort?.isDebugModeEnabled ?: _localDebugModeEnabled,
+            _cameraFacingMode,
+            _countdownSeconds,
+            _farFieldHud,
+            _completionSummary,
+            pipeline.latestFusedSwing,
+            pipeline.latestAnomalyReport,
+            _isBodyFramed
+        ) { arr -> arr }
+    ) { part1, part2 ->
         @Suppress("UNCHECKED_CAST")
         LabUiState(
-            selectedDrill = array[0] as DrillType,
-            isSessionActive = array[1] as Boolean,
-            activeSessionId = array[2] as String?,
-            sessionDurationSeconds = array[3] as Long,
-            swingCount = array[4] as Int,
-            isSensorConnected = array[5] as Boolean,
-            isSensorScanning = array[6] as Boolean,
-            isDebugModeEnabled = array[7] as Boolean,
-            latestFusedSwing = array[8] as FusedSwing?,
-            latestAnomalyReport = array[9] as BaselineComparisonReport?
+            selectedDrill = part1[0] as DrillType,
+            isSessionActive = part1[1] as Boolean,
+            activeSessionId = part1[2] as String?,
+            sessionDurationSeconds = part1[3] as Long,
+            swingCount = part1[4] as Int,
+            isSensorConnected = part1[5] as Boolean,
+            isSensorScanning = part1[6] as Boolean,
+            isDebugModeEnabled = part2[0] as Boolean,
+            cameraFacingMode = part2[1] as CameraFacingMode,
+            countdownSeconds = part2[2] as Int?,
+            farFieldHud = part2[3] as FarFieldHudState?,
+            completionSummary = part2[4] as SessionCompletionSummary?,
+            latestFusedSwing = part2[5] as FusedSwing?,
+            latestAnomalyReport = part2[6] as BaselineComparisonReport?,
+            isBodyFramed = part2[7] as Boolean
         )
     }.stateIn(
         scope = viewModelScope,
@@ -68,8 +95,18 @@ class LabViewModel @Inject constructor(
         initialValue = LabUiState()
     )
 
+    fun toggleCameraFacing() {
+        _cameraFacingMode.update {
+            if (it == CameraFacingMode.FRONT) CameraFacingMode.BACK else CameraFacingMode.FRONT
+        }
+    }
+
+    fun setCameraFacing(mode: CameraFacingMode) {
+        _cameraFacingMode.value = mode
+    }
+
     fun selectDrill(drillType: DrillType) {
-        if (!uiState.value.isSessionActive) {
+        if (!uiState.value.isSessionActive && _countdownSeconds.value == null) {
             _selectedDrill.value = drillType
         }
     }
@@ -88,6 +125,37 @@ class LabViewModel @Inject constructor(
             connectSensor()
             return false
         }
+        if (uiState.value.isSessionActive || _countdownSeconds.value != null) {
+            return false
+        }
+        sessionSwings.clear()
+        _completionSummary.value = null
+
+        if (_cameraFacingMode.value == CameraFacingMode.FRONT) {
+            countdownJob?.cancel()
+            countdownJob = viewModelScope.launch {
+                for (sec in 5 downTo 1) {
+                    _countdownSeconds.value = sec
+                    delay(1000L)
+                }
+                _countdownSeconds.value = 0
+                delay(500L)
+                _countdownSeconds.value = null
+                executeActualStartSession()
+            }
+            return true
+        } else {
+            executeActualStartSession()
+            return true
+        }
+    }
+
+    fun cancelCountdown() {
+        countdownJob?.cancel()
+        _countdownSeconds.value = null
+    }
+
+    private fun executeActualStartSession() {
         val drill = _selectedDrill.value
         val port = sessionPort
         if (port != null) {
@@ -96,10 +164,32 @@ class LabViewModel @Inject constructor(
             _localIsSessionActive.value = true
             _localSessionId.value = "local-session"
         }
-        return true
     }
 
     fun finishSession() {
+        countdownJob?.cancel()
+        _countdownSeconds.value = null
+
+        val totalSwings = if (sessionSwings.isNotEmpty()) sessionSwings.size else uiState.value.swingCount
+        val squareCount = sessionSwings.count { it.racketImpact.faceState.name == "SQUARE" }
+        val squareRate = if (totalSwings > 0) (squareCount * 100) / totalSwings else 0
+        val avgEfficiency = if (sessionSwings.isNotEmpty()) {
+            sessionSwings.map { it.kineticChain.energyTransferEfficiency }.average().toFloat()
+        } else 0f
+
+        val currentSessionId = uiState.value.activeSessionId ?: "lab-session"
+        val durationSec = uiState.value.sessionDurationSeconds
+        val drillName = _selectedDrill.value.toDisplayName()
+
+        _completionSummary.value = SessionCompletionSummary(
+            sessionId = currentSessionId,
+            drillName = drillName,
+            totalSwingCount = totalSwings,
+            durationSeconds = durationSec,
+            squareRatePercent = squareRate,
+            averageEnergyEfficiency = avgEfficiency
+        )
+
         val port = sessionPort
         if (port != null) {
             port.finishSession()
@@ -110,8 +200,25 @@ class LabViewModel @Inject constructor(
         pipeline.reset()
     }
 
+    fun dismissCompletionSummary() {
+        _completionSummary.value = null
+    }
+
     fun onPoseDetected(frame: PoseFrame) {
         pipeline.feedPoseFrame(frame)
+
+        // Body Framing Check: Head(0), Shoulders(11,12), Hips(23,24), Ankles(27,28)
+        val lms = frame.landmarks
+        if (lms.size >= 29) {
+            val keyIndices = listOf(0, 11, 12, 23, 24, 27, 28)
+            val isFramed = keyIndices.all { idx ->
+                val lm = lms[idx]
+                lm.visibility >= 0.4f && !lm.isNan && lm.x in 0.02f..0.98f && lm.y in 0.02f..0.98f
+            }
+            _isBodyFramed.value = isFramed
+        } else {
+            _isBodyFramed.value = false
+        }
     }
 
     fun onImuReceived(sample: ImuDataPoint) {
@@ -122,7 +229,34 @@ class LabViewModel @Inject constructor(
         val targetSessionId = sessionId ?: uiState.value.activeSessionId ?: "temp-session"
         val targetDrill = drillType ?: _selectedDrill.value
         viewModelScope.launch {
-            pipeline.onSwingTriggered(targetSessionId, targetDrill)
+            val fused = pipeline.onSwingTriggered(targetSessionId, targetDrill)
+            if (fused != null) {
+                sessionSwings.add(fused)
+                if (_cameraFacingMode.value == CameraFacingMode.FRONT) {
+                    val faceState = fused.racketImpact.faceState.name
+                    val isSquare = faceState == "SQUARE"
+                    val angle = fused.racketImpact.deviationDeg
+                    val faceText = if (angle >= 0) "$faceState +${angle.toInt()}°" else "$faceState ${angle.toInt()}°"
+                    val faceColorHex = when (faceState) {
+                        "SQUARE" -> 0xFF00E676
+                        "OPEN" -> 0xFFFF9100
+                        else -> 0xFFFF1744
+                    }
+                    _farFieldHud.value = FarFieldHudState(
+                        faceText = faceText,
+                        faceColorHex = faceColorHex,
+                        energyEfficiency = fused.kineticChain.energyTransferEfficiency,
+                        isSquare = isSquare
+                    )
+                    hudJob?.cancel()
+                    hudJob = launch {
+                        delay(3000L)
+                        _farFieldHud.value = null
+                    }
+                } else {
+                    _farFieldHud.value = null
+                }
+            }
         }
     }
 

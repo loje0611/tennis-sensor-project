@@ -12,6 +12,7 @@ import androidx.camera.view.PreviewView
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -63,7 +64,8 @@ private fun labBleRuntimePermissions(): List<String> = buildList {
 @Composable
 fun LabScreen(
     viewModel: LabViewModel? = null,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onNavigateToReplay: (String) -> Unit = {}
 ) {
     val cameraPermissionState = rememberPermissionState(Manifest.permission.CAMERA)
     val blePermissionsState = rememberMultiplePermissionsState(labBleRuntimePermissions())
@@ -84,6 +86,7 @@ fun LabScreen(
             viewModel = viewModel,
             blePermissionsGranted = blePermissionsState.allPermissionsGranted,
             onRequestBlePermissions = { blePermissionsState.launchMultiplePermissionRequest() },
+            onNavigateToReplay = onNavigateToReplay,
             modifier = modifier
         )
     } else {
@@ -123,6 +126,7 @@ private fun CameraPreviewWithOverlay(
     viewModel: LabViewModel?,
     blePermissionsGranted: Boolean,
     onRequestBlePermissions: () -> Unit,
+    onNavigateToReplay: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
@@ -139,6 +143,8 @@ private fun CameraPreviewWithOverlay(
     val landmarkerWrapper = remember {
         MediaPipePoseLandmarkerWrapper(context)
     }
+
+    val isFrontCamera = (uiState.cameraFacingMode == CameraFacingMode.FRONT)
 
     // Auto-connect sensor when BLE permission is granted and sensor is not connected
     LaunchedEffect(blePermissionsGranted, uiState.isSensorConnected, uiState.isSensorScanning) {
@@ -173,11 +179,14 @@ private fun CameraPreviewWithOverlay(
     Box(modifier = modifier.fillMaxSize()) {
         AndroidView(
             factory = { ctx ->
-                val previewView = PreviewView(ctx).apply {
+                PreviewView(ctx).apply {
                     scaleType = PreviewView.ScaleType.FILL_CENTER
                 }
-                
-                val cameraProviderFuture = ProcessCameraProvider.getInstance(ctx)
+            },
+            update = { previewView ->
+                previewView.scaleX = if (isFrontCamera) -1f else 1f
+
+                val cameraProviderFuture = ProcessCameraProvider.getInstance(context)
                 cameraProviderFuture.addListener({
                     val cameraProvider = cameraProviderFuture.get()
                     
@@ -219,26 +228,56 @@ private fun CameraPreviewWithOverlay(
                     
                     imageAnalyzer.setAnalyzer(cameraExecutor, analyzer)
                     
+                    val cameraSelector = if (isFrontCamera) {
+                        CameraSelector.DEFAULT_FRONT_CAMERA
+                    } else {
+                        CameraSelector.DEFAULT_BACK_CAMERA
+                    }
+
                     try {
                         cameraProvider.unbindAll()
                         cameraProvider.bindToLifecycle(
                             lifecycleOwner,
-                            CameraSelector.DEFAULT_BACK_CAMERA,
+                            cameraSelector,
                             preview,
                             imageAnalyzer
                         )
                     } catch (exc: Exception) {
-                        exc.printStackTrace()
+                        // Fallback to back camera if front camera fails
+                        try {
+                            cameraProvider.unbindAll()
+                            cameraProvider.bindToLifecycle(
+                                lifecycleOwner,
+                                CameraSelector.DEFAULT_BACK_CAMERA,
+                                preview,
+                                imageAnalyzer
+                            )
+                        } catch (_: Exception) {}
                     }
-                }, ContextCompat.getMainExecutor(ctx))
-                
-                previewView
+                }, ContextCompat.getMainExecutor(context))
             },
             modifier = Modifier.fillMaxSize()
         )
         
+        // 1. Pose Overlay (Mirrored for Front Camera)
         PoseOverlayCanvas(
             poseFrame = currentPoseFrame,
+            isMirrored = isFrontCamera,
+            modifier = Modifier.fillMaxSize()
+        )
+
+        // 2. Body Framing Guide (Front Camera & Pre-session)
+        BodyFramingGuide(
+            isFrontCamera = isFrontCamera,
+            isSessionActive = uiState.isSessionActive,
+            isBodyFramed = uiState.isBodyFramed,
+            modifier = Modifier.fillMaxSize()
+        )
+
+        // 3. Far-Field Feedback Overlay (Large HUD & Border Pulse on Swing)
+        FarFieldFeedbackOverlay(
+            hudState = uiState.farFieldHud,
+            isFrontCamera = isFrontCamera,
             modifier = Modifier.fillMaxSize()
         )
         
@@ -249,10 +288,10 @@ private fun CameraPreviewWithOverlay(
                 .padding(top = 16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // 1. 이상치 / 피로도 경고 배너
+            // 이상치 / 피로도 경고 배너
             LabAnomalyAlertBanner(report = uiState.latestAnomalyReport)
 
-            // 2. 세션 제어 헤더
+            // 세션 제어 헤더
             LabSessionControlHeader(
                 selectedDrill = uiState.selectedDrill,
                 isSessionActive = uiState.isSessionActive,
@@ -260,6 +299,8 @@ private fun CameraPreviewWithOverlay(
                 swingCount = uiState.swingCount,
                 isSensorConnected = uiState.isSensorConnected,
                 isSensorScanning = uiState.isSensorScanning,
+                cameraFacingMode = uiState.cameraFacingMode,
+                onToggleCameraFacing = { viewModel?.toggleCameraFacing() },
                 onConnectSensor = {
                     if (blePermissionsGranted) {
                         viewModel?.connectSensor()
@@ -269,7 +310,7 @@ private fun CameraPreviewWithOverlay(
                 },
                 onStartSession = {
                     val started = viewModel?.startSession() ?: false
-                    if (!started) {
+                    if (!started && !uiState.isSensorConnected) {
                         Toast.makeText(
                             context,
                             "센서를 먼저 연결해 주세요",
@@ -280,7 +321,7 @@ private fun CameraPreviewWithOverlay(
                 onFinishSession = { viewModel?.finishSession() }
             )
 
-            // 3. 드릴 선택 바
+            // 드릴 선택 바
             DrillSelectorBar(
                 selectedDrill = uiState.selectedDrill,
                 isSessionActive = uiState.isSessionActive,
@@ -309,13 +350,27 @@ private fun CameraPreviewWithOverlay(
                 }
             }
 
-            androidx.compose.foundation.layout.Spacer(modifier = Modifier.weight(1f))
+            Spacer(modifier = Modifier.weight(1f))
 
-            // 4. 실시간 융합 피드백 카드 (하단)
+            // 실시간 융합 피드백 카드 (하단) - 후면 카메라 또는 일반 상태에서 상세 표시
             LabRealtimeFeedbackCard(
                 fusedSwing = uiState.latestFusedSwing,
                 modifier = Modifier.fillMaxWidth()
             )
         }
+
+        // 4. Setup Countdown Overlay (5, 4, 3, 2, 1, 시작!)
+        SetupCountdownOverlay(
+            countdownSeconds = uiState.countdownSeconds,
+            onCancel = { viewModel?.cancelCountdown() },
+            modifier = Modifier.fillMaxSize()
+        )
+
+        // 5. Session Completion Dialog
+        SessionCompletionDialog(
+            summary = uiState.completionSummary,
+            onDismiss = { viewModel?.dismissCompletionSummary() },
+            onNavigateToReplay = onNavigateToReplay
+        )
     }
 }

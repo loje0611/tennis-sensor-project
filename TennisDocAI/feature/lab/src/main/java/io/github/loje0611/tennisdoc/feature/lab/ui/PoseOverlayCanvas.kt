@@ -15,6 +15,7 @@ import io.github.loje0611.tennisdoc.core.vision.model.PoseFrame
 fun PoseOverlayCanvas(
     poseFrame: PoseFrame?,
     modifier: Modifier = Modifier,
+    isMirrored: Boolean = false,
     videoAspectRatio: Float = 0.75f, // 3:4 portrait aspect ratio (480x640)
     isFillCenter: Boolean = true
 ) {
@@ -69,7 +70,8 @@ fun PoseOverlayCanvas(
             if (index !in landmarks.indices) return null
             val lm = landmarks[index]
             if (lm.visibility < 0.5f || lm.isNan) return null
-            return Offset(offsetX + lm.x * displayedWidth, offsetY + lm.y * displayedHeight)
+            val normalizedX = if (isMirrored) (1f - lm.x) else lm.x
+            return Offset(offsetX + normalizedX * displayedWidth, offsetY + lm.y * displayedHeight)
         }
 
         fun drawBone(startIndex: Int, endIndex: Int) {
