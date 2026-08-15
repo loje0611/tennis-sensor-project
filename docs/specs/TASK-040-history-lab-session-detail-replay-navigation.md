@@ -4,6 +4,7 @@
 | Rev | Date | Author | 사유 |
 |---|---|---|---|
 | v1 | 2026-08-15 | PM | 최초 작성 (Phase 3 Lab 훈련 기록 중심 History/SessionDetail 화면 개편, 스윙별 융합 지표 리스트 및 LabReplayScreen 내비게이션 배선 명세) |
+| v2 | 2026-08-15 | PM | MockDataGenerator 개편 명세 추가: Mock 버튼 클릭 시 Match 세션 대신 Lab 훈련 세션(`sessionType="LAB"`, `drillType="FOREHAND"`) 및 3차원 원시 레코드(`lab_raw_records`: 30fps PoseFrame + 50Hz IMU + FusedSwing) 생성하여 실내/오프라인에서도 리플레이 화면 즉시 검증 가능하도록 지원 (FR-4, AC-7 신설) |
 
 ---
 
@@ -12,7 +13,7 @@
 ### 1.1 개요
 본 명세서는 Phase 3 Lab 모드에서 생성된 훈련 세션 데이터(드릴 라벨, 스윙별 라켓 페이스 상태, 5단계 운동 체인 효율, 인과 코칭 진단)를 사용자가 기록 목록 및 상세 화면에서 직관적으로 조회하고, 개별 스윙의 **동기 리플레이 뷰어(`LabReplayScreen`, [TASK-039](TASK-039-synchronized-replay-diagnostic-viewer.md))**로 직접 진입할 수 있도록 `:feature:history`, `:feature:lab`, `:app` 모듈의 내비게이션과 UI를 개편하는 작업을 규정합니다.
 
-불필요한 모드 필터 없이 Lab 훈련 기록 목록을 즉시 노출하고, 세션 상세 화면에서 스윙별 융합 카드 목록과 원클릭 리플레이 진입 경로를 제공합니다.
+불필요한 모드 필터 없이 Lab 훈련 기록 목록을 즉시 노출하고, 세션 상세 화면에서 스윙별 융합 카드 목록과 원클릭 리플레이 진입 경로를 제공합니다. 또한 개발/테스트 환경에서 실센서나 카메라 없이도 즉시 리플레이 화면을 검증할 수 있도록 `MockDataGenerator`를 Lab 세션 및 `lab_raw_records` 원시 데이터 생성용으로 개편합니다.
 
 ### 1.2 범위
 - `:feature:history` 모듈 UI 및 ViewModel 개편:
@@ -25,6 +26,8 @@
     - `sessionType == "MATCH"` 기존 6각 레이더 차트 뷰 하위 호환 유지.
   - `SessionDetailViewModel`:
     - `SwingHistoryRepository`를 통해 해당 세션의 `List<LabRawRecordEntity>` 로드 및 `LabSessionDetailUiState` 바인딩.
+  - `MockDataGenerator`:
+    - `[Mock]` 버튼 클릭 시 `sessionType = "LAB"`, `drillType = "FOREHAND"` 세션 및 스윙별 `LabRawRecordEntity`(30fps PoseFrame 시계열 + 50Hz IMU 파형 + FusedSwing) 생성.
 - `:app` 모듈 내비게이션 배선 (`io.github.loje0611.tennisdoc.navigation`):
   - `AppRoutes.LAB_REPLAY = "lab_replay/{sessionId}/{recordId}"` 라우트 등록.
   - `AppNavHost`에 `LabReplayScreen` 컴포저블 연결: `sessionId`/`recordId` 기반으로 `LabRawRecordEntity`의 융합 데이터를 `LabReplayViewModel`에 전달하여 화면 렌더링.
@@ -89,6 +92,15 @@
   - 해당 레코드의 `LabRawRecordEntity` 또는 파싱된 `FusedSwing`을 `LabReplayScreen`에 주입하여 렌더링한다.
   - `onBack = { navController.popBackStack() }`를 통해 이전 세션 상세 화면으로 자연스럽게 복귀한다.
 
+### FR-4: Lab 전용 Mock 데이터 생성기 (`MockDataGenerator`) 개편
+- `HistoryViewModel.insertMockSessionData()` 실행 시:
+  - `sessionType = "LAB"`, `drillType = "FOREHAND"`로 설정된 `SwingSessionEntity` 생성.
+  - 10개의 가상 스윙에 대해 각각 `LabRawRecordEntity`를 생성하여:
+    - 30fps 비전 포즈 시계열 (약 30프레임 PoseFrame JSON)
+    - 50Hz IMU 파형 시계열 (약 50샘플 ImuDataPoint JSON)
+    - `impactOffsetMs`, 라켓 페이스 상태(`SQUARE`/`OPEN`/`CLOSED`), 5단계 체인 지표
+  - `SwingHistoryRepository.insertLabRawRecord()`를 통해 `lab_raw_records` 테이블에 영속화.
+
 ---
 
 ## 4. 인터페이스 및 데이터 구조 (Interfaces & Data Structures)
@@ -129,6 +141,7 @@ interface SwingHistoryRepository {
     // 기존 메서드 유지...
     fun getLabRawRecordsForSession(sessionId: String): Flow<List<LabRawRecordEntity>>
     suspend fun getLabRawRecordById(recordId: Long): LabRawRecordEntity?
+    suspend fun insertLabRawRecord(record: LabRawRecordEntity): Long
 }
 ```
 
@@ -167,6 +180,7 @@ interface SwingHistoryRepository {
 - [ ] **AC-4**: `LabReplayScreen`에서 상단 뒤로가기 버튼을 누르면 `SessionDetailScreen`으로 정상 복귀한다.
 - [ ] **AC-5**: `SessionDetailViewModelTest` 및 `HistoryViewModelTest` 단위 테스트가 100% 통과한다.
 - [ ] **AC-6**: `./gradlew :feature:history:test :feature:lab:test :app:testDebugUnitTest verifyModuleDependencies :app:assembleDebug` 명령이 0 Failures로 통과한다.
+- [ ] **AC-7**: `HistoryScreen`에서 `[Mock]` 버튼 클릭 시 `sessionType == "LAB"` 세션 및 스윙별 `LabRawRecordEntity`가 DB에 생성되어, `SessionDetailScreen` ➔ `LabReplayScreen`으로 진입하여 스켈레톤과 IMU 파형이 렌더링된다.
 
 ---
 

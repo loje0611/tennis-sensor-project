@@ -596,10 +596,10 @@
         "TASK-039"
       ],
       "spec_path": "docs/specs/TASK-040-history-lab-session-detail-replay-navigation.md",
-      "status": "DONE",
+      "status": "SPEC_READY",
       "retry_count": 0,
       "created_at": "2026-08-15T07:30:56Z",
-      "updated_at": "2026-08-15T08:16:00Z"
+      "updated_at": "2026-08-15T08:53:43Z"
     },
     {
       "id": "TASK-041",
