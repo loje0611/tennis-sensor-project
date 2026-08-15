@@ -79,4 +79,10 @@ interface SwingHistoryRepository {
     suspend fun batchUpdateGlobalStatistics(events: List<SwingEventEntity>)
 
     suspend fun getGlobalAverageMetrics(categoryKey: String): SwingMetrics?
+
+    fun getLabRawRecordsForSession(sessionId: String): Flow<List<io.github.loje0611.tennisdoc.core.data.db.entity.LabRawRecordEntity>>
+
+    suspend fun getLabRawRecordById(recordId: Long): io.github.loje0611.tennisdoc.core.data.db.entity.LabRawRecordEntity?
+
+    suspend fun insertLabRawRecord(record: io.github.loje0611.tennisdoc.core.data.db.entity.LabRawRecordEntity): Long
 }

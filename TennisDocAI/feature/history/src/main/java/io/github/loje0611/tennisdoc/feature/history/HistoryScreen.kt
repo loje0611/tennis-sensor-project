@@ -119,8 +119,9 @@ fun HistoryScreen(
                 )
             }
             items(items = sessions, key = { it.sessionId }) { session ->
+                val drillName = formatSessionDrillName(session)
                 val sessionDesc = "${SwingSessionEntity.formatSessionName(session.startTime)}, " +
-                    "${session.totalSwingCount} swings, ${formatDurationMillis(session.durationMillis)}"
+                    "$drillName, ${session.totalSwingCount}회 스윙, ${formatDurationMillis(session.durationMillis)}"
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -151,7 +152,7 @@ fun HistoryScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Column(
-                            verticalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalArrangement = Arrangement.spacedBy(6.dp),
                         ) {
                             Text(
                                 text = SwingSessionEntity.formatSessionName(session.startTime),
@@ -159,11 +160,19 @@ fun HistoryScreen(
                                     fontFamily = MichromaFont,
                                     fontWeight = FontWeight.ExtraBold,
                                     color = SwingTheme.colors.onBackground,
-                                    fontSize = 16.sp
+                                    fontSize = 15.sp
                                 ),
                             )
                             Text(
-                                text = "${session.totalSwingCount} swings · ${formatDurationMillis(session.durationMillis)}",
+                                text = drillName,
+                                style = MaterialTheme.typography.labelMedium.copy(
+                                    color = SwingTheme.colors.electricCyanSlice,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 13.sp
+                                ),
+                            )
+                            Text(
+                                text = "${session.totalSwingCount}회 스윙 · ${formatDurationMillis(session.durationMillis)}",
                                 style = MaterialTheme.typography.bodyMedium.copy(
                                     fontFamily = FontFamily.SansSerif,
                                     color = SwingTheme.colors.subGray,
@@ -189,5 +198,16 @@ fun HistoryScreen(
                 }
             }
         }
+    }
+}
+
+private fun formatSessionDrillName(session: SwingSessionEntity): String {
+    val drill = session.drillType?.let {
+        runCatching { io.github.loje0611.tennisdoc.core.model.DrillType.valueOf(it) }.getOrNull()
+    }
+    return when {
+        drill != null -> "${drill.toDisplayName()} 훈련"
+        session.sessionType == "LAB" -> "Lab 훈련"
+        else -> "매치 분석"
     }
 }

@@ -1,13 +1,18 @@
 package io.github.loje0611.tennisdoc.feature.lab.replay
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import io.github.loje0611.tennisdoc.core.data.repository.SwingHistoryRepository
+import io.github.loje0611.tennisdoc.core.fusion.engine.FusionEngine
+import io.github.loje0611.tennisdoc.core.fusion.engine.FusionEngineImpl
+import io.github.loje0611.tennisdoc.core.fusion.engine.LabRawRecordParser
 import io.github.loje0611.tennisdoc.core.fusion.model.FusedSwing
 import io.github.loje0611.tennisdoc.core.fusion.model.ImuDataPoint
+import io.github.loje0611.tennisdoc.core.model.DrillType
 import io.github.loje0611.tennisdoc.core.vision.model.PoseFrame
-import javax.inject.Inject
-import kotlin.math.abs
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -15,14 +20,83 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import javax.inject.Inject
+import kotlin.math.abs
 
 @HiltViewModel
-class LabReplayViewModel @Inject constructor() : ViewModel() {
+class LabReplayViewModel @Inject constructor(
+    savedStateHandle: SavedStateHandle,
+    private val repository: SwingHistoryRepository,
+) : ViewModel() {
+
+    private var fusionEngine: FusionEngine = FusionEngineImpl()
+
+    constructor(
+        savedStateHandle: SavedStateHandle?,
+        repository: SwingHistoryRepository?,
+        fusionEngine: FusionEngine = FusionEngineImpl(),
+    ) : this(
+        savedStateHandle ?: SavedStateHandle(),
+        repository ?: object : SwingHistoryRepository {
+            override fun observeSessions() = kotlinx.coroutines.flow.emptyFlow<List<io.github.loje0611.tennisdoc.core.data.db.entity.SwingSessionEntity>>()
+            override suspend fun generateCsvString(sessionId: String?, startTimeMillis: Long?, endTimeMillis: Long?) = ""
+            override suspend fun getSessionDetail(sessionId: String) = null
+            override suspend fun deleteSession(sessionId: String) {}
+            override suspend fun insertProvisionalSession(session: io.github.loje0611.tennisdoc.core.data.db.entity.SwingSessionEntity) {}
+            override suspend fun finalizeSession(sessionId: String, endTime: Long, totalSwingCount: Int, durationMillis: Long, fhVolley: Int, bhVolley: Int, breakdownNormalized: Map<String, Int>) {}
+            override suspend fun insertSessionWithBreakdown(session: io.github.loje0611.tennisdoc.core.data.db.entity.SwingSessionEntity, breakdown: List<Pair<String, Int>>) {}
+            override suspend fun insertMockSession(session: io.github.loje0611.tennisdoc.core.data.db.entity.SwingSessionEntity, breakdownMap: Map<String, Int>, events: List<io.github.loje0611.tennisdoc.core.data.db.entity.SwingEventEntity>) {}
+            override suspend fun insertSwingEvent(event: io.github.loje0611.tennisdoc.core.data.db.entity.SwingEventEntity) {}
+            override suspend fun getAverageMetrics(sessionId: String, categoryKey: String) = null
+            override suspend fun getSwingEventsForSession(sessionId: String) = emptyList<io.github.loje0611.tennisdoc.core.data.db.entity.SwingEventEntity>()
+            override suspend fun updateGlobalStatistics(categoryKey: String, metrics: io.github.loje0611.tennisdoc.core.model.SwingMetrics) {}
+            override suspend fun batchUpdateGlobalStatistics(events: List<io.github.loje0611.tennisdoc.core.data.db.entity.SwingEventEntity>) {}
+            override suspend fun getGlobalAverageMetrics(categoryKey: String) = null
+            override fun getLabRawRecordsForSession(sessionId: String) = kotlinx.coroutines.flow.emptyFlow<List<io.github.loje0611.tennisdoc.core.data.db.entity.LabRawRecordEntity>>()
+            override suspend fun getLabRawRecordById(recordId: Long) = null
+            override suspend fun insertLabRawRecord(record: io.github.loje0611.tennisdoc.core.data.db.entity.LabRawRecordEntity) = 0L
+        }
+    ) {
+        this.fusionEngine = fusionEngine
+    }
+
+    constructor() : this(null, null, FusionEngineImpl())
 
     private val _uiState = MutableStateFlow(LabReplayUiState())
     val uiState: StateFlow<LabReplayUiState> = _uiState.asStateFlow()
 
     private var playbackJob: Job? = null
+
+    init {
+        val recordId = savedStateHandle.get<Long>("recordId")
+            ?: savedStateHandle.get<String>("recordId")?.toLongOrNull()
+        if (recordId != null && recordId > 0L) {
+            loadRecord(recordId)
+        }
+    }
+
+    fun loadRecord(recordId: Long) {
+        val repo = repository ?: return
+        viewModelScope.launch {
+            val record = withContext(Dispatchers.IO) {
+                repo.getLabRawRecordById(recordId)
+            }
+            if (record != null) {
+                val drill = runCatching { DrillType.valueOf(record.drillType) }
+                    .getOrDefault(DrillType.FOREHAND)
+                val fused = withContext(Dispatchers.Default) {
+                    LabRawRecordParser.parseFusedSwing(
+                        drillType = drill,
+                        imuJson = record.imuRawJson,
+                        posesJson = record.visionPosesJson,
+                        fusionEngine = fusionEngine
+                    )
+                }
+                setFusedSwing(fused)
+            }
+        }
+    }
 
     fun setFusedSwing(fusedSwing: FusedSwing?) {
         playbackJob?.cancel()

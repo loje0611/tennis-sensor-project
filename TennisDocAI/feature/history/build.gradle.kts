@@ -12,6 +12,7 @@ dependencies {
     implementation(project(":core:model"))
     implementation(project(":core:ui"))
     implementation(project(":core:data"))
+    implementation(project(":core:fusion"))
 
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)

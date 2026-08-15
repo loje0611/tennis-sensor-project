@@ -31,6 +31,7 @@ class SwingHistoryRepositoryImpl @Inject constructor(
 
     private val dao: SwingSessionDao = database.swingSessionDao()
     private val globalDao: GlobalStatisticsDao = database.globalStatisticsDao()
+    private val labDao = database.labRawRecordDao()
 
     private val csvTimestampFormat = SimpleDateFormat(SwingHistoryRepository.CSV_TIMESTAMP_PATTERN, Locale.US)
 
@@ -258,5 +259,17 @@ class SwingHistoryRepositoryImpl @Inject constructor(
             stability = entity.avgStability.toInt().coerceIn(0, 100),
             consistency = entity.avgConsistency.toInt().coerceIn(0, 100),
         )
+    }
+
+    override fun getLabRawRecordsForSession(sessionId: String): Flow<List<io.github.loje0611.tennisdoc.core.data.db.entity.LabRawRecordEntity>> {
+        return labDao.getRecordsBySessionId(sessionId)
+    }
+
+    override suspend fun getLabRawRecordById(recordId: Long): io.github.loje0611.tennisdoc.core.data.db.entity.LabRawRecordEntity? {
+        return labDao.getRecordById(recordId)
+    }
+
+    override suspend fun insertLabRawRecord(record: io.github.loje0611.tennisdoc.core.data.db.entity.LabRawRecordEntity): Long {
+        return labDao.insert(record)
     }
 }

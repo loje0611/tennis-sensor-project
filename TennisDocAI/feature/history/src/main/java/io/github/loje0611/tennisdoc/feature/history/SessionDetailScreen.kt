@@ -34,6 +34,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -82,6 +83,8 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.DialogWindowProvider
 import androidx.core.view.WindowCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import io.github.loje0611.tennisdoc.core.data.db.entity.SessionSwingCountEntity
+import io.github.loje0611.tennisdoc.core.data.db.entity.SwingSessionEntity
 import io.github.loje0611.tennisdoc.core.ui.displayCategoryTitle
 import io.github.loje0611.tennisdoc.core.ui.formatDurationMillis
 import io.github.loje0611.tennisdoc.core.ui.progressBrushForCategoryKey
@@ -89,6 +92,9 @@ import io.github.loje0611.tennisdoc.core.ui.progressColorForCategoryKey
 import io.github.loje0611.tennisdoc.core.ui.theme.MichromaFont
 import io.github.loje0611.tennisdoc.core.ui.theme.SwingTheme
 import kotlinx.coroutines.flow.distinctUntilChanged
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 import kotlin.math.round
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -96,6 +102,7 @@ import kotlin.math.round
 fun SessionDetailScreen(
     onBack: () -> Unit,
     viewModel: SessionDetailViewModel,
+    onNavigateToReplay: (sessionId: String, recordId: Long) -> Unit = { _, _ -> },
     contentPadding: PaddingValues = PaddingValues(0.dp),
 ) {
     val context = LocalContext.current
@@ -183,81 +190,353 @@ fun SessionDetailScreen(
             }
             else -> {
                 val session = state.session ?: return@Scaffold
-                val totalSwingsF = session.totalSwingCount.coerceAtLeast(1).toFloat()
+                if (session.sessionType == "LAB") {
+                    LabSessionDetailContent(
+                        session = session,
+                        labState = state.labDetailState,
+                        onNavigateToReplay = { recordId ->
+                            onNavigateToReplay(session.sessionId, recordId)
+                        },
+                        modifier = Modifier.padding(innerPadding)
+                    )
+                } else {
+                    MatchSessionDetailContent(
+                        session = session,
+                        breakdown = state.breakdown,
+                        categories = categories,
+                        onItemClick = { index ->
+                            targetPageIdx = index
+                            viewModel.preloadAllCategories(categories)
+                            showSheet = true
+                        },
+                        modifier = Modifier.padding(innerPadding)
+                    )
+                }
+            }
+        }
+    }
+}
 
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(innerPadding)
-                        .background(SwingTheme.colors.background)
-                        .verticalScroll(rememberScrollState())
-                        .padding(horizontal = 24.dp, vertical = 32.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
+@Composable
+private fun LabSessionDetailContent(
+    session: SwingSessionEntity,
+    labState: LabSessionDetailUiState,
+    onNavigateToReplay: (Long) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val drillDisplayName = session.drillType?.let {
+        runCatching { io.github.loje0611.tennisdoc.core.model.DrillType.valueOf(it).toDisplayName() }.getOrNull()
+    } ?: "Lab 훈련"
+
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .background(SwingTheme.colors.background)
+            .verticalScroll(rememberScrollState())
+            .padding(horizontal = 20.dp, vertical = 24.dp),
+        verticalArrangement = Arrangement.spacedBy(20.dp)
+    ) {
+        // ── 상단 훈련 요약 카드 ──
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(containerColor = SwingTheme.colors.cardSurface),
+            border = androidx.compose.foundation.BorderStroke(0.5.dp, SwingTheme.colors.cardBorder)
+        ) {
+            Column(
+                modifier = Modifier.padding(20.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(
-                        text = "${session.totalSwingCount} Total Swings",
-                        style = MaterialTheme.typography.displaySmall.copy(
-                            fontFamily = MichromaFont, fontWeight = FontWeight.ExtraBold,
-                            fontSize = 44.sp, lineHeight = 48.sp, color = SwingTheme.colors.onBackground,
-                            textAlign = TextAlign.Center, letterSpacing = 1.sp,
-                        ),
-                        modifier = Modifier.fillMaxWidth(),
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = "Duration · ${formatDurationMillis(session.durationMillis)}",
-                        style = MaterialTheme.typography.bodyLarge.copy(fontFamily = FontFamily.SansSerif, color = SwingTheme.colors.subGray),
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Text(
-                        text = "구종을 선택하면 상세 분석을 볼 수 있습니다",
-                        style = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.SansSerif, color = SwingTheme.colors.subGray.copy(alpha = 0.6f)),
-                    )
-                    Spacer(modifier = Modifier.height(40.dp))
+                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Text(
+                            text = "$drillDisplayName 훈련",
+                            style = MaterialTheme.typography.titleLarge.copy(
+                                fontFamily = MichromaFont,
+                                fontWeight = FontWeight.Bold,
+                                color = SwingTheme.colors.onBackground,
+                                fontSize = 18.sp
+                            )
+                        )
+                        Text(
+                            text = "${session.totalSwingCount}회 스윙 · ${formatDurationMillis(session.durationMillis)}",
+                            style = MaterialTheme.typography.bodyMedium.copy(
+                                color = SwingTheme.colors.subGray,
+                                fontSize = 13.sp
+                            )
+                        )
+                    }
+                }
 
-                    state.breakdown.forEachIndexed { index, row ->
-                        val fraction = row.count.toFloat() / totalSwingsF
-                        val percentage = round((fraction * 100.0).toDouble()).toInt()
-                        val barColor = progressColorForCategoryKey(row.categoryKey)
-                        val barBrush = progressBrushForCategoryKey(row.categoryKey)
-
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    // 정타율 카드
+                    Card(
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = CardDefaults.cardColors(containerColor = SwingTheme.colors.background)
+                    ) {
                         Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(Color.Transparent, RoundedCornerShape(12.dp))
-                                .clickable {
-                                    targetPageIdx = index
-                                    viewModel.preloadAllCategories(categories)
-                                    showSheet = true
-                                }
-                                .padding(horizontal = 12.dp, vertical = 16.dp),
+                            modifier = Modifier.padding(14.dp),
+                            verticalArrangement = Arrangement.spacedBy(4.dp)
                         ) {
-                            Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                                NeonProgressBar(
-                                    progress = fraction.coerceIn(0f, 1f), brush = barBrush,
-                                    glowColor = barColor, modifier = Modifier.weight(1f).height(12.dp),
-                                    label = displayCategoryTitle(row.categoryKey),
-                                )
-                                Spacer(modifier = Modifier.width(20.dp))
-                                Text(
-                                    text = "$percentage% · ${row.count}회",
-                                    style = MaterialTheme.typography.bodyLarge.copy(
-                                        fontFamily = MichromaFont, fontWeight = FontWeight.Bold,
-                                        color = SwingTheme.colors.onBackground, fontSize = 14.sp,
-                                    ),
-                                )
-                            }
-                            Spacer(modifier = Modifier.height(8.dp))
                             Text(
-                                text = displayCategoryTitle(row.categoryKey),
-                                style = MaterialTheme.typography.bodyMedium.copy(
-                                    fontFamily = FontFamily.SansSerif, fontWeight = FontWeight.SemiBold, color = SwingTheme.colors.subGray,
-                                ),
+                                text = "정타율 (SQUARE)",
+                                style = MaterialTheme.typography.labelSmall.copy(color = SwingTheme.colors.subGray)
+                            )
+                            Text(
+                                text = "${labState.squareRatePercent}%",
+                                style = MaterialTheme.typography.titleMedium.copy(
+                                    fontFamily = MichromaFont,
+                                    fontWeight = FontWeight.ExtraBold,
+                                    color = SwingTheme.colors.electricCyanSlice,
+                                    fontSize = 18.sp
+                                )
+                            )
+                        }
+                    }
+
+                    // 평균 체인 효율 카드
+                    Card(
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = CardDefaults.cardColors(containerColor = SwingTheme.colors.background)
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(14.dp),
+                            verticalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            Text(
+                                text = "평균 체인 효율",
+                                style = MaterialTheme.typography.labelSmall.copy(color = SwingTheme.colors.subGray)
+                            )
+                            Text(
+                                text = String.format(Locale.US, "%.1f%%", labState.averageEnergyEfficiency),
+                                style = MaterialTheme.typography.titleMedium.copy(
+                                    fontFamily = MichromaFont,
+                                    fontWeight = FontWeight.ExtraBold,
+                                    color = SwingTheme.colors.neonGreenTopspin,
+                                    fontSize = 18.sp
+                                )
                             )
                         }
                     }
                 }
+            }
+        }
+
+        // ── 스윙별 분석 목록 헤더 ──
+        Text(
+            text = "스윙별 상세 분석 & 리플레이",
+            style = MaterialTheme.typography.titleMedium.copy(
+                fontFamily = MichromaFont,
+                fontWeight = FontWeight.Bold,
+                color = SwingTheme.colors.onBackground,
+                fontSize = 16.sp
+            )
+        )
+
+        if (labState.swingItems.isEmpty()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 32.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = if (labState.isLoading) "스윙 데이터를 분석하는 중..." else "기록된 스윙 데이터가 없습니다.",
+                    style = MaterialTheme.typography.bodyMedium.copy(color = SwingTheme.colors.subGray)
+                )
+            }
+        } else {
+            labState.swingItems.forEach { item ->
+                LabSwingSummaryCard(
+                    item = item,
+                    onClick = { onNavigateToReplay(item.recordId) }
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun LabSwingSummaryCard(
+    item: LabSwingSummaryItem,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val faceColor = when (item.faceState) {
+        "SQUARE" -> Color(0xFF00E676)
+        "OPEN" -> Color(0xFFFF9100)
+        "CLOSED" -> Color(0xFF2979FF)
+        else -> SwingTheme.colors.subGray
+    }
+
+    val timeStr = SimpleDateFormat("HH:mm:ss", Locale.US).format(Date(item.timestampMillis))
+
+    Card(
+        modifier = modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick),
+        shape = RoundedCornerShape(14.dp),
+        colors = CardDefaults.cardColors(containerColor = SwingTheme.colors.cardSurface),
+        border = androidx.compose.foundation.BorderStroke(0.5.dp, SwingTheme.colors.cardBorder)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "스윙 #${item.swingIndex}",
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            fontFamily = MichromaFont,
+                            fontWeight = FontWeight.Bold,
+                            color = SwingTheme.colors.onBackground,
+                            fontSize = 15.sp
+                        )
+                    )
+                    Text(
+                        text = timeStr,
+                        style = MaterialTheme.typography.bodySmall.copy(color = SwingTheme.colors.subGray, fontSize = 12.sp)
+                    )
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(4.dp))
+                            .background(faceColor.copy(alpha = 0.15f))
+                            .padding(horizontal = 6.dp, vertical = 2.dp)
+                    ) {
+                        Text(
+                            text = item.faceState,
+                            style = MaterialTheme.typography.labelSmall.copy(
+                                color = faceColor,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 11.sp
+                            )
+                        )
+                    }
+                }
+
+                Text(
+                    text = "체인 효율: ${String.format(Locale.US, "%.0f%%", item.energyEfficiency)} · ${item.coachingFeedback}",
+                    style = MaterialTheme.typography.bodySmall.copy(
+                        color = SwingTheme.colors.subGray,
+                        fontSize = 13.sp
+                    ),
+                    maxLines = 2
+                )
+            }
+
+            Spacer(modifier = Modifier.width(8.dp))
+
+            Box(
+                modifier = Modifier
+                    .size(36.dp)
+                    .clip(CircleShape)
+                    .background(SwingTheme.colors.electricCyanSlice.copy(alpha = 0.15f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Default.KeyboardArrowRight,
+                    contentDescription = "동기 리플레이 보기",
+                    tint = SwingTheme.colors.electricCyanSlice
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun MatchSessionDetailContent(
+    session: SwingSessionEntity,
+    breakdown: List<SessionSwingCountEntity>,
+    categories: List<String>,
+    onItemClick: (Int) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val totalSwingsF = session.totalSwingCount.coerceAtLeast(1).toFloat()
+
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .background(SwingTheme.colors.background)
+            .verticalScroll(rememberScrollState())
+            .padding(horizontal = 24.dp, vertical = 32.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Text(
+            text = "${session.totalSwingCount} Total Swings",
+            style = MaterialTheme.typography.displaySmall.copy(
+                fontFamily = MichromaFont, fontWeight = FontWeight.ExtraBold,
+                fontSize = 44.sp, lineHeight = 48.sp, color = SwingTheme.colors.onBackground,
+                textAlign = TextAlign.Center, letterSpacing = 1.sp,
+            ),
+            modifier = Modifier.fillMaxWidth(),
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            text = "Duration · ${formatDurationMillis(session.durationMillis)}",
+            style = MaterialTheme.typography.bodyLarge.copy(fontFamily = FontFamily.SansSerif, color = SwingTheme.colors.subGray),
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+        Text(
+            text = "구종을 선택하면 상세 분석을 볼 수 있습니다",
+            style = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.SansSerif, color = SwingTheme.colors.subGray.copy(alpha = 0.6f)),
+        )
+        Spacer(modifier = Modifier.height(40.dp))
+
+        breakdown.forEachIndexed { index, row ->
+            val fraction = row.count.toFloat() / totalSwingsF
+            val percentage = round((fraction * 100.0).toDouble()).toInt()
+            val barColor = progressColorForCategoryKey(row.categoryKey)
+            val barBrush = progressBrushForCategoryKey(row.categoryKey)
+
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(Color.Transparent, RoundedCornerShape(12.dp))
+                    .clickable { onItemClick(index) }
+                    .padding(horizontal = 12.dp, vertical = 16.dp),
+            ) {
+                Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                    NeonProgressBar(
+                        progress = fraction.coerceIn(0f, 1f), brush = barBrush,
+                        glowColor = barColor, modifier = Modifier.weight(1f).height(12.dp),
+                        label = displayCategoryTitle(row.categoryKey),
+                    )
+                    Spacer(modifier = Modifier.width(20.dp))
+                    Text(
+                        text = "$percentage% · ${row.count}회",
+                        style = MaterialTheme.typography.bodyLarge.copy(
+                            fontFamily = MichromaFont, fontWeight = FontWeight.Bold,
+                            color = SwingTheme.colors.onBackground, fontSize = 14.sp,
+                        ),
+                    )
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = displayCategoryTitle(row.categoryKey),
+                    style = MaterialTheme.typography.bodyMedium.copy(
+                        fontFamily = FontFamily.SansSerif, fontWeight = FontWeight.SemiBold, color = SwingTheme.colors.subGray,
+                    ),
+                )
             }
         }
     }

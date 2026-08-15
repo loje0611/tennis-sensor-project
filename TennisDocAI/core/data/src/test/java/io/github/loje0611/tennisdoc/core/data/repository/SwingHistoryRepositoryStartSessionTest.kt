@@ -150,5 +150,12 @@ class SwingHistoryRepositoryStartSessionTest {
         override suspend fun batchUpdateGlobalStatistics(events: List<SwingEventEntity>) {}
 
         override suspend fun getGlobalAverageMetrics(categoryKey: String): SwingMetrics? = null
+
+        override fun getLabRawRecordsForSession(sessionId: String): Flow<List<io.github.loje0611.tennisdoc.core.data.db.entity.LabRawRecordEntity>> =
+            MutableStateFlow(emptyList())
+
+        override suspend fun getLabRawRecordById(recordId: Long): io.github.loje0611.tennisdoc.core.data.db.entity.LabRawRecordEntity? = null
+
+        override suspend fun insertLabRawRecord(record: io.github.loje0611.tennisdoc.core.data.db.entity.LabRawRecordEntity): Long = 1L
     }
 }

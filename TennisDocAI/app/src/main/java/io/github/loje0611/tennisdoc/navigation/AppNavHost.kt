@@ -38,6 +38,8 @@ import io.github.loje0611.tennisdoc.feature.history.HistoryViewModel
 import io.github.loje0611.tennisdoc.feature.history.SessionDetailScreen
 import io.github.loje0611.tennisdoc.feature.history.SessionDetailViewModel
 
+import io.github.loje0611.tennisdoc.feature.lab.replay.LabReplayScreen
+import io.github.loje0611.tennisdoc.feature.lab.replay.LabReplayViewModel
 import io.github.loje0611.tennisdoc.feature.lab.ui.LabScreen
 import io.github.loje0611.tennisdoc.feature.lab.ui.LabViewModel
 
@@ -245,7 +247,24 @@ fun AppNavHost() {
                 SessionDetailScreen(
                     onBack = { navController.popBackStack() },
                     viewModel = sessionDetailViewModel,
+                    onNavigateToReplay = { sessionId, recordId ->
+                        navController.navigate(AppRoutes.labReplay(sessionId, recordId))
+                    },
                     contentPadding = innerPadding,
+                )
+            }
+            composable(
+                route = AppRoutes.LAB_REPLAY,
+                arguments = listOf(
+                    navArgument("sessionId") { type = NavType.StringType },
+                    navArgument("recordId") { type = NavType.LongType },
+                ),
+            ) {
+                val replayViewModel: LabReplayViewModel = hiltViewModel()
+                LabReplayScreen(
+                    viewModel = replayViewModel,
+                    onNavigateBack = { navController.popBackStack() },
+                    modifier = Modifier.padding(innerPadding)
                 )
             }
         }

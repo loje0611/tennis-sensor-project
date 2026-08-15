@@ -129,4 +129,52 @@ class SessionDetailViewModelTest {
         val sessions = repository.observeSessions().first()
         assertTrue(sessions.isEmpty())
     }
+
+    @Test
+    fun `when session is LAB type, loads lab raw records and maps summary items`() = runTest {
+        val testSessionId = UUID.randomUUID().toString()
+        val testSession = SwingSessionEntity(
+            sessionId = testSessionId,
+            sessionName = "Lab Forehand Session",
+            startTime = 1000L,
+            sessionType = "LAB",
+            drillType = "FOREHAND",
+            totalSwingCount = 2,
+            durationMillis = 60000L,
+        )
+        repository.insertProvisionalSession(testSession)
+
+        val imuJson1 = "[{\"ts\":1000,\"ax\":0.1,\"ay\":0.2,\"az\":0.3,\"gx\":1.0,\"gy\":2.0,\"gz\":3.0}]"
+        val posesJson1 = "[{\"landmarks\":[{\"x\":0.1,\"y\":0.2,\"z\":0.3,\"v\":0.9}]}]"
+        val record1 = io.github.loje0611.tennisdoc.core.data.db.entity.LabRawRecordEntity(
+            id = 101L,
+            sessionId = testSessionId,
+            drillType = "FOREHAND",
+            timestampMillis = 1000L,
+            imuRawJson = imuJson1,
+            visionPosesJson = posesJson1,
+        )
+        val record2 = io.github.loje0611.tennisdoc.core.data.db.entity.LabRawRecordEntity(
+            id = 102L,
+            sessionId = testSessionId,
+            drillType = "FOREHAND",
+            timestampMillis = 2000L,
+            imuRawJson = imuJson1,
+            visionPosesJson = posesJson1,
+        )
+        repository.insertLabRawRecord(record1)
+        repository.insertLabRawRecord(record2)
+
+        val savedStateHandle = SavedStateHandle(mapOf("sessionId" to testSessionId))
+        val viewModel = SessionDetailViewModel(savedStateHandle, repository, fakeCoachingGenerator)
+
+        val state = viewModel.uiState.first { !it.loading && it.labDetailState.swingItems.isNotEmpty() }
+
+        assertEquals(2, state.labDetailState.swingItems.size)
+        assertEquals(101L, state.labDetailState.swingItems[0].recordId)
+        assertEquals(1, state.labDetailState.swingItems[0].swingIndex)
+        assertEquals(102L, state.labDetailState.swingItems[1].recordId)
+        assertEquals(2, state.labDetailState.swingItems[1].swingIndex)
+        assertFalse(state.labDetailState.isLoading)
+    }
 }

@@ -107,7 +107,24 @@ class FakeSwingHistoryRepository : SwingHistoryRepository {
 
     override suspend fun updateGlobalStatistics(categoryKey: String, metrics: SwingMetrics) {}
 
-    override suspend fun batchUpdateGlobalStatistics(eventList: List<SwingEventEntity>) {}
+    override suspend fun batchUpdateGlobalStatistics(events: List<SwingEventEntity>) {}
 
     override suspend fun getGlobalAverageMetrics(categoryKey: String): SwingMetrics? = null
+
+    private val labRecords = mutableMapOf<String, MutableList<io.github.loje0611.tennisdoc.core.data.db.entity.LabRawRecordEntity>>()
+
+    override fun getLabRawRecordsForSession(sessionId: String): Flow<List<io.github.loje0611.tennisdoc.core.data.db.entity.LabRawRecordEntity>> {
+        return MutableStateFlow(labRecords[sessionId] ?: emptyList())
+    }
+
+    override suspend fun getLabRawRecordById(recordId: Long): io.github.loje0611.tennisdoc.core.data.db.entity.LabRawRecordEntity? {
+        return labRecords.values.flatten().find { it.id == recordId }
+    }
+
+    override suspend fun insertLabRawRecord(record: io.github.loje0611.tennisdoc.core.data.db.entity.LabRawRecordEntity): Long {
+        val assignedId = if (record.id == 0L) (labRecords.values.flatten().maxOfOrNull { it.id } ?: 0L) + 1L else record.id
+        val newRecord = record.copy(id = assignedId)
+        labRecords.getOrPut(record.sessionId) { mutableListOf() }.add(newRecord)
+        return assignedId
+    }
 }

@@ -3,16 +3,22 @@ package io.github.loje0611.tennisdoc.feature.history
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import io.github.loje0611.tennisdoc.core.model.CoachingCommentGenerator
-import io.github.loje0611.tennisdoc.core.model.SwingMetrics
+import io.github.loje0611.tennisdoc.core.data.db.entity.LabRawRecordEntity
 import io.github.loje0611.tennisdoc.core.data.db.entity.SessionSwingCountEntity
 import io.github.loje0611.tennisdoc.core.data.db.entity.SwingSessionEntity
 import io.github.loje0611.tennisdoc.core.data.repository.SwingHistoryRepository
+import io.github.loje0611.tennisdoc.core.fusion.engine.FusionEngine
+import io.github.loje0611.tennisdoc.core.fusion.engine.FusionEngineImpl
+import io.github.loje0611.tennisdoc.core.fusion.engine.LabRawRecordParser
+import io.github.loje0611.tennisdoc.core.model.CoachingCommentGenerator
+import io.github.loje0611.tennisdoc.core.model.DrillType
+import io.github.loje0611.tennisdoc.core.model.SwingMetrics
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -32,6 +38,7 @@ data class SessionDetailUiState(
     val session: SwingSessionEntity? = null,
     val breakdown: List<SessionSwingCountEntity> = emptyList(),
     val analysisCache: Map<String, CategoryAnalysisData> = emptyMap(),
+    val labDetailState: LabSessionDetailUiState = LabSessionDetailUiState(),
 )
 
 @HiltViewModel
@@ -40,6 +47,17 @@ class SessionDetailViewModel @Inject constructor(
     private val repository: SwingHistoryRepository,
     private val coachingCommentGenerator: CoachingCommentGenerator,
 ) : ViewModel() {
+
+    private var fusionEngine: FusionEngine = FusionEngineImpl()
+
+    constructor(
+        savedStateHandle: SavedStateHandle,
+        repository: SwingHistoryRepository,
+        coachingCommentGenerator: CoachingCommentGenerator,
+        fusionEngine: FusionEngine,
+    ) : this(savedStateHandle, repository, coachingCommentGenerator) {
+        this.fusionEngine = fusionEngine
+    }
 
     private val sessionId: String = savedStateHandle["sessionId"] ?: ""
 
@@ -54,20 +72,98 @@ class SessionDetailViewModel @Inject constructor(
                 val detail = withContext(Dispatchers.IO) {
                     repository.getSessionDetail(sessionId)
                 }
-                _uiState.update {
-                    if (detail == null) {
+                if (detail == null) {
+                    _uiState.update {
                         it.copy(loading = false, notFound = true, session = null, breakdown = emptyList())
-                    } else {
+                    }
+                } else {
+                    _uiState.update {
                         it.copy(
                             loading = false,
                             notFound = false,
                             session = detail.session,
                             breakdown = detail.breakdown,
+                            labDetailState = it.labDetailState.copy(
+                                session = detail.session,
+                                isLoading = detail.session.sessionType == "LAB"
+                            )
                         )
+                    }
+
+                    if (detail.session.sessionType == "LAB") {
+                        observeLabRawRecords(detail.session)
                     }
                 }
             }
         }
+    }
+
+    private fun observeLabRawRecords(session: SwingSessionEntity) {
+        viewModelScope.launch {
+            repository.getLabRawRecordsForSession(session.sessionId).collectLatest { records ->
+                val (items, squareRate, avgEff) = withContext(Dispatchers.Default) {
+                    processLabRecords(records, session)
+                }
+                _uiState.update { current ->
+                    current.copy(
+                        labDetailState = current.labDetailState.copy(
+                            session = session,
+                            swingItems = items,
+                            squareRatePercent = squareRate,
+                            averageEnergyEfficiency = avgEff,
+                            isLoading = false
+                        )
+                    )
+                }
+            }
+        }
+    }
+
+    private fun processLabRecords(
+        records: List<LabRawRecordEntity>,
+        session: SwingSessionEntity
+    ): Triple<List<LabSwingSummaryItem>, Int, Float> {
+        val items = records.mapIndexed { idx, record ->
+            val drill = runCatching { DrillType.valueOf(record.drillType) }
+                .getOrElse {
+                    session.drillType?.let { runCatching { DrillType.valueOf(it) }.getOrNull() }
+                        ?: DrillType.FOREHAND
+                }
+            val fused = LabRawRecordParser.parseFusedSwing(
+                drillType = drill,
+                imuJson = record.imuRawJson,
+                posesJson = record.visionPosesJson,
+                fusionEngine = fusionEngine
+            )
+            val faceState = fused.racketImpact.faceState.name
+            val energyEff = fused.kineticChain.energyTransferEfficiency
+            val feedback = fused.diagnosis?.coachingFeedback
+                ?: (fused.diagnosis?.primaryCause ?: "스윙 분석 완료")
+
+            LabSwingSummaryItem(
+                recordId = record.id,
+                swingIndex = idx + 1,
+                timestampMillis = record.timestampMillis,
+                faceState = faceState,
+                energyEfficiency = energyEff,
+                coachingFeedback = feedback,
+                fusedSwing = fused
+            )
+        }
+
+        val squareCount = items.count { it.faceState == "SQUARE" }
+        val squareRatePercent = if (items.isNotEmpty()) {
+            (squareCount * 100 / items.size)
+        } else {
+            0
+        }
+        val avgEfficiency = if (items.isNotEmpty()) {
+            items.map { it.energyEfficiency }.average().toFloat()
+        } else {
+            0f
+        }
+
+        return Triple(items, squareRatePercent, avgEfficiency)
     }
 
     fun preloadAllCategories(keys: List<String>) {

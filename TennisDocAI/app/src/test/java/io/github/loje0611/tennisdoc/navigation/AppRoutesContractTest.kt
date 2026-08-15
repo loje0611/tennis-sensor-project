@@ -22,6 +22,13 @@ class AppRoutesContractTest {
     }
 
     @Test
+    fun `labReplay embeds sessionId and recordId`() {
+        assertEquals("lab_replay/{sessionId}/{recordId}", AppRoutes.LAB_REPLAY)
+        assertEquals("lab_replay/sess-456/101", AppRoutes.labReplay("sess-456", 101L))
+        assertEquals("lab_replay/sess-456/101", AppRoutes.createLabReplayRoute("sess-456", 101L))
+    }
+
+    @Test
     fun `practice route constant is absent`() {
         val hasPractice = AppRoutes::class.java.declaredFields.any { field ->
             Modifier.isStatic(field.modifiers) &&
