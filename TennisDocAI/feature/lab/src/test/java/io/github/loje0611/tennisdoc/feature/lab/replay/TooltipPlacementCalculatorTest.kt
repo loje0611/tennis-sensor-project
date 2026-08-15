@@ -49,8 +49,17 @@ class TooltipPlacementCalculatorTest {
             for (j in i + 1 until rects.size) {
                 val r1 = rects[i]
                 val r2 = rects[j]
-                val overlap = r1.overlaps(r2)
-                assertFalse("Rect $i and Rect $j must not overlap", overlap)
+                assertFalse("Rect $i and Rect $j must not overlap", r1.overlaps(r2))
+                val inflated = Rect(
+                    r1.left - TooltipPlacementCalculator.MIN_GAP,
+                    r1.top - TooltipPlacementCalculator.MIN_GAP,
+                    r1.right + TooltipPlacementCalculator.MIN_GAP,
+                    r1.bottom + TooltipPlacementCalculator.MIN_GAP,
+                )
+                assertFalse(
+                    "Rect $i and Rect $j must keep MIN_GAP=${TooltipPlacementCalculator.MIN_GAP}",
+                    inflated.overlaps(r2),
+                )
             }
         }
     }

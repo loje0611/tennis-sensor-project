@@ -164,7 +164,7 @@ fun ImuWaveformChart(
                         }
 
                         // 현재 시간 수직 커서 라인 (timeOffset 보정 락킹)
-                        val cursorTargetMs = (currentTimestampMs + timeOffsetMs).coerceIn(0L, durationMs).toFloat()
+                        val cursorTargetMs = (currentTimestampMs + timeOffsetMs - baseTime).coerceIn(0L, durationMs).toFloat()
                         val cursorX = (cursorTargetMs / totalTime) * w
 
                         drawLine(

@@ -116,6 +116,11 @@ class LabReplayViewModelTest {
         assertTrue("isImpactFrame should be true near 495ms", state.isImpactFrame)
         assertNotNull(state.currentPoseFrame)
         assertNotNull(state.currentImuPoint)
+        assertEquals(
+            "IMU cursor must lock to t_current + timeOffsetMs (sensor impact 1500ms)",
+            1500L,
+            state.currentImuPoint!!.timestampMs,
+        )
         assertTrue("tooltips should be populated on impact frame", state.tooltips.isNotEmpty())
     }
 

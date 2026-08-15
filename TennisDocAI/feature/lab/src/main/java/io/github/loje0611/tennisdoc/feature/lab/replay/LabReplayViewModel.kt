@@ -167,24 +167,20 @@ class LabReplayViewModel @Inject constructor() : ViewModel() {
         return poses[index]
     }
 
-    private fun findNearestImu(imuSamples: List<ImuDataPoint>, targetTs: Long): ImuDataPoint? {
+    private fun findNearestImu(imuSamples: List<ImuDataPoint>, targetAbsoluteTs: Long): ImuDataPoint? {
         if (imuSamples.isEmpty()) return null
         if (imuSamples.size == 1) return imuSamples.first()
 
-        // Binary search for nearest timestamp
         var low = 0
         var high = imuSamples.lastIndex
-
-        val baseTs = imuSamples.first().timestampMs
-        val normalizedTarget = baseTs + targetTs
 
         while (low <= high) {
             val mid = (low + high) ushr 1
             val midTs = imuSamples[mid].timestampMs
 
             when {
-                midTs < normalizedTarget -> low = mid + 1
-                midTs > normalizedTarget -> high = mid - 1
+                midTs < targetAbsoluteTs -> low = mid + 1
+                midTs > targetAbsoluteTs -> high = mid - 1
                 else -> return imuSamples[mid]
             }
         }
@@ -192,8 +188,8 @@ class LabReplayViewModel @Inject constructor() : ViewModel() {
         val leftIdx = high.coerceIn(0, imuSamples.lastIndex)
         val rightIdx = low.coerceIn(0, imuSamples.lastIndex)
 
-        val diffLeft = abs(imuSamples[leftIdx].timestampMs - normalizedTarget)
-        val diffRight = abs(imuSamples[rightIdx].timestampMs - normalizedTarget)
+        val diffLeft = abs(imuSamples[leftIdx].timestampMs - targetAbsoluteTs)
+        val diffRight = abs(imuSamples[rightIdx].timestampMs - targetAbsoluteTs)
 
         return if (diffLeft <= diffRight) imuSamples[leftIdx] else imuSamples[rightIdx]
     }
