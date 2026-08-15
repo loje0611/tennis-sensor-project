@@ -330,3 +330,71 @@ Lab 화면 `onDispose`에서 `!isSessionActive`이면 `disconnectSensor()`를 �
 ## Verdict (Run 4)
 
 **QA_FAILED** (`retry_count` 0 → 1). 5종 드릴 UI는 JVM에서 통과했으나, AC-11 상주 알림이 센서 연결과 묶여 있고 측정 시작/종료와 동기화되지 않는다.
+
+## Run 5 (spec v4) — FAIL-1 재검증
+
+**Date:** 2026-08-15T06:09:15Z  
+**Spec revision:** v4  
+**Result:** **QA_PASSED**
+
+### Boundary Check
+
+Inspected commit `3f34231` (`fix(session): align notification lifecycle with session state and support idle connect`). Working tree clean except leftover `.cursor/` / spike gradle props.
+
+| Path | Role | Verdict |
+|---|---|---|
+| `SwingAnalysisForegroundService.kt` | production | OK — `ACTION_CONNECT_SENSOR`는 파이프라인만 시작, `ACTION_START`만 `startForeground` |
+| `LabSessionPortImpl.kt` | production | OK — FAIL-1: idle `connectSensor()`, 측정 `start()` / `requestStop()` |
+| `LabDrillGuideUiTest.kt`, `LabSessionPortImplTest.kt` | test | Tester Run 4 추가분이 Developer 커밋에 포함됨. assertion 변경/약화 없음 |
+| `docs/qa/TASK-038-report.md`, board | workflow | 이전 QA 기록 |
+
+경계 위반 없음.
+
+### Commands Executed
+
+```bash
+cd TennisDocAI
+export JAVA_HOME=/home/keunu/.gradle/jdks/eclipse_adoptium-21-amd64-linux.2
+./gradlew :feature:lab:test :app:testDebugUnitTest verifyModuleDependencies :app:assembleDebug --rerun-tasks
+# BUILD SUCCESSFUL in 25s
+```
+
+`:feature:lab:test` — **25 tests, 0 failures** (timestamp `2026-08-15T06:09:04Z`)
+
+`:app:testDebugUnitTest` — **34 tests, 0 failures** (timestamp `2026-08-15T06:09:15Z`)
+
+| Suite | Tests | Failures |
+|---|---|---|
+| `LabDrillGuideUiTest` | 4 | 0 |
+| `LabSessionPortImplTest` | 4 | 0 |
+| 회귀 | 26 | 0 |
+
+`verifyModuleDependencies` SUCCESS.  
+`:app:assembleDebug` SUCCESS.
+
+### FAIL-1 / Acceptance Criteria
+
+| # | Result | Evidence |
+|---|---|---|
+| FAIL-1 / AC-11 | PASS | `LabSessionPortImplTest` `ac11_connectSensorWhileIdle…`: idle `connectSensor` Intent action ≠ `ACTION_START`. `ac11_startSessionStartsForegroundNotificationAndFinishStopsIt`: `startSession` → `ACTION_START`, `finishSession` → `ACTION_STOP` |
+| AC-1 | PASS | lab compile + 드릴/헤더 Compose |
+| AC-2 | PASS | 5종 칩 라벨 + 세션 중 잠금 |
+| AC-3 | PASS | LAB `startSession` + 측정 시작/종료 토글 |
+| AC-4 | PASS | `SQUARE` + coaching `uiState` |
+| AC-5 | PASS | fatigued / CRITICAL `uiState` |
+| AC-6 | PASS | lab **25/0**, app **34/0** |
+| AC-7 | PASS | 선언 명령 BUILD SUCCESSFUL, 0 failures |
+| AC-8 | PASS | 인디케이터 + 단일 측정 버튼 |
+| AC-9 | PASS | 미연결 `startSession()==false` |
+| AC-10 | PASS | `isDebugModeEnabled` uiState / port |
+
+### Human follow-up (실기기)
+
+1. Lab 탭 → 카메라·BLE 권한 → 자동 연결. 대기 중에는 「스윙 분석이 실행 중입니다」 알림이 없어야 함  
+2. 드릴 칩이 포핸드·백핸드·서브·포발리·백발리 5종인지  
+3. **측정 시작** 후에만 상주 알림, **측정 종료** 또는 Lab 이탈(세션 없음) 시 알림이 바로 닫히는지  
+4. FPS는 개발자 모드에서만  
+
+## Verdict (Run 5)
+
+**QA_PASSED** (`retry_count` 유지 1). FAIL-1(대기 연결이 세션 상주 알림을 올림)이 해소되었고, 선언 명령 0 failures.
