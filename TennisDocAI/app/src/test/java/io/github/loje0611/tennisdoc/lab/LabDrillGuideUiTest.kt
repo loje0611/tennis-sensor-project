@@ -44,17 +44,28 @@ class LabDrillGuideUiTest {
             }
         }
 
+        listOf("포핸드", "백핸드", "서브", "포발리", "백발리").forEach { label ->
+            composeRule.onNodeWithText(label).performScrollTo().assertIsDisplayed()
+        }
+        assertEquals(0, composeRule.onAllNodesWithText("포핸드 플랫").fetchSemanticsNodes().size)
+        assertEquals(0, composeRule.onAllNodesWithText("포핸드 탑스핀").fetchSemanticsNodes().size)
+        assertEquals(0, composeRule.onAllNodesWithText("발리").fetchSemanticsNodes().size)
+
         composeRule.onNodeWithText("백핸드").performScrollTo().performClick()
         composeRule.waitForIdle()
         assertEquals(DrillType.BACKHAND, selected)
 
+        composeRule.onNodeWithText("포발리").performScrollTo().performClick()
+        composeRule.waitForIdle()
+        assertEquals(DrillType.FOREHAND_VOLLEY, selected)
+
         sessionActive = true
         composeRule.waitForIdle()
 
-        composeRule.onNodeWithText("백핸드").performScrollTo().assertIsNotEnabled()
+        composeRule.onNodeWithText("포발리").performScrollTo().assertIsNotEnabled()
         composeRule.onNodeWithText("서브").performScrollTo().performClick()
         composeRule.waitForIdle()
-        assertEquals(DrillType.BACKHAND, selected)
+        assertEquals(DrillType.FOREHAND_VOLLEY, selected)
     }
 
     @Test

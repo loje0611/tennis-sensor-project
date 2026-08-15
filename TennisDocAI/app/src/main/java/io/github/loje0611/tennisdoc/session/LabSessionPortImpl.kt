@@ -42,15 +42,17 @@ class LabSessionPortImpl @Inject constructor(
     override val isDebugModeEnabled: StateFlow<Boolean> = SwingAnalysisSessionState.debugModeEnabled
 
     override fun startSession(type: SessionType, drillType: DrillType): String {
+        SwingAnalysisForegroundService.start(appContext)
         return SwingAnalysisSessionState.startSession(type, drillType)
     }
 
     override fun finishSession() {
         SwingAnalysisSessionState.finishSession()
+        SwingAnalysisForegroundService.requestStop(appContext)
     }
 
     override fun connectSensor() {
-        SwingAnalysisForegroundService.start(appContext)
+        SwingAnalysisForegroundService.connectSensor(appContext)
     }
 
     override fun disconnectSensor() {

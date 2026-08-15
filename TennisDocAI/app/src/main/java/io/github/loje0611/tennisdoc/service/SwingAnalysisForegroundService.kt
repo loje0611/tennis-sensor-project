@@ -140,6 +140,13 @@ class SwingAnalysisForegroundService : Service() {
                     startAnalysisPipeline()
                 }
             }
+            ACTION_CONNECT_SENSOR -> {
+                if (!pipelineStarted) {
+                    pipelineStarted = true
+                    isMockMode = false
+                    startAnalysisPipeline()
+                }
+            }
             ACTION_START, null -> {
                 val notification = buildNotification(mock = false)
                 startForegroundCompat(notification)
@@ -532,6 +539,7 @@ class SwingAnalysisForegroundService : Service() {
     companion object {
         const val ACTION_START = "io.github.loje0611.tennisdoc.action.START_ANALYSIS"
         const val ACTION_STOP = "io.github.loje0611.tennisdoc.action.STOP_ANALYSIS"
+        const val ACTION_CONNECT_SENSOR = "io.github.loje0611.tennisdoc.action.CONNECT_SENSOR"
         const val ACTION_DEBUG_SIMULATE = "io.github.loje0611.tennisdoc.action.DEBUG_SIMULATE_SWING"
         const val ACTION_SEND_BLE_COMMAND = "io.github.loje0611.tennisdoc.action.SEND_BLE_COMMAND"
         const val ACTION_MOCK_START = "io.github.loje0611.tennisdoc.action.MOCK_START"
@@ -544,6 +552,13 @@ class SwingAnalysisForegroundService : Service() {
         private const val NOTIFICATION_ID = 1001
         private const val TAG = "SwingFgService"
         private const val TTS_SPEECH_RATE = 1.0f
+
+        fun connectSensor(context: Context) {
+            val intent = Intent(context, SwingAnalysisForegroundService::class.java).apply {
+                action = ACTION_CONNECT_SENSOR
+            }
+            context.startService(intent)
+        }
 
         fun start(context: Context) {
             val intent = Intent(context, SwingAnalysisForegroundService::class.java).apply {

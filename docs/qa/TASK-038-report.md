@@ -245,3 +245,88 @@ export JAVA_HOME=/home/keunu/.gradle/jdks/eclipse_adoptium-21-amd64-linux.2
 ## Verdict (Run 3)
 
 **QA_PASSED** (`retry_count` 유지 0). spec v3 AC-8/9/10 JVM 증거가 선언 명령 0 failures로 통과했다. auto-connect·Toast·FPS 오버레이 픽셀은 실기기 Human follow-up.
+
+## Run 4 (spec v4)
+
+**Date:** 2026-08-15T06:06:33Z  
+**Spec revision:** v4 (5종 드릴, 세션 중만 상주 알림 / AC-11)  
+**Result:** **QA_FAILED**
+
+### Boundary Check
+
+Inspected commit `a829b24` (`feat: implement TASK-038 v4 spec`) plus working tree (`git status --short` clean except leftover `.cursor/` / spike gradle props).
+
+| Path | Role | Verdict |
+|---|---|---|
+| `core/model/DrillType.kt`, `DrillSelectorBar.kt`, `LabUiState.kt`, `LabViewModel.kt` | production | OK — AC-2 5종 드릴 |
+| `LabScreen.kt` | production | OK — 화면 이탈 시 `!isSessionActive`이면 `disconnectSensor()` |
+| `LabViewModelTest.kt`, `LabDrillGuideUiTest.kt`, `LabSessionPortImplTest.kt`, fusion/data/model 테스트·golden | test (Developer) | **Accepted** — spec §1.2 / AC-2 enum 정비로 제거된 `FOREHAND_TOPSPIN` 등 식별자 치환. assertion 약화 없음 (선택/잠금/LAB 전달 계약 유지) |
+| `docs/specs/**` | PM | v4 개정 (이번 사이클 Tester 미수정) |
+| leftover `.cursor/`, spike gradle props | 무관 | TASK-038 범위 밖 |
+
+경계 위반으로 `QA_FAILED`할 항목 없음. 실패는 AC-11 상주 알림 라이프사이클.
+
+### Commands Executed
+
+```bash
+cd TennisDocAI
+export JAVA_HOME=/home/keunu/.gradle/jdks/eclipse_adoptium-21-amd64-linux.2
+./gradlew :feature:lab:test :app:testDebugUnitTest verifyModuleDependencies :app:assembleDebug --rerun-tasks
+# BUILD FAILED in 29s — :app:testDebugUnitTest 34 tests, 2 failed
+```
+
+`:feature:lab:test` — **25 tests, 0 failures** (timestamp `2026-08-15T06:06:21Z`)
+
+| Suite | Tests | Failures |
+|---|---|---|
+| `LabViewModelTest` | 8 | 0 |
+| 회귀 (`LabFusion*` / `Pose*`) | 17 | 0 |
+
+`:app:testDebugUnitTest` — **34 tests, 2 failures** (timestamp `2026-08-15T06:06:33Z`)
+
+| Suite | Tests | Failures |
+|---|---|---|
+| `LabDrillGuideUiTest` | 4 | 0 |
+| `LabSessionPortImplTest` | 4 | **2** |
+| 회귀 | 26 | 0 |
+
+`verifyModuleDependencies` SUCCESS.  
+`:app:assembleDebug` SUCCESS (테스트 실패 전에 패키징됨).
+
+### Failure
+
+**FAIL-1 — AC-11: 대기/미실행 상태에서 세션 상주 알림 경로가 켜지고, 측정 시작·종료와 알림 라이프사이클이 분리되어 있다**
+
+관측 (`LabSessionPortImplTest`):
+
+- `ac11_connectSensorWhileIdleDoesNotStartSessionRunningForegroundService` **FAIL**  
+  `connectSensor()`가 `SwingAnalysisForegroundService.ACTION_START` (`io.github.loje0611.tennisdoc.action.START_ANALYSIS`)를 보낸다. 이 액션은 서비스에서 `startForeground` + `"스윙 분석이 실행 중입니다"` 알림을 즉시 올린다. Lab 진입 auto-connect는 세션 시작 전 대기 상태이므로 AC-11 위반.
+- `ac11_startSessionStartsForegroundNotificationAndFinishStopsIt` **FAIL**  
+  `startSession()` 후 시작된 서비스 Intent가 `null`이다. `finishSession()`도 `ACTION_STOP`을 보내지 않는다. 알림은 측정 시작과 함께 켜지지 않고, 측정 종료와 함께 닫히지도 않는다.
+
+Lab 화면 `onDispose`에서 `!isSessionActive`이면 `disconnectSensor()`를 호출하는 정리는 있으나, 포트의 connect/start/finish와 알림 수명이 명세와 어긋난다.
+
+**Developer 수정 방향 (관측 가능한 계약):**
+
+- 센서만 연결하는 `connectSensor()`는 세션 실행 알림(`ACTION_START` / `"스윙 분석이 실행 중입니다"`)을 올리지 않는다.
+- `startSession()`이 그 상주 알림을 켜고, `finishSession()`이 `ACTION_STOP`(또는 동등한 즉시 해제)으로 닫는다.
+
+### Acceptance Criteria
+
+| # | Result | Evidence |
+|---|---|---|
+| AC-1 | PASS | lab compile + `LabDrillGuideUiTest` 헤더/드릴 바 렌더 |
+| AC-2 | PASS | `LabDrillGuideUiTest` `ac1AndAc2…`: 칩 「포핸드」「백핸드」「서브」「포발리」「백발리」표시, 구 라벨 0개, 「포발리」선택 후 세션 중 「서브」클릭이 무시. `LabViewModelTest` `AC-2…`: 세션 중 `BACKHAND` 무시 |
+| AC-3 | PASS | `LabViewModelTest` `AC-3…` + `LabDrillGuideUiTest` `ac3…` 측정 시작/종료 토글 |
+| AC-4 | PASS | `LabViewModelTest` `AC-4 AC-5…` `SQUARE` + coaching `uiState` |
+| AC-5 | PASS | `LabViewModelTest` `AC-5 fatigued or critical…` |
+| AC-6 | **FAIL** | app **34 tests, 2 failures** (`LabSessionPortImplTest` AC-11) |
+| AC-7 | **FAIL** | 선언 명령 `:app:testDebugUnitTest` FAILED |
+| AC-8 | PASS | `LabDrillGuideUiTest` `ac8_*` 인디케이터 + 단일 측정 버튼, 「센서 연결」노드 0 |
+| AC-9 | PASS | `LabViewModelTest` `startSessionIsRejectedWhenSensorDisconnected` |
+| AC-10 | PASS | `LabViewModelTest` `AC-10…` + `LabSessionPortImplTest` `isDebugModeEnabledReflectsSessionState` |
+| AC-11 | **FAIL** | FAIL-1. idle `connectSensor` → `ACTION_START`. `startSession`/`finishSession`은 알림 start/stop Intent를 보내지 않음 |
+
+## Verdict (Run 4)
+
+**QA_FAILED** (`retry_count` 0 → 1). 5종 드릴 UI는 JVM에서 통과했으나, AC-11 상주 알림이 센서 연결과 묶여 있고 측정 시작/종료와 동기화되지 않는다.
