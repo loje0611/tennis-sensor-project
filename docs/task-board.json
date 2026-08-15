@@ -614,6 +614,20 @@
       "retry_count": 1,
       "created_at": "2026-08-15T08:32:52Z",
       "updated_at": "2026-08-15T08:49:30Z"
+    },
+    {
+      "id": "TASK-042",
+      "title": "Lab 화면 'Clean Sunlit Court' 밝고 세련된 프리미엄 UI/UX 개편",
+      "raw_request": "진행해 줘",
+      "target_project": "TennisDocAI",
+      "depends_on": [
+        "TASK-041"
+      ],
+      "spec_path": "docs/specs/TASK-042-lab-clean-sunlit-court-light-ui-redesign.md",
+      "status": "SPEC_READY",
+      "retry_count": 0,
+      "created_at": "2026-08-15T09:00:36Z",
+      "updated_at": "2026-08-15T09:00:36Z"
     }
   ]
 }
