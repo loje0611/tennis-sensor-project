@@ -71,3 +71,56 @@ export JAVA_HOME=/home/keunu/.gradle/jdks/eclipse_adoptium-21-amd64-linux.2
 ## Verdict
 
 **QA_FAILED** (`retry_count` 0 → 1). 카메라 토글·5초 카운트다운·대형 HUD·종료 다이얼로그 요약은 통과했으나, FRONT TTS(AC-6)와 리플레이가 `LabReplayScreen`으로 연결되지 않음(AC-7).
+
+## Run 2 (spec v1) — FAIL-1 / FAIL-2 재검증
+
+**Date:** 2026-08-15T08:48:49Z  
+**Result:** **QA_PASSED**
+
+### Boundary Check
+
+Inspected commit `61bc444` (`fix(lab): fix AC-6 TTS speech and AC-7 LabReplay navigation in TASK-041`).
+
+| Path | Role | Verdict |
+|---|---|---|
+| `LabAudioFeedbackPort.kt`, `LabViewModel.kt`, `LabModule.kt` | production | OK — FAIL-1: FRONT `speakCoaching`, BACK `playImpactBeep` |
+| `SessionCompletionDialog.kt`, `LabUiState.kt`, `LabScreen.kt`, `AppNavHost.kt`, `LabFusionPipeline.kt` | production | OK — FAIL-2: `latestRecordId` + `labReplay(sessionId, recordId)` |
+| `LabViewModelTest.kt`, `LabCameraModeUiTest.kt` | test | Tester Run 1 강화분 포함. assertion 약화 없음 (`101L`, TTS 발화 문구 유지) |
+
+경계 위반 없음.
+
+### Commands Executed
+
+```bash
+cd TennisDocAI
+export JAVA_HOME=/home/keunu/.gradle/jdks/eclipse_adoptium-21-amd64-linux.2
+./gradlew :feature:lab:test :app:testDebugUnitTest verifyModuleDependencies :app:assembleDebug --rerun-tasks
+# BUILD SUCCESSFUL in 26s
+```
+
+`:feature:lab:test` — **44 tests, 0 failures** (timestamp `2026-08-15T08:48:27Z`) including `LabViewModelTest` 17/0.  
+`:app:testDebugUnitTest` — **52 tests, 0 failures** (timestamp `2026-08-15T08:48:38Z`) including `LabCameraModeUiTest` 10/0.  
+`verifyModuleDependencies` SUCCESS.  
+`:app:assembleDebug` SUCCESS.
+
+### FAIL-1 / FAIL-2 / Acceptance Criteria
+
+| # | Result | Evidence |
+|---|---|---|
+| FAIL-1 / AC-6 | PASS | `TASK-041 AC-6 FRONT camera swing triggers TTS utterance and BACK camera swing is muted`: FRONT `speakCoaching("훌륭한 임팩트입니다.")`, BACK `spoken=null` + impact beep |
+| FAIL-2 / AC-7 | PASS | Dialog 리플레이 클릭 → `("sess-lab-xyz", 101L)` → `createLabReplayRoute` = `lab_replay/sess-lab-xyz/101`. VM `latestRecordId=101`. AppNavHost `labReplay(sessionId, recordId)` |
+| AC-1~5 | PASS | Run 1 유지. 카운트다운 5→1→0, HUD, 토글 |
+| AC-8 | PASS | 선언 명령 BUILD SUCCESSFUL, lab **44/0**, app **52/0** |
+
+### Notes (not AC failures)
+
+- 프로덕션 `DefaultLabAudioFeedbackPort.speakCoaching`은 발화 문자열을 기록하며 Android `TextToSpeech` 엔진 호출은 없다. JVM 계약(FRONT enqueue / BACK mute)은 통과. 실기기에서 실제 음성은 Human follow-up.
+
+### Human follow-up (실기기)
+
+전면: 측정 시작 → 5초 카운트다운 → 스윙 후 대형 HUD·(가능하면) 음성. 측정 종료 → 리포트 → 리플레이 보기 → `LabReplayScreen`. 후면: 즉시 시작, HUD 없음, TTS 없음.
+
+## Verdict (Run 2)
+
+**QA_PASSED** (`retry_count` 유지 1). FAIL-1 TTS 분기와 FAIL-2 `LabReplayScreen` 내비게이션이 해소되었고 선언 명령 0 failures.
+
