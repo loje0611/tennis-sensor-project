@@ -34,6 +34,7 @@ class LabViewModel @Inject constructor(
     private val _localSessionDuration = MutableStateFlow(0L)
     private val _localSwingCount = MutableStateFlow(0)
     private val _localSensorConnected = MutableStateFlow(false)
+    private val _localSensorScanning = MutableStateFlow(false)
 
     val uiState: StateFlow<LabUiState> = combine(
         _selectedDrill,
@@ -42,6 +43,7 @@ class LabViewModel @Inject constructor(
         sessionPort?.sessionDurationSeconds ?: _localSessionDuration,
         sessionPort?.swingCount ?: _localSwingCount,
         sessionPort?.isSensorConnected ?: _localSensorConnected,
+        sessionPort?.isSensorScanning ?: _localSensorScanning,
         pipeline.latestFusedSwing,
         pipeline.latestAnomalyReport
     ) { array ->
@@ -53,8 +55,9 @@ class LabViewModel @Inject constructor(
             sessionDurationSeconds = array[3] as Long,
             swingCount = array[4] as Int,
             isSensorConnected = array[5] as Boolean,
-            latestFusedSwing = array[6] as FusedSwing?,
-            latestAnomalyReport = array[7] as BaselineComparisonReport?
+            isSensorScanning = array[6] as Boolean,
+            latestFusedSwing = array[7] as FusedSwing?,
+            latestAnomalyReport = array[8] as BaselineComparisonReport?
         )
     }.stateIn(
         scope = viewModelScope,
@@ -68,7 +71,19 @@ class LabViewModel @Inject constructor(
         }
     }
 
-    fun startSession() {
+    fun connectSensor() {
+        sessionPort?.connectSensor()
+    }
+
+    fun disconnectSensor() {
+        sessionPort?.disconnectSensor()
+    }
+
+    fun startSession(): Boolean {
+        val connected = sessionPort?.isSensorConnected?.value ?: _localSensorConnected.value
+        if (!connected) {
+            return false
+        }
         val drill = _selectedDrill.value
         val port = sessionPort
         if (port != null) {
@@ -77,6 +92,7 @@ class LabViewModel @Inject constructor(
             _localIsSessionActive.value = true
             _localSessionId.value = "local-session"
         }
+        return true
     }
 
     fun finishSession() {

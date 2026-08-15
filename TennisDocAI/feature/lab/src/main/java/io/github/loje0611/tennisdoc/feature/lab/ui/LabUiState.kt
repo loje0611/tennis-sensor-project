@@ -11,6 +11,7 @@ data class LabUiState(
     val sessionDurationSeconds: Long = 0L,
     val swingCount: Int = 0,
     val isSensorConnected: Boolean = false,
+    val isSensorScanning: Boolean = false,
     val latestFusedSwing: FusedSwing? = null,
     val latestAnomalyReport: BaselineComparisonReport? = null
 )

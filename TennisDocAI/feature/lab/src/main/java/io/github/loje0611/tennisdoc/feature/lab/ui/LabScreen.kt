@@ -1,7 +1,9 @@
 package io.github.loje0611.tennisdoc.feature.lab.ui
 
 import android.Manifest
+import android.os.Build
 import android.util.Size
+import android.widget.Toast
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.Preview
@@ -19,6 +21,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -34,11 +37,27 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
+import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import com.google.accompanist.permissions.rememberPermissionState
 import io.github.loje0611.tennisdoc.core.vision.model.PoseFrame
 import io.github.loje0611.tennisdoc.feature.lab.landmarker.MediaPipePoseLandmarkerWrapper
 import io.github.loje0611.tennisdoc.feature.lab.pipeline.PoseAnalysisAnalyzer
 import java.util.concurrent.Executors
+
+private fun labBleRuntimePermissions(): List<String> = buildList {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        add(Manifest.permission.POST_NOTIFICATIONS)
+    }
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+        add(Manifest.permission.BLUETOOTH_SCAN)
+        add(Manifest.permission.BLUETOOTH_CONNECT)
+        add(Manifest.permission.ACCESS_FINE_LOCATION)
+    } else {
+        add(Manifest.permission.ACCESS_FINE_LOCATION)
+        add(Manifest.permission.BLUETOOTH)
+        add(Manifest.permission.BLUETOOTH_ADMIN)
+    }
+}
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
@@ -47,10 +66,24 @@ fun LabScreen(
     modifier: Modifier = Modifier
 ) {
     val cameraPermissionState = rememberPermissionState(Manifest.permission.CAMERA)
+    val blePermissionsState = rememberMultiplePermissionsState(labBleRuntimePermissions())
+
+    LaunchedEffect(cameraPermissionState.status.isGranted, blePermissionsState.allPermissionsGranted) {
+        when {
+            !cameraPermissionState.status.isGranted -> {
+                cameraPermissionState.launchPermissionRequest()
+            }
+            !blePermissionsState.allPermissionsGranted -> {
+                blePermissionsState.launchMultiplePermissionRequest()
+            }
+        }
+    }
     
     if (cameraPermissionState.status.isGranted) {
         CameraPreviewWithOverlay(
             viewModel = viewModel,
+            blePermissionsGranted = blePermissionsState.allPermissionsGranted,
+            onRequestBlePermissions = { blePermissionsState.launchMultiplePermissionRequest() },
             modifier = modifier
         )
     } else {
@@ -88,6 +121,8 @@ fun LabScreen(
 @Composable
 private fun CameraPreviewWithOverlay(
     viewModel: LabViewModel?,
+    blePermissionsGranted: Boolean,
+    onRequestBlePermissions: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
@@ -214,7 +249,25 @@ private fun CameraPreviewWithOverlay(
                 sessionDurationSeconds = uiState.sessionDurationSeconds,
                 swingCount = uiState.swingCount,
                 isSensorConnected = uiState.isSensorConnected,
-                onStartSession = { viewModel?.startSession() },
+                isSensorScanning = uiState.isSensorScanning,
+                onConnectSensor = {
+                    if (blePermissionsGranted) {
+                        viewModel?.connectSensor()
+                    } else {
+                        onRequestBlePermissions()
+                    }
+                },
+                onCancelSensorConnect = { viewModel?.disconnectSensor() },
+                onStartSession = {
+                    val started = viewModel?.startSession() ?: false
+                    if (!started) {
+                        Toast.makeText(
+                            context,
+                            "센서를 먼저 연결해 주세요",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                },
                 onFinishSession = { viewModel?.finishSession() }
             )
 

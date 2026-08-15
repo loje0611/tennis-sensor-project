@@ -68,8 +68,18 @@ class LabViewModelTest {
         private val _isSensorConnected = MutableStateFlow(true)
         override val isSensorConnected: StateFlow<Boolean> = _isSensorConnected.asStateFlow()
 
+        private val _isSensorScanning = MutableStateFlow(false)
+        override val isSensorScanning: StateFlow<Boolean> = _isSensorScanning.asStateFlow()
+
         var lastStartType: SessionType? = null
         var lastStartDrill: DrillType? = null
+        var connectCalled = false
+        var disconnectCalled = false
+
+        fun setSensorConnected(connected: Boolean) {
+            _isSensorConnected.value = connected
+            if (connected) _isSensorScanning.value = false
+        }
 
         override fun startSession(type: SessionType, drillType: DrillType): String {
             lastStartType = type
@@ -83,6 +93,17 @@ class LabViewModelTest {
         override fun finishSession() {
             _activeSessionId.value = null
             _isSessionActive.value = false
+        }
+
+        override fun connectSensor() {
+            connectCalled = true
+            _isSensorScanning.value = true
+        }
+
+        override fun disconnectSensor() {
+            disconnectCalled = true
+            _isSensorScanning.value = false
+            _isSensorConnected.value = false
         }
     }
 
@@ -275,5 +296,32 @@ class LabViewModelTest {
 
         assertEquals(1, fakePipeline.fedPoses.size)
         assertEquals(1, fakePipeline.fedImu.size)
+    }
+
+    @Test
+    fun startSessionIsRejectedWhenSensorDisconnected() = runTest {
+        val fakePipeline = FakeLabFusionPipeline()
+        val fakePort = FakeLabSessionPort()
+        fakePort.setSensorConnected(false)
+        val viewModel = LabViewModel(fakePipeline, fakePort)
+        testScheduler.advanceUntilIdle()
+
+        assertFalse(viewModel.startSession())
+        testScheduler.advanceUntilIdle()
+        assertFalse(viewModel.uiState.value.isSessionActive)
+        assertEquals(null, fakePort.lastStartType)
+    }
+
+    @Test
+    fun connectSensorForwardsToSessionPort() = runTest {
+        val fakePipeline = FakeLabFusionPipeline()
+        val fakePort = FakeLabSessionPort()
+        fakePort.setSensorConnected(false)
+        val viewModel = LabViewModel(fakePipeline, fakePort)
+
+        viewModel.connectSensor()
+        testScheduler.advanceUntilIdle()
+        assertTrue(fakePort.connectCalled)
+        assertTrue(viewModel.uiState.value.isSensorScanning)
     }
 }

@@ -10,6 +10,7 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.RuntimeEnvironment
 import org.robolectric.annotation.Config
 
 @RunWith(RobolectricTestRunner::class)
@@ -28,7 +29,7 @@ class LabSessionPortImplTest {
 
     @Test
     fun startSessionForwardsLabTypeAndSelectedDrill() {
-        val port = LabSessionPortImpl()
+        val port = LabSessionPortImpl(RuntimeEnvironment.getApplication())
         val sid = port.startSession(SessionType.LAB, DrillType.VOLLEY)
 
         assertEquals(sid, SwingAnalysisSessionState.activeSessionId.value)

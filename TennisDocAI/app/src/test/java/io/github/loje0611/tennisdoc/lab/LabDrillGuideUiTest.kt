@@ -98,4 +98,31 @@ class LabDrillGuideUiTest {
         assertTrue(finishClicked)
         composeRule.onNodeWithText("측정 시작").assertIsDisplayed()
     }
+
+    @Test
+    fun disconnectedHeaderShowsConnectButtonAndInvokesCallback() {
+        var connectClicked = false
+
+        composeRule.setContent {
+            MaterialTheme {
+                LabSessionControlHeader(
+                    selectedDrill = DrillType.FOREHAND_TOPSPIN,
+                    isSessionActive = false,
+                    sessionDurationSeconds = 0L,
+                    swingCount = 0,
+                    isSensorConnected = false,
+                    isSensorScanning = false,
+                    onConnectSensor = { connectClicked = true },
+                    onStartSession = {},
+                    onFinishSession = {}
+                )
+            }
+        }
+
+        composeRule.onNodeWithText("센서 미연결").assertIsDisplayed()
+        composeRule.onNodeWithText("센서 연결").assertIsDisplayed()
+        composeRule.onNodeWithText("센서 연결").performClick()
+        composeRule.waitForIdle()
+        assertTrue(connectClicked)
+    }
 }
