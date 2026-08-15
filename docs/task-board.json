@@ -600,6 +600,20 @@
       "retry_count": 0,
       "created_at": "2026-08-15T07:30:56Z",
       "updated_at": "2026-08-15T08:16:00Z"
+    },
+    {
+      "id": "TASK-041",
+      "title": "Lab 카메라 모드별 특화 UX 구현 (전면 셀프 트레이닝 vs 후면 코칭 모드)",
+      "raw_request": "제안해준 사항으로 task 생성해주고 명세서 작성해 줘 다만 셀프 모드 시 카운트 다운은 3초가 아니라 5초로 늘려줘",
+      "target_project": "TennisDocAI",
+      "depends_on": [
+        "TASK-040"
+      ],
+      "spec_path": "docs/specs/TASK-041-lab-camera-mode-ux-self-training-coaching.md",
+      "status": "SPEC_READY",
+      "retry_count": 0,
+      "created_at": "2026-08-15T08:32:52Z",
+      "updated_at": "2026-08-15T08:32:52Z"
     }
   ]
 }
