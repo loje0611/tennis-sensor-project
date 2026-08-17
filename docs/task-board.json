@@ -687,17 +687,17 @@
     },
     {
       "id": "TASK-047",
-      "title": "AI 코치 리포트 스포츠 카드 UI 컴포넌트 구현",
-      "raw_request": "task 47 작성해",
+      "title": "AI \ucf54\uce58 \ub9ac\ud3ec\ud2b8 \uc2a4\ud3ec\uce20 \uce74\ub4dc UI \ucef4\ud3ec\ub10c\ud2b8 \uad6c\ud604",
+      "raw_request": "task 47 \uc791\uc131\ud574",
       "target_project": "TennisDocAI",
       "depends_on": [
         "TASK-043"
       ],
       "spec_path": "docs/specs/TASK-047-ai-coach-report-sports-card-ui.md",
-      "status": "SPEC_READY",
+      "status": "DONE",
       "retry_count": 0,
       "created_at": "2026-08-17T09:36:55Z",
-      "updated_at": "2026-08-17T09:36:55Z"
+      "updated_at": "2026-08-17T09:50:26.660796Z"
     }
   ]
 }
