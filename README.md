@@ -154,8 +154,8 @@ tennis-sensor-project/
 | **Phase 1** | 비전 알고리즘 Python 프로토타입 검증 (`tennis-vision-analyzer`, TASK-001~008) | ✅ **완료** |
 | **Phase 2** | **Gradle 멀티모듈 분리**(`:core:*` / `:feature:*`) 후, 검증된 비전 알고리즘(수학 공식·임계값·타이밍 로직)을 Kotlin으로 포팅 (CameraX + MediaPipe Android SDK) → [실행 계획](docs/PHASE2_PLAN.md) | ✅ **완료** |
 | **Phase 3** | **Lab 모드 MVP** — 센서 필수. 임팩트 앵커 동기화 + 5단계 운동 체인 + 인과 코칭 + 동기 리플레이. **합격 기준은 Ablation 테스트**(아래) → [실행 계획](docs/PHASE3_PLAN.md) | ✅ **완료** |
-| **Phase 4** | 융합 지표를 LLM에 전달해 자연어 개인화 **"AI 코치 리포트"** 자동 생성 → [실행 계획](docs/PHASE4_PLAN.md) | ▶ **다음 단계 (착수)** |
-| **Phase 5** | 개인 baseline 전이 + **Match 모드 복귀** — 하드웨어 v2.0 슬림화 이후 판단 | 보류 |
+| **Phase 4** | 융합 지표를 LLM에 전달해 자연어 개인화 **"AI 코치 리포트"** 자동 생성 (TASK-043~050) → [실행 계획](docs/PHASE4_PLAN.md) | ✅ **완료** |
+| **Phase 5** | 개인 baseline 전이 + **자유 랠리(Auto-Classify) / Match 모드 복귀** — 하드웨어 v2.0 슬림화 이후 판단 | 보류 |
 
 
 #### Phase 3 합격 기준 (Ablation 테스트)
