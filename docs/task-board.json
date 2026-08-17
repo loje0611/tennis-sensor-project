@@ -673,17 +673,17 @@
     },
     {
       "id": "TASK-046",
-      "title": "로컬 룰 기반 Fallback 엔진 & LLM API 클라이언트 구현",
-      "raw_request": "task 46 명세서 작성해 줘",
+      "title": "\ub85c\uceec \ub8f0 \uae30\ubc18 Fallback \uc5d4\uc9c4 & LLM API \ud074\ub77c\uc774\uc5b8\ud2b8 \uad6c\ud604",
+      "raw_request": "task 46 \uba85\uc138\uc11c \uc791\uc131\ud574 \uc918",
       "target_project": "TennisDocAI",
       "depends_on": [
         "TASK-045"
       ],
       "spec_path": "docs/specs/TASK-046-local-fallback-engine-and-gemini-client.md",
-      "status": "SPEC_READY",
+      "status": "DONE",
       "retry_count": 0,
       "created_at": "2026-08-17T09:28:40Z",
-      "updated_at": "2026-08-17T09:28:40Z"
+      "updated_at": "2026-08-17T09:32:45.675252Z"
     }
   ]
 }
