@@ -628,6 +628,20 @@
       "retry_count": 0,
       "created_at": "2026-08-15T09:00:36Z",
       "updated_at": "2026-08-15T09:09:00Z"
+    },
+    {
+      "id": "TASK-043",
+      "title": "Room DB v9 마이그레이션 및 AI 코치 도메인 계약 정의",
+      "raw_request": "task 43 작성해",
+      "target_project": "TennisDocAI",
+      "depends_on": [
+        "TASK-042"
+      ],
+      "spec_path": "docs/specs/TASK-043-room-db-v9-ai-coach-domain-contracts.md",
+      "status": "SPEC_READY",
+      "retry_count": 0,
+      "created_at": "2026-08-17T02:40:45Z",
+      "updated_at": "2026-08-17T02:40:45Z"
     }
   ]
 }
