@@ -369,6 +369,9 @@ private fun CameraPreviewWithOverlay(
         // 5. Session Completion Dialog
         SessionCompletionDialog(
             summary = uiState.completionSummary,
+            aiReport = uiState.aiCoachReport,
+            isGeneratingAiReport = uiState.isGeneratingAiReport,
+            onGenerateAiReport = { viewModel?.requestAiCoachReport() },
             onDismiss = { viewModel?.dismissCompletionSummary() },
             onNavigateToReplay = onNavigateToReplay
         )

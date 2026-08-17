@@ -164,4 +164,6 @@ class RecordingSwingHistoryRepository : SwingHistoryRepository {
         labRecords.getOrPut(record.sessionId) { mutableListOf() }.add(newRecord)
         assignedId
     }
+
+    override suspend fun saveAiCoachReport(sessionId: String, reportJson: String, generatedAt: Long) {}
 }

@@ -32,6 +32,7 @@ import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -558,5 +559,142 @@ class LabViewModelTest {
         viewModel.onPoseDetected(PoseFrame(landmarks = fullLandmarks))
         testScheduler.advanceUntilIdle()
         assertTrue(viewModel.uiState.value.isBodyFramed)
+    }
+    @Test
+    fun `TASK-048 AC-5 requestAiCoachReport triggers loading and updates state with report`() = runTest {
+        val fakePipeline = FakeLabFusionPipeline()
+        val fakePort = FakeLabSessionPort()
+
+        var savedSessionId: String? = null
+        var savedReportJson: String? = null
+
+        val fakeRepo = object : io.github.loje0611.tennisdoc.core.data.repository.SwingHistoryRepository {
+            override fun observeSessions() = kotlinx.coroutines.flow.emptyFlow<List<io.github.loje0611.tennisdoc.core.data.db.entity.SwingSessionEntity>>()
+            override suspend fun generateCsvString(sId: String?, sTime: Long?, eTime: Long?) = ""
+            override suspend fun getSessionDetail(sessionId: String) = null
+            override suspend fun deleteSession(sessionId: String) {}
+            override suspend fun startSession(type: SessionType, drill: DrillType?, time: Long) = ""
+            override suspend fun insertProvisionalSession(session: io.github.loje0611.tennisdoc.core.data.db.entity.SwingSessionEntity) {}
+            override suspend fun finalizeSession(sId: String, eTime: Long, c: Int, d: Long, f: Int, b: Int, map: Map<String, Int>) {}
+            override suspend fun insertSessionWithBreakdown(s: io.github.loje0611.tennisdoc.core.data.db.entity.SwingSessionEntity, map: List<Pair<String, Int>>) {}
+            override suspend fun insertMockSession(s: io.github.loje0611.tennisdoc.core.data.db.entity.SwingSessionEntity, map: Map<String, Int>, events: List<io.github.loje0611.tennisdoc.core.data.db.entity.SwingEventEntity>) {}
+            override suspend fun insertSwingEvent(event: io.github.loje0611.tennisdoc.core.data.db.entity.SwingEventEntity) {}
+            override suspend fun getAverageMetrics(sessionId: String, categoryKey: String) = null
+            override suspend fun getSwingEventsForSession(sessionId: String) = emptyList<io.github.loje0611.tennisdoc.core.data.db.entity.SwingEventEntity>()
+            override suspend fun updateGlobalStatistics(categoryKey: String, metrics: io.github.loje0611.tennisdoc.core.model.SwingMetrics) {}
+            override suspend fun batchUpdateGlobalStatistics(events: List<io.github.loje0611.tennisdoc.core.data.db.entity.SwingEventEntity>) {}
+            override suspend fun getGlobalAverageMetrics(categoryKey: String) = null
+            override fun getLabRawRecordsForSession(sessionId: String) = kotlinx.coroutines.flow.emptyFlow<List<io.github.loje0611.tennisdoc.core.data.db.entity.LabRawRecordEntity>>()
+            override suspend fun getLabRawRecordById(recordId: Long) = null
+            override suspend fun insertLabRawRecord(record: io.github.loje0611.tennisdoc.core.data.db.entity.LabRawRecordEntity) = 1L
+
+            override suspend fun saveAiCoachReport(sessionId: String, reportJson: String, generatedAt: Long) {
+                savedSessionId = sessionId
+                savedReportJson = reportJson
+            }
+        }
+
+        val viewModel = LabViewModel(
+            pipeline = fakePipeline,
+            sessionPort = fakePort,
+            audioPort = io.github.loje0611.tennisdoc.feature.lab.audio.DefaultLabAudioFeedbackPort(),
+            aiCoachService = io.github.loje0611.tennisdoc.core.coach.service.CompositeAiCoachService(),
+            swingHistoryRepository = fakeRepo
+        )
+
+        viewModel.setCameraFacing(CameraFacingMode.BACK)
+        viewModel.startSession()
+        testScheduler.advanceUntilIdle()
+        viewModel.triggerSwing()
+        testScheduler.advanceUntilIdle()
+        viewModel.finishSession()
+        testScheduler.advanceUntilIdle()
+
+        assertFalse(viewModel.uiState.value.isGeneratingAiReport)
+        org.junit.Assert.assertNull(viewModel.uiState.value.aiCoachReport)
+
+        viewModel.requestAiCoachReport()
+        testScheduler.advanceUntilIdle()
+
+        assertFalse(viewModel.uiState.value.isGeneratingAiReport)
+        val report = viewModel.uiState.value.aiCoachReport
+        assertNotNull(report)
+        assertTrue(report!!.isFallbackReport)
+        assertTrue(report.overallSummary.isNotBlank())
+
+        assertEquals("test-session-id", savedSessionId)
+        assertNotNull(savedReportJson)
+        assertNotEquals("{}", savedReportJson)
+        assertTrue(
+            "persisted reportJson must contain the generated overallSummary, not a stub object",
+            savedReportJson!!.contains(report.overallSummary)
+        )
+    }
+
+    @Test
+    fun `TASK-050 FR-4 requestAiCoachReport uses preferences tone and blank key fallback`() = runTest {
+        val fakePipeline = FakeLabFusionPipeline()
+        val fakePort = FakeLabSessionPort()
+        var savedReportJson: String? = null
+        val fakeRepo = object : io.github.loje0611.tennisdoc.core.data.repository.SwingHistoryRepository {
+            override fun observeSessions() = kotlinx.coroutines.flow.emptyFlow<List<io.github.loje0611.tennisdoc.core.data.db.entity.SwingSessionEntity>>()
+            override suspend fun generateCsvString(sId: String?, sTime: Long?, eTime: Long?) = ""
+            override suspend fun getSessionDetail(sessionId: String) = null
+            override suspend fun deleteSession(sessionId: String) {}
+            override suspend fun startSession(type: SessionType, drill: DrillType?, time: Long) = ""
+            override suspend fun insertProvisionalSession(session: io.github.loje0611.tennisdoc.core.data.db.entity.SwingSessionEntity) {}
+            override suspend fun finalizeSession(sId: String, eTime: Long, c: Int, d: Long, f: Int, b: Int, map: Map<String, Int>) {}
+            override suspend fun insertSessionWithBreakdown(s: io.github.loje0611.tennisdoc.core.data.db.entity.SwingSessionEntity, map: List<Pair<String, Int>>) {}
+            override suspend fun insertMockSession(s: io.github.loje0611.tennisdoc.core.data.db.entity.SwingSessionEntity, map: Map<String, Int>, events: List<io.github.loje0611.tennisdoc.core.data.db.entity.SwingEventEntity>) {}
+            override suspend fun insertSwingEvent(event: io.github.loje0611.tennisdoc.core.data.db.entity.SwingEventEntity) {}
+            override suspend fun getAverageMetrics(sessionId: String, categoryKey: String) = null
+            override suspend fun getSwingEventsForSession(sessionId: String) = emptyList<io.github.loje0611.tennisdoc.core.data.db.entity.SwingEventEntity>()
+            override suspend fun updateGlobalStatistics(categoryKey: String, metrics: io.github.loje0611.tennisdoc.core.model.SwingMetrics) {}
+            override suspend fun batchUpdateGlobalStatistics(events: List<io.github.loje0611.tennisdoc.core.data.db.entity.SwingEventEntity>) {}
+            override suspend fun getGlobalAverageMetrics(categoryKey: String) = null
+            override fun getLabRawRecordsForSession(sessionId: String) = kotlinx.coroutines.flow.emptyFlow<List<io.github.loje0611.tennisdoc.core.data.db.entity.LabRawRecordEntity>>()
+            override suspend fun getLabRawRecordById(recordId: Long) = null
+            override suspend fun insertLabRawRecord(record: io.github.loje0611.tennisdoc.core.data.db.entity.LabRawRecordEntity) = 1L
+            override suspend fun saveAiCoachReport(sessionId: String, reportJson: String, generatedAt: Long) {
+                savedReportJson = reportJson
+            }
+        }
+        val fakePrefs = object : io.github.loje0611.tennisdoc.core.data.repository.AiCoachPreferencesRepository {
+            override val geminiApiKey = MutableStateFlow<String?>(null)
+            override val llmProvider = MutableStateFlow(io.github.loje0611.tennisdoc.core.model.LlmProvider.GEMINI)
+            override val defaultCoachTone = MutableStateFlow(io.github.loje0611.tennisdoc.core.model.CoachTone.STRICT)
+            override suspend fun setGeminiApiKey(apiKey: String?) {}
+            override suspend fun setLlmProvider(provider: io.github.loje0611.tennisdoc.core.model.LlmProvider) {}
+            override suspend fun setDefaultCoachTone(tone: io.github.loje0611.tennisdoc.core.model.CoachTone) {}
+        }
+
+        val viewModel = LabViewModel(
+            pipeline = fakePipeline,
+            sessionPort = fakePort,
+            audioPort = io.github.loje0611.tennisdoc.feature.lab.audio.DefaultLabAudioFeedbackPort(),
+            aiCoachService = io.github.loje0611.tennisdoc.core.coach.service.CompositeAiCoachService(),
+            swingHistoryRepository = fakeRepo,
+            aiCoachPreferences = fakePrefs,
+        )
+        viewModel.setCameraFacing(CameraFacingMode.BACK)
+        viewModel.startSession()
+        testScheduler.advanceUntilIdle()
+        viewModel.triggerSwing()
+        testScheduler.advanceUntilIdle()
+        viewModel.finishSession()
+        testScheduler.advanceUntilIdle()
+
+        viewModel.requestAiCoachReport()
+        testScheduler.advanceUntilIdle()
+
+        val report = viewModel.uiState.value.aiCoachReport
+        assertNotNull(report)
+        assertTrue(report!!.isFallbackReport)
+        assertTrue(
+            "blank API key + STRICT default tone must produce the strict fallback summary",
+            report.overallSummary.startsWith("결과에 집중해야 합니다."),
+        )
+        assertNotNull(savedReportJson)
+        assertTrue(savedReportJson!!.contains(report.overallSummary))
     }
 }

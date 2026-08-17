@@ -17,6 +17,7 @@ import io.github.loje0611.tennisdoc.core.model.AiCoachReport
 import io.github.loje0611.tennisdoc.core.model.CoachTone
 import io.github.loje0611.tennisdoc.core.coach.service.CompositeAiCoachService
 import io.github.loje0611.tennisdoc.core.coach.parser.StructuredReportParser
+import io.github.loje0611.tennisdoc.core.data.repository.AiCoachPreferencesRepository
 
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -24,6 +25,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -63,6 +65,7 @@ class SessionDetailViewModel @Inject constructor(
     private val coachingCommentGenerator: CoachingCommentGenerator,
     private val reportParser: StructuredReportParser,
     private val compositeAiCoachService: CompositeAiCoachService,
+    private val aiCoachPreferences: io.github.loje0611.tennisdoc.core.data.repository.AiCoachPreferencesRepository,
 ) : ViewModel() {
 
     private var fusionEngine: FusionEngine = FusionEngineImpl()
@@ -73,8 +76,9 @@ class SessionDetailViewModel @Inject constructor(
         coachingCommentGenerator: CoachingCommentGenerator,
         reportParser: StructuredReportParser,
         compositeAiCoachService: CompositeAiCoachService,
+        aiCoachPreferences: io.github.loje0611.tennisdoc.core.data.repository.AiCoachPreferencesRepository,
         fusionEngine: FusionEngine,
-    ) : this(savedStateHandle, repository, coachingCommentGenerator, reportParser, compositeAiCoachService) {
+    ) : this(savedStateHandle, repository, coachingCommentGenerator, reportParser, compositeAiCoachService, aiCoachPreferences) {
         this.fusionEngine = fusionEngine
     }
 
@@ -254,12 +258,16 @@ class SessionDetailViewModel @Inject constructor(
         _uiState.update { it.copy(selectedTone = tone) }
     }
 
-    fun requestAiCoachReport(tone: CoachTone = CoachTone.ENCOURAGING) {
+    fun requestAiCoachReport(tone: CoachTone? = null) {
         val currentSession = _uiState.value.session ?: return
         
         _uiState.update { it.copy(isGeneratingAiReport = true) }
         viewModelScope.launch {
             try {
+                val apiKey = aiCoachPreferences.geminiApiKey.first()
+                val provider = aiCoachPreferences.llmProvider.first()
+                val resolvedTone = tone ?: aiCoachPreferences.defaultCoachTone.first()
+
                 val report = withContext(Dispatchers.Default) {
                     val fusedSwings = _uiState.value.labDetailState.swingItems.mapNotNull { it.fusedSwing }
                     val drillType = currentSession.drillType?.let { runCatching { DrillType.valueOf(it) }.getOrNull() } ?: DrillType.FOREHAND
@@ -269,7 +277,7 @@ class SessionDetailViewModel @Inject constructor(
                         swings = fusedSwings,
                         drillType = drillType
                     )
-                    val result = compositeAiCoachService.createReport(context, tone = tone)
+                    val result = compositeAiCoachService.createReport(context, provider = provider, apiKey = apiKey, tone = resolvedTone)
                     
                     if (result != null) {
                         val root = org.json.JSONObject()

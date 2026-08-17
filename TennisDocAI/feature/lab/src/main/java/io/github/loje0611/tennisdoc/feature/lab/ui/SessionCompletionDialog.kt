@@ -25,11 +25,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import io.github.loje0611.tennisdoc.core.ui.theme.MichromaFont
+import io.github.loje0611.tennisdoc.core.ui.coach.AiCoachReportCard
+import io.github.loje0611.tennisdoc.core.ui.coach.AiCoachLoadingSkeleton
 
 @Composable
 fun SessionCompletionDialog(
     summary: SessionCompletionSummary?,
+    aiReport: io.github.loje0611.tennisdoc.core.model.AiCoachReport? = null,
+    isGeneratingAiReport: Boolean = false,
+    onGenerateAiReport: () -> Unit = {},
     onDismiss: () -> Unit,
     onNavigateToReplay: (sessionId: String, recordId: Long) -> Unit,
     modifier: Modifier = Modifier
@@ -54,15 +61,15 @@ fun SessionCompletionDialog(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(vertical = 4.dp)
+                    .verticalScroll(rememberScrollState())
+                    .padding(vertical = 4.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 Text(
                     text = "훈련이 성공적으로 기록되었습니다. 요약 결과를 확인하세요.",
                     style = MaterialTheme.typography.bodyMedium,
                     color = Color(0xFF555560)
                 )
-
-                Spacer(modifier = Modifier.height(16.dp))
 
                 Card(
                     colors = CardDefaults.cardColors(
@@ -97,6 +104,25 @@ fun SessionCompletionDialog(
                             valueColor = Color(0xFF0066FF),
                             isMichroma = true
                         )
+                    }
+                }
+
+                if (aiReport != null) {
+                    AiCoachReportCard(report = aiReport)
+                } else if (isGeneratingAiReport) {
+                    AiCoachLoadingSkeleton()
+                } else {
+                    OutlinedButton(
+                        onClick = onGenerateAiReport,
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            containerColor = Color(0xFFF8FAFC),
+                            contentColor = Color(0xFF0066FF)
+                        ),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0x330066FF))
+                    ) {
+                        Text(text = "🤖 AI 코치 처방받기", fontWeight = FontWeight.Bold)
                     }
                 }
             }

@@ -57,6 +57,7 @@ dependencies {
     implementation(project(":core:ui"))
     implementation(project(":core:sensor"))
     implementation(project(":core:data"))
+    implementation(project(":core:coach"))
     implementation(project(":core:analysis"))
     implementation(project(":feature:history"))
     implementation(project(":feature:match"))

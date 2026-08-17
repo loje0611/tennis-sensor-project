@@ -31,6 +31,15 @@ class SessionDetailNavigationUiTest {
     @get:Rule
     val composeTestRule = createComposeRule()
 
+    private val fakeAiCoachPreferences = object : io.github.loje0611.tennisdoc.core.data.repository.AiCoachPreferencesRepository {
+        override val geminiApiKey = kotlinx.coroutines.flow.MutableStateFlow<String?>("fake")
+        override val llmProvider = kotlinx.coroutines.flow.MutableStateFlow(io.github.loje0611.tennisdoc.core.model.LlmProvider.GEMINI)
+        override val defaultCoachTone = kotlinx.coroutines.flow.MutableStateFlow(io.github.loje0611.tennisdoc.core.model.CoachTone.ENCOURAGING)
+        override suspend fun setGeminiApiKey(apiKey: String?) {}
+        override suspend fun setLlmProvider(provider: io.github.loje0611.tennisdoc.core.model.LlmProvider) {}
+        override suspend fun setDefaultCoachTone(tone: io.github.loje0611.tennisdoc.core.model.CoachTone) {}
+    }
+
     @Test
     fun ac2AndAc3_labSessionRendersSummarySwingCardsAndTriggersReplayCallback() {
         val repository = RecordingSwingHistoryRepository()
@@ -53,6 +62,9 @@ class SessionDetailNavigationUiTest {
             SavedStateHandle(mapOf("sessionId" to "sess-lab-999")),
             repository,
             fakeCoachingGenerator(),
+            io.github.loje0611.tennisdoc.core.coach.parser.StructuredReportParser(),
+            io.github.loje0611.tennisdoc.core.coach.service.CompositeAiCoachService(),
+            fakeAiCoachPreferences
         )
 
         var clickedSessionId = ""
@@ -113,6 +125,9 @@ class SessionDetailNavigationUiTest {
             SavedStateHandle(mapOf("sessionId" to "sess-lab-empty")),
             repository,
             fakeCoachingGenerator(),
+            io.github.loje0611.tennisdoc.core.coach.parser.StructuredReportParser(),
+            io.github.loje0611.tennisdoc.core.coach.service.CompositeAiCoachService(),
+            fakeAiCoachPreferences
         )
 
         composeTestRule.setContent {
@@ -130,7 +145,7 @@ class SessionDetailNavigationUiTest {
                 .isNotEmpty()
         }
         composeTestRule.onNodeWithText("서브 훈련").assertIsDisplayed()
-        composeTestRule.onNodeWithText("기록된 스윙 데이터가 없습니다.").assertIsDisplayed()
+        composeTestRule.onNodeWithText("기록된 스윙 데이터가 없습니다.").performScrollTo().assertIsDisplayed()
     }
 
     private fun fakeCoachingGenerator(): CoachingCommentGenerator =

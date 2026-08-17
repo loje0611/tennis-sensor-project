@@ -81,7 +81,7 @@ class AiCoachReportTest {
             CoachTone.entries.map { it.name }.toSet(),
         )
         assertEquals(
-            setOf("MOCK", "GEMINI", "OPENAI"),
+            setOf("MOCK", "GEMINI", "OPENAI", "LOCAL_RULE_ONLY"),
             LlmProvider.entries.map { it.name }.toSet(),
         )
         assertTrue(CoachTone.ENCOURAGING in CoachTone.entries)

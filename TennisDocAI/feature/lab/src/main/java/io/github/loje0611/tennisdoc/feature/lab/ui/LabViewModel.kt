@@ -13,6 +13,7 @@ import io.github.loje0611.tennisdoc.feature.lab.audio.DefaultLabAudioFeedbackPor
 import io.github.loje0611.tennisdoc.feature.lab.audio.LabAudioFeedbackPort
 import io.github.loje0611.tennisdoc.feature.lab.pipeline.LabFusionPipeline
 import io.github.loje0611.tennisdoc.feature.lab.session.LabSessionPort
+import io.github.loje0611.tennisdoc.core.data.repository.AiCoachPreferencesRepository
 import javax.inject.Inject
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -23,13 +24,17 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 @HiltViewModel
 class LabViewModel @Inject constructor(
     val pipeline: LabFusionPipeline,
     val sessionPort: LabSessionPort? = null,
-    val audioPort: LabAudioFeedbackPort = DefaultLabAudioFeedbackPort()
+    val audioPort: LabAudioFeedbackPort = DefaultLabAudioFeedbackPort(),
+    val aiCoachService: io.github.loje0611.tennisdoc.core.coach.service.CompositeAiCoachService? = null,
+    val swingHistoryRepository: io.github.loje0611.tennisdoc.core.data.repository.SwingHistoryRepository? = null,
+    val aiCoachPreferences: io.github.loje0611.tennisdoc.core.data.repository.AiCoachPreferencesRepository? = null
 ) : ViewModel() {
 
     private val _selectedDrill = MutableStateFlow(DrillType.FOREHAND)
@@ -48,6 +53,8 @@ class LabViewModel @Inject constructor(
     private val _farFieldHud = MutableStateFlow<FarFieldHudState?>(null)
     private val _completionSummary = MutableStateFlow<SessionCompletionSummary?>(null)
     private val _isBodyFramed = MutableStateFlow(false)
+    private val _aiCoachReport = MutableStateFlow<io.github.loje0611.tennisdoc.core.model.AiCoachReport?>(null)
+    private val _isGeneratingAiReport = MutableStateFlow(false)
 
     private val sessionSwings = mutableListOf<FusedSwing>()
     private var countdownJob: Job? = null
@@ -72,8 +79,12 @@ class LabViewModel @Inject constructor(
             pipeline.latestFusedSwing,
             pipeline.latestAnomalyReport,
             _isBodyFramed
+        ) { arr -> arr },
+        combine(
+            _aiCoachReport,
+            _isGeneratingAiReport
         ) { arr -> arr }
-    ) { part1, part2 ->
+    ) { part1, part2, part3 ->
         @Suppress("UNCHECKED_CAST")
         LabUiState(
             selectedDrill = part1[0] as DrillType,
@@ -90,7 +101,9 @@ class LabViewModel @Inject constructor(
             completionSummary = part2[4] as SessionCompletionSummary?,
             latestFusedSwing = part2[5] as FusedSwing?,
             latestAnomalyReport = part2[6] as BaselineComparisonReport?,
-            isBodyFramed = part2[7] as Boolean
+            isBodyFramed = part2[7] as Boolean,
+            aiCoachReport = part3[0] as io.github.loje0611.tennisdoc.core.model.AiCoachReport?,
+            isGeneratingAiReport = part3[1] as Boolean
         )
     }.stateIn(
         scope = viewModelScope,
@@ -266,6 +279,56 @@ class LabViewModel @Inject constructor(
                     audioPort.playImpactBeep()
                     _farFieldHud.value = null
                 }
+            }
+        }
+    }
+
+    fun requestAiCoachReport(tone: io.github.loje0611.tennisdoc.core.model.CoachTone? = null) {
+        if (aiCoachService == null || swingHistoryRepository == null) return
+
+        val currentSessionId = uiState.value.activeSessionId ?: uiState.value.completionSummary?.sessionId ?: "lab-session"
+        val swings = sessionSwings.toList()
+        
+        if (swings.isEmpty() && uiState.value.swingCount == 0) {
+            // 빈 세션이면 안전 처리 혹은 리턴
+            return
+        }
+
+        viewModelScope.launch {
+            _isGeneratingAiReport.value = true
+            
+            try {
+                val apiKey = aiCoachPreferences?.geminiApiKey?.first()
+                val provider = aiCoachPreferences?.llmProvider?.first() ?: io.github.loje0611.tennisdoc.core.model.LlmProvider.GEMINI
+                val resolvedTone = tone ?: aiCoachPreferences?.defaultCoachTone?.first() ?: io.github.loje0611.tennisdoc.core.model.CoachTone.ENCOURAGING
+
+                val contextBuilder = io.github.loje0611.tennisdoc.core.fusion.context.SessionPrescriptionContextBuilder()
+                val context = contextBuilder.buildContext(
+                    sessionId = currentSessionId,
+                    drillType = uiState.value.selectedDrill,
+                    swings = swings,
+                    baseline = null, // TODO: Fetch baseline if needed
+                    durationSeconds = uiState.value.sessionDurationSeconds
+                )
+                
+                val report = aiCoachService.createReport(context, provider = provider, apiKey = apiKey, tone = resolvedTone)
+                
+                val reportJson = """
+                    {
+                        "reportId": "${report.reportId}",
+                        "sessionId": "${report.sessionId}",
+                        "overallSummary": "${report.overallSummary.replace("\"", "\\\"").replace("\n", "\\n")}",
+                        "isFallbackReport": ${report.isFallbackReport}
+                    }
+                """.trimIndent()
+                
+                swingHistoryRepository.saveAiCoachReport(currentSessionId, reportJson, System.currentTimeMillis())
+                
+                _aiCoachReport.value = report
+            } catch (e: Exception) {
+                // Ignore or handle
+            } finally {
+                _isGeneratingAiReport.value = false
             }
         }
     }

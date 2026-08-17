@@ -52,4 +52,5 @@ enum class LlmProvider {
     MOCK,
     GEMINI,
     OPENAI,
+    LOCAL_RULE_ONLY
 }

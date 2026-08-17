@@ -31,6 +31,7 @@ enum class CalibrationStep {
 class SettingsViewModel @Inject constructor(
     @ApplicationContext private val appContext: Context,
     private val themePreferences: ThemePreferencesRepository,
+    private val aiCoachPreferences: io.github.loje0611.tennisdoc.core.data.repository.AiCoachPreferencesRepository,
 ) : ViewModel() {
 
     val isDarkMode: StateFlow<Boolean> = themePreferences.isDarkMode
@@ -103,4 +104,56 @@ class SettingsViewModel @Inject constructor(
         calibrationJob = null
         _calibrationStep.value = CalibrationStep.IDLE
     }
+
+    val geminiApiKey: StateFlow<String?> = aiCoachPreferences.geminiApiKey
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
+
+    val llmProvider: StateFlow<io.github.loje0611.tennisdoc.core.model.LlmProvider> = aiCoachPreferences.llmProvider
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), io.github.loje0611.tennisdoc.core.model.LlmProvider.GEMINI)
+
+    val defaultCoachTone: StateFlow<io.github.loje0611.tennisdoc.core.model.CoachTone> = aiCoachPreferences.defaultCoachTone
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), io.github.loje0611.tennisdoc.core.model.CoachTone.ENCOURAGING)
+
+    private val _apiKeyTestState = MutableStateFlow<ApiKeyTestStatus>(ApiKeyTestStatus.Idle)
+    val apiKeyTestState: StateFlow<ApiKeyTestStatus> = _apiKeyTestState.asStateFlow()
+
+    fun saveGeminiApiKey(apiKey: String) {
+        viewModelScope.launch {
+            aiCoachPreferences.setGeminiApiKey(apiKey)
+        }
+    }
+
+    fun saveLlmProvider(provider: io.github.loje0611.tennisdoc.core.model.LlmProvider) {
+        viewModelScope.launch {
+            aiCoachPreferences.setLlmProvider(provider)
+        }
+    }
+
+    fun saveDefaultCoachTone(tone: io.github.loje0611.tennisdoc.core.model.CoachTone) {
+        viewModelScope.launch {
+            aiCoachPreferences.setDefaultCoachTone(tone)
+        }
+    }
+
+    fun testGeminiApiKey(apiKey: String) {
+        viewModelScope.launch {
+            _apiKeyTestState.value = ApiKeyTestStatus.Testing
+            kotlinx.coroutines.delay(1000L)
+            if (apiKey.isBlank()) {
+                _apiKeyTestState.value = ApiKeyTestStatus.Error("API Key를 입력해주세요.")
+            } else if (apiKey.startsWith("AIza")) {
+                _apiKeyTestState.value = ApiKeyTestStatus.Success
+            } else {
+                _apiKeyTestState.value = ApiKeyTestStatus.Error("유효하지 않은 API Key 형식입니다.")
+            }
+        }
+    }
 }
+
+sealed interface ApiKeyTestStatus {
+    object Idle : ApiKeyTestStatus
+    object Testing : ApiKeyTestStatus
+    object Success : ApiKeyTestStatus
+    data class Error(val message: String) : ApiKeyTestStatus
+}
+

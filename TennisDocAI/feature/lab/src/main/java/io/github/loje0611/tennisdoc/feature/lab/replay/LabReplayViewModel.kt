@@ -56,6 +56,7 @@ class LabReplayViewModel @Inject constructor(
             override fun getLabRawRecordsForSession(sessionId: String) = kotlinx.coroutines.flow.emptyFlow<List<io.github.loje0611.tennisdoc.core.data.db.entity.LabRawRecordEntity>>()
             override suspend fun getLabRawRecordById(recordId: Long) = null
             override suspend fun insertLabRawRecord(record: io.github.loje0611.tennisdoc.core.data.db.entity.LabRawRecordEntity) = 0L
+            override suspend fun saveAiCoachReport(sessionId: String, reportJson: String, generatedAt: Long) {}
         }
     ) {
         this.fusionEngine = fusionEngine

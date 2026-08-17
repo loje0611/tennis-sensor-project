@@ -63,6 +63,15 @@ class LabReplayNavigationUiTest {
             )
         }
 
+        val fakeAiCoachPreferences = object : io.github.loje0611.tennisdoc.core.data.repository.AiCoachPreferencesRepository {
+            override val geminiApiKey = kotlinx.coroutines.flow.MutableStateFlow<String?>("fake")
+            override val llmProvider = kotlinx.coroutines.flow.MutableStateFlow(io.github.loje0611.tennisdoc.core.model.LlmProvider.GEMINI)
+            override val defaultCoachTone = kotlinx.coroutines.flow.MutableStateFlow(io.github.loje0611.tennisdoc.core.model.CoachTone.ENCOURAGING)
+            override suspend fun setGeminiApiKey(apiKey: String?) {}
+            override suspend fun setLlmProvider(provider: io.github.loje0611.tennisdoc.core.model.LlmProvider) {}
+            override suspend fun setDefaultCoachTone(tone: io.github.loje0611.tennisdoc.core.model.CoachTone) {}
+        }
+
         val detailViewModel = SessionDetailViewModel(
             SavedStateHandle(mapOf("sessionId" to "sess-lab-nav")),
             repository,
@@ -73,6 +82,9 @@ class LabReplayNavigationUiTest {
                     globalAverage: SwingMetrics?,
                 ): String = "Good"
             },
+            io.github.loje0611.tennisdoc.core.coach.parser.StructuredReportParser(),
+            io.github.loje0611.tennisdoc.core.coach.service.CompositeAiCoachService(),
+            fakeAiCoachPreferences,
         )
 
         composeRule.setContent {

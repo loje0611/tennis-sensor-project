@@ -25,4 +25,18 @@ abstract class AppModule {
     abstract fun bindLabSessionPort(
         impl: LabSessionPortImpl,
     ): LabSessionPort
+
+    companion object {
+        @dagger.Provides
+        @Singleton
+        fun provideStructuredReportParser(): io.github.loje0611.tennisdoc.core.coach.parser.StructuredReportParser {
+            return io.github.loje0611.tennisdoc.core.coach.parser.StructuredReportParser()
+        }
+
+        @dagger.Provides
+        @Singleton
+        fun provideCompositeAiCoachService(): io.github.loje0611.tennisdoc.core.coach.service.CompositeAiCoachService {
+            return io.github.loje0611.tennisdoc.core.coach.service.CompositeAiCoachService()
+        }
+    }
 }

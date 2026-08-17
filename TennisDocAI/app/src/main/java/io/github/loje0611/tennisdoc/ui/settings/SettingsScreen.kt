@@ -51,6 +51,22 @@ import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import io.github.loje0611.tennisdoc.session.SwingAnalysisSessionState
 import io.github.loje0611.tennisdoc.core.ui.theme.MichromaFont
 import io.github.loje0611.tennisdoc.core.ui.theme.SwingTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Button
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
+import io.github.loje0611.tennisdoc.core.ui.coach.CoachToneSelector
+import io.github.loje0611.tennisdoc.core.model.LlmProvider
+import androidx.compose.material3.ExperimentalMaterial3Api
 
 private fun bleRuntimePermissions(): List<String> = buildList {
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -378,5 +394,224 @@ fun SettingsScreen(
                 }
             }
         }
+        
+        AiCoachSettingsSection(viewModel)
     }
 }
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun AiCoachSettingsSection(viewModel: SettingsViewModel) {
+    val geminiApiKey by viewModel.geminiApiKey.collectAsStateWithLifecycle()
+    val llmProvider by viewModel.llmProvider.collectAsStateWithLifecycle()
+    val defaultCoachTone by viewModel.defaultCoachTone.collectAsStateWithLifecycle()
+    val testState by viewModel.apiKeyTestState.collectAsStateWithLifecycle()
+
+    var isPasswordVisible by remember { mutableStateOf(false) }
+    var apiKeyInput by remember { mutableStateOf(geminiApiKey ?: "") }
+    var providerExpanded by remember { mutableStateOf(false) }
+
+    LaunchedEffect(geminiApiKey) {
+        apiKeyInput = geminiApiKey ?: ""
+    }
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .shadow(
+                elevation = 8.dp,
+                shape = RoundedCornerShape(16.dp),
+                ambientColor = SwingTheme.colors.cardBorder.copy(alpha = 0.5f),
+                spotColor = SwingTheme.colors.cardBorder.copy(alpha = 0.5f)
+            )
+            .clip(RoundedCornerShape(16.dp))
+            .background(SwingTheme.colors.cardSurface)
+            .border(
+                width = 0.5.dp,
+                color = SwingTheme.colors.cardBorder,
+                shape = RoundedCornerShape(16.dp)
+            )
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            Text(
+                text = "🤖 AI 코치 설정",
+                style = MaterialTheme.typography.titleMedium.copy(
+                    fontWeight = FontWeight.Bold,
+                    color = SwingTheme.colors.onBackground
+                )
+            )
+
+            // Provider Selector
+            ExposedDropdownMenuBox(
+                expanded = providerExpanded,
+                onExpandedChange = { providerExpanded = !providerExpanded },
+            ) {
+                OutlinedTextField(
+                    modifier = Modifier.menuAnchor().fillMaxWidth(),
+                    readOnly = true,
+                    value = when (llmProvider) {
+                        LlmProvider.GEMINI -> "Google Gemini Flash (권장)"
+                        LlmProvider.LOCAL_RULE_ONLY -> "오프라인 룰 엔진 (로컬 전용)"
+                        LlmProvider.MOCK -> "가상 Mock 코치"
+                        LlmProvider.OPENAI -> "OpenAI GPT (실험적)"
+                    },
+                    onValueChange = {},
+                    label = { Text("AI 프로바이더") },
+                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = providerExpanded) },
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = SwingTheme.colors.neonPurpleSettings,
+                        focusedLabelColor = SwingTheme.colors.neonPurpleSettings
+                    ),
+                    shape = RoundedCornerShape(12.dp)
+                )
+                ExposedDropdownMenu(
+                    expanded = providerExpanded,
+                    onDismissRequest = { providerExpanded = false },
+                ) {
+                    DropdownMenuItem(
+                        text = { Text("Google Gemini Flash (권장)") },
+                        onClick = {
+                            viewModel.saveLlmProvider(LlmProvider.GEMINI)
+                            providerExpanded = false
+                        }
+                    )
+                    DropdownMenuItem(
+                        text = { Text("오프라인 룰 엔진 (로컬 전용)") },
+                        onClick = {
+                            viewModel.saveLlmProvider(LlmProvider.LOCAL_RULE_ONLY)
+                            providerExpanded = false
+                        }
+                    )
+                    DropdownMenuItem(
+                        text = { Text("가상 Mock 코치") },
+                        onClick = {
+                            viewModel.saveLlmProvider(LlmProvider.MOCK)
+                            providerExpanded = false
+                        }
+                    )
+                    DropdownMenuItem(
+                        text = { Text("OpenAI GPT (실험적)") },
+                        onClick = {
+                            viewModel.saveLlmProvider(LlmProvider.OPENAI)
+                            providerExpanded = false
+                        }
+                    )
+                }
+            }
+
+            // API Key Input
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                OutlinedTextField(
+                    value = apiKeyInput,
+                    onValueChange = { 
+                        apiKeyInput = it
+                        viewModel.saveGeminiApiKey(it)
+                    },
+                    label = { Text("Gemini API Key") },
+                    modifier = Modifier.weight(1f),
+                    visualTransformation = if (isPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                    trailingIcon = {
+                        val image = if (isPasswordVisible)
+                            Icons.Filled.Visibility
+                        else Icons.Filled.VisibilityOff
+
+                        IconButton(onClick = { isPasswordVisible = !isPasswordVisible }) {
+                            Icon(imageVector = image, contentDescription = if (isPasswordVisible) "Hide password" else "Show password")
+                        }
+                    },
+                    singleLine = true,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = SwingTheme.colors.neonPurpleSettings,
+                        focusedLabelColor = SwingTheme.colors.neonPurpleSettings
+                    ),
+                    shape = RoundedCornerShape(12.dp)
+                )
+
+                Button(
+                    onClick = { viewModel.testGeminiApiKey(apiKeyInput) },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = SwingTheme.colors.neonPurpleSettings
+                    ),
+                    modifier = Modifier.padding(top = 8.dp)
+                ) {
+                    Text("연결 테스트")
+                }
+            }
+
+            Text(
+                text = "Google AI Studio에서 무료로 발급받은 API Key를 입력하세요.",
+                style = MaterialTheme.typography.bodySmall,
+                color = SwingTheme.colors.subGray
+            )
+
+            // Test status
+            when (testState) {
+                is ApiKeyTestStatus.Testing -> {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        CircularProgressIndicator(
+                            color = SwingTheme.colors.neonPurpleSettings,
+                            modifier = Modifier.size(16.dp),
+                            strokeWidth = 2.dp
+                        )
+                        Text(
+                            text = " 연결 확인 중...",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = SwingTheme.colors.onBackgroundVariant
+                        )
+                    }
+                }
+                is ApiKeyTestStatus.Success -> {
+                    Box(
+                        modifier = Modifier
+                            .background(androidx.compose.ui.graphics.Color(0xFFDCFCE7), RoundedCornerShape(4.dp))
+                            .padding(horizontal = 8.dp, vertical = 4.dp)
+                    ) {
+                        Text(
+                            text = "✔ 연결 성공",
+                            style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold),
+                            color = androidx.compose.ui.graphics.Color(0xFF16A34A)
+                        )
+                    }
+                }
+                is ApiKeyTestStatus.Error -> {
+                    Box(
+                        modifier = Modifier
+                            .background(androidx.compose.ui.graphics.Color(0xFFFEE2E2), RoundedCornerShape(4.dp))
+                            .padding(horizontal = 8.dp, vertical = 4.dp)
+                    ) {
+                        Text(
+                            text = "✖ ${(testState as ApiKeyTestStatus.Error).message}",
+                            style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold),
+                            color = androidx.compose.ui.graphics.Color(0xFFDC2626)
+                        )
+                    }
+                }
+                ApiKeyTestStatus.Idle -> {}
+            }
+
+            // Coach Tone Selector
+            Text(
+                text = "기본 코칭 톤",
+                style = MaterialTheme.typography.bodyMedium.copy(
+                    fontWeight = FontWeight.Bold,
+                    color = SwingTheme.colors.onBackground
+                )
+            )
+            CoachToneSelector(
+                selectedTone = defaultCoachTone,
+                onToneSelected = { viewModel.saveDefaultCoachTone(it) },
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
+    }
+}
+

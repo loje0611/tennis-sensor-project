@@ -42,5 +42,7 @@ data class LabUiState(
     val completionSummary: SessionCompletionSummary? = null,
     val latestFusedSwing: FusedSwing? = null,
     val latestAnomalyReport: BaselineComparisonReport? = null,
-    val isBodyFramed: Boolean = false
+    val isBodyFramed: Boolean = false,
+    val aiCoachReport: io.github.loje0611.tennisdoc.core.model.AiCoachReport? = null,
+    val isGeneratingAiReport: Boolean = false
 )
