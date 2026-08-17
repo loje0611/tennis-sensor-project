@@ -44,14 +44,14 @@ class SwingHistoryRepositorySessionLifecycleTest {
     fun startSessionCreatesLabForehandTopspinRow() = runTest {
         val sid = repository.startSession(
             sessionType = SessionType.LAB,
-            drillType = DrillType.FOREHAND_TOPSPIN,
+            drillType = DrillType.FOREHAND,
             startTimeMillis = 1_700_000_000_000L,
         )
 
         val stored = repository.getSessionDetail(sid)
         assertNotNull(stored)
         assertEquals(SessionType.LAB.name, stored!!.session.sessionType)
-        assertEquals(DrillType.FOREHAND_TOPSPIN.name, stored.session.drillType)
+        assertEquals(DrillType.FOREHAND.name, stored.session.drillType)
         assertEquals(0, stored.session.totalSwingCount)
         assertEquals(null, stored.session.endTime)
     }
@@ -60,7 +60,7 @@ class SwingHistoryRepositorySessionLifecycleTest {
     fun swingEventIsStoredUnderActiveSessionId() = runTest {
         val sid = repository.startSession(
             sessionType = SessionType.LAB,
-            drillType = DrillType.FOREHAND_TOPSPIN,
+            drillType = DrillType.FOREHAND,
         )
         repository.insertSwingEvent(
             SwingEventEntity(
@@ -86,7 +86,7 @@ class SwingHistoryRepositorySessionLifecycleTest {
     fun finalizeSessionPersistsEndTimeCountAndTypes() = runTest {
         val sid = repository.startSession(
             sessionType = SessionType.LAB,
-            drillType = DrillType.FOREHAND_TOPSPIN,
+            drillType = DrillType.FOREHAND,
             startTimeMillis = 1_000L,
         )
         val endTime = 6_000L
@@ -105,8 +105,33 @@ class SwingHistoryRepositorySessionLifecycleTest {
         assertEquals(4, stored.totalSwingCount)
         assertEquals(5_000L, stored.durationMillis)
         assertEquals(SessionType.LAB.name, stored.sessionType)
-        assertEquals(DrillType.FOREHAND_TOPSPIN.name, stored.drillType)
+        assertEquals(DrillType.FOREHAND.name, stored.drillType)
         val breakdown = repository.getSessionDetail(sid)!!.breakdown
         assertTrue(breakdown.any { it.categoryKey == "forehand topspin" && it.count == 4 })
+    }
+
+    @Test
+    fun ac3_saveAiCoachReportUpdatesSessionAndLeavesMissingIdQuiet() = runTest {
+        val sid = repository.startSession(
+            sessionType = SessionType.LAB,
+            drillType = DrillType.FOREHAND,
+            startTimeMillis = 1_000L,
+        )
+        val before = repository.getSessionDetail(sid)!!.session
+        assertEquals(null, before.aiCoachReportJson)
+        assertEquals(null, before.aiReportGeneratedAt)
+
+        val json = """{"overallSummary":"Keep the face square"}"""
+        repository.saveAiCoachReport(sid, json, 3_000L)
+
+        val after = repository.getSessionDetail(sid)!!.session
+        assertEquals(json, after.aiCoachReportJson)
+        assertEquals(3_000L, after.aiReportGeneratedAt)
+        assertEquals(SessionType.LAB.name, after.sessionType)
+        assertEquals(DrillType.FOREHAND.name, after.drillType)
+
+        repository.saveAiCoachReport("no-such-session", "{}", 4_000L)
+        assertEquals(null, repository.getSessionDetail("no-such-session"))
+        assertEquals(json, repository.getSessionDetail(sid)!!.session.aiCoachReportJson)
     }
 }

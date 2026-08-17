@@ -53,6 +53,9 @@ interface SwingSessionDao {
         bhVolley: Int,
     )
 
+    @Query("UPDATE swing_sessions SET aiCoachReportJson = :reportJson, aiReportGeneratedAt = :generatedAt WHERE sessionId = :sessionId")
+    suspend fun updateAiCoachReport(sessionId: String, reportJson: String, generatedAt: Long)
+
     // ── 스윙 이벤트 (운동학 분석) ──────────────────────────────────────────
 
     @Insert

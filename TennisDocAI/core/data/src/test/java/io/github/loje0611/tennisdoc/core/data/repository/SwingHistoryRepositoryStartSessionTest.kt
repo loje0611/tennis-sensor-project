@@ -157,5 +157,7 @@ class SwingHistoryRepositoryStartSessionTest {
         override suspend fun getLabRawRecordById(recordId: Long): io.github.loje0611.tennisdoc.core.data.db.entity.LabRawRecordEntity? = null
 
         override suspend fun insertLabRawRecord(record: io.github.loje0611.tennisdoc.core.data.db.entity.LabRawRecordEntity): Long = 1L
+
+        override suspend fun saveAiCoachReport(sessionId: String, reportJson: String, generatedAt: Long) {}
     }
 }

@@ -47,8 +47,8 @@ class LabRawRecordDaoTest {
     }
 
     @Test
-    fun databaseVersionIs8() {
-        assertEquals(8, database.openHelper.writableDatabase.version)
+    fun databaseVersionIs9() {
+        assertEquals(9, database.openHelper.writableDatabase.version)
     }
 
     @Test
@@ -60,14 +60,14 @@ class LabRawRecordDaoTest {
                 sessionName = "Lab drill",
                 startTime = 10L,
                 sessionType = SessionType.LAB.name,
-                drillType = DrillType.FOREHAND_TOPSPIN.name,
+                drillType = DrillType.FOREHAND.name,
             ),
         )
 
         val rowId = labDao.insert(
             LabRawRecordEntity(
                 sessionId = sessionId,
-                drillType = DrillType.FOREHAND_TOPSPIN.name,
+                drillType = DrillType.FOREHAND.name,
                 timestampMillis = 20L,
                 imuRawJson = """[{"ax":0.1}]""",
                 visionPosesJson = """[{"landmarks":[]}]""",
@@ -79,7 +79,7 @@ class LabRawRecordDaoTest {
         val loaded = labDao.getRecordById(rowId)
         assertNotNull(loaded)
         assertEquals(sessionId, loaded!!.sessionId)
-        assertEquals(DrillType.FOREHAND_TOPSPIN.name, loaded.drillType)
+        assertEquals(DrillType.FOREHAND.name, loaded.drillType)
         assertEquals("""[{"ax":0.1}]""", loaded.imuRawJson)
         assertEquals(15L, loaded.impactOffsetMs)
 
@@ -138,7 +138,7 @@ class LabRawRecordDaoTest {
             labDao.insert(
                 LabRawRecordEntity(
                     sessionId = "missing-session",
-                    drillType = DrillType.VOLLEY.name,
+                    drillType = DrillType.FOREHAND_VOLLEY.name,
                     timestampMillis = 1L,
                     imuRawJson = "[]",
                     visionPosesJson = "[]",

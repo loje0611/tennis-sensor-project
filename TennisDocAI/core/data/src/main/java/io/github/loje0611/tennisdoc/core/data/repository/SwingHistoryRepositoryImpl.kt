@@ -272,4 +272,8 @@ class SwingHistoryRepositoryImpl @Inject constructor(
     override suspend fun insertLabRawRecord(record: io.github.loje0611.tennisdoc.core.data.db.entity.LabRawRecordEntity): Long {
         return labDao.insert(record)
     }
+
+    override suspend fun saveAiCoachReport(sessionId: String, reportJson: String, generatedAt: Long) {
+        dao.updateAiCoachReport(sessionId, reportJson, generatedAt)
+    }
 }

@@ -23,7 +23,7 @@ import io.github.loje0611.tennisdoc.core.data.db.entity.SwingSessionEntity
         GlobalStatisticsEntity::class,
         LabRawRecordEntity::class,
     ],
-    version = 8,
+    version = 9,
     exportSchema = true,
 )
 abstract class TennisDocDatabase : RoomDatabase() {
@@ -76,6 +76,13 @@ abstract class TennisDocDatabase : RoomDatabase() {
             }
         }
 
+        val MIGRATION_8_9 = object : Migration(8, 9) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE swing_sessions ADD COLUMN aiCoachReportJson TEXT DEFAULT NULL")
+                db.execSQL("ALTER TABLE swing_sessions ADD COLUMN aiReportGeneratedAt INTEGER DEFAULT NULL")
+            }
+        }
+
         fun getInstance(context: Context): TennisDocDatabase {
             return instance ?: synchronized(this) {
                 instance ?: Room.databaseBuilder(
@@ -83,7 +90,7 @@ abstract class TennisDocDatabase : RoomDatabase() {
                     TennisDocDatabase::class.java,
                     "swingsense.db",
                 )
-                    .addMigrations(MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8)
+                    .addMigrations(MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9)
                     .fallbackToDestructiveMigrationOnDowngrade()
                     .build()
                     .also { instance = it }

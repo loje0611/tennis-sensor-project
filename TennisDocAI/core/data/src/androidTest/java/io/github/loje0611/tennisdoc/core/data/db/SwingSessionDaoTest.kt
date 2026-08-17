@@ -192,4 +192,26 @@ class SwingSessionDaoTest {
         assertEquals(1, ranged.size)
         assertEquals("forehand topspin", ranged.first().categoryKey)
     }
+
+    @Test
+    fun ac3_updateAiCoachReportPersistsJsonAndTimestamp() = runTest {
+        val session = makeSession(id = "sess-ai-1")
+        dao.insertSession(session)
+        assertNull(dao.getSessionById("sess-ai-1")!!.aiCoachReportJson)
+        assertNull(dao.getSessionById("sess-ai-1")!!.aiReportGeneratedAt)
+
+        dao.updateAiCoachReport("sess-ai-1", """{"summary":"keep elbow in"}""", 2_000L)
+
+        val updated = dao.getSessionById("sess-ai-1")!!
+        assertEquals("""{"summary":"keep elbow in"}""", updated.aiCoachReportJson)
+        assertEquals(2_000L, updated.aiReportGeneratedAt)
+        assertEquals("Test Session", updated.sessionName)
+        assertEquals(10, updated.totalSwingCount)
+    }
+
+    @Test
+    fun ac3_updateAiCoachReportOnMissingSessionDoesNotThrow() = runTest {
+        dao.updateAiCoachReport("missing-session", "{}", 1L)
+        assertNull(dao.getSessionById("missing-session"))
+    }
 }

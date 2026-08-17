@@ -20,6 +20,8 @@ data class SwingSessionEntity(
     val backhandVolleyCount: Int = 0,
     val sessionType: String = "MATCH",
     val drillType: String? = null,
+    val aiCoachReportJson: String? = null,
+    val aiReportGeneratedAt: Long? = null,
 ) {
     companion object {
         private val SESSION_NAME_FORMAT = SimpleDateFormat("yyyy.MM.dd hh:mm a", Locale.US)
