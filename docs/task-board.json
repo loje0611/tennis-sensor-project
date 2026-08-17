@@ -684,6 +684,20 @@
       "retry_count": 0,
       "created_at": "2026-08-17T09:28:40Z",
       "updated_at": "2026-08-17T09:32:45.675252Z"
+    },
+    {
+      "id": "TASK-047",
+      "title": "AI 코치 리포트 스포츠 카드 UI 컴포넌트 구현",
+      "raw_request": "task 47 작성해",
+      "target_project": "TennisDocAI",
+      "depends_on": [
+        "TASK-043"
+      ],
+      "spec_path": "docs/specs/TASK-047-ai-coach-report-sports-card-ui.md",
+      "status": "SPEC_READY",
+      "retry_count": 0,
+      "created_at": "2026-08-17T09:36:55Z",
+      "updated_at": "2026-08-17T09:36:55Z"
     }
   ]
 }
