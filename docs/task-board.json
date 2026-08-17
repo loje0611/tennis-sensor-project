@@ -698,6 +698,21 @@
       "retry_count": 0,
       "created_at": "2026-08-17T09:36:55Z",
       "updated_at": "2026-08-17T09:50:26.660796Z"
+    },
+    {
+      "id": "TASK-048",
+      "title": ":feature:lab 세션 완료 다이얼로그 AI 코칭 리포트 연동",
+      "raw_request": "task 48 작성해",
+      "target_project": "TennisDocAI",
+      "depends_on": [
+        "TASK-046",
+        "TASK-047"
+      ],
+      "spec_path": "docs/specs/TASK-048-lab-session-completion-ai-report-integration.md",
+      "status": "SPEC_READY",
+      "retry_count": 0,
+      "created_at": "2026-08-17T09:54:00Z",
+      "updated_at": "2026-08-17T09:54:00Z"
     }
   ]
 }
