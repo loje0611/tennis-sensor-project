@@ -17,8 +17,8 @@ tasks.register("verifyModuleDependencies") {
         ":core:fusion" to setOf(":core:model", ":core:vision", ":core:analysis"),
         ":core:coach" to setOf(":core:model", ":core:fusion"),
         ":feature:match" to setOf(":core:model", ":core:ui", ":core:sensor", ":core:data", ":core:analysis"),
-        ":feature:history" to setOf(":core:model", ":core:ui", ":core:data", ":core:fusion"),
-        ":feature:lab" to setOf(":core:model", ":core:ui", ":core:vision", ":core:data", ":core:analysis", ":core:fusion"),
+        ":feature:history" to setOf(":core:model", ":core:ui", ":core:data", ":core:fusion", ":core:coach"),
+        ":feature:lab" to setOf(":core:model", ":core:ui", ":core:vision", ":core:data", ":core:analysis", ":core:fusion", ":core:coach"),
         ":app" to setOf(":core:model", ":core:ui", ":core:sensor", ":core:data", ":core:analysis", ":core:vision", ":core:fusion", ":core:coach", ":feature:match", ":feature:history", ":feature:lab")
     )
 

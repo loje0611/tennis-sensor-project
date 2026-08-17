@@ -10,6 +10,16 @@ import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
+import io.github.loje0611.tennisdoc.core.ui.coach.AiCoachReportCard
+import io.github.loje0611.tennisdoc.core.ui.coach.AiCoachLoadingSkeleton
+import io.github.loje0611.tennisdoc.core.ui.coach.CoachToneSelector
+import io.github.loje0611.tennisdoc.core.model.AiCoachReport
+import io.github.loje0611.tennisdoc.core.model.CoachTone
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.OutlinedButton
+
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -72,12 +82,14 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Paint
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
+import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
+
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.DialogWindowProvider
@@ -190,27 +202,84 @@ fun SessionDetailScreen(
             }
             else -> {
                 val session = state.session ?: return@Scaffold
-                if (session.sessionType == "LAB") {
-                    LabSessionDetailContent(
-                        session = session,
-                        labState = state.labDetailState,
-                        onNavigateToReplay = { recordId ->
-                            onNavigateToReplay(session.sessionId, recordId)
-                        },
-                        modifier = Modifier.padding(innerPadding)
+                Column(
+                    modifier = Modifier.fillMaxSize().padding(innerPadding).background(SwingTheme.colors.background)
+                ) {
+                    val isLab = session.sessionType == "LAB"
+                    val tabs = if (isLab) {
+                        listOf(SessionDetailTab.ANALYSIS, SessionDetailTab.REPLAY, SessionDetailTab.AI_COACH)
+                    } else {
+                        listOf(SessionDetailTab.ANALYSIS, SessionDetailTab.AI_COACH)
+                    }
+                    val titles = mapOf(
+                        SessionDetailTab.ANALYSIS to "📊 스윙 분석",
+                        SessionDetailTab.REPLAY to "🎬 동기 리플레이",
+                        SessionDetailTab.AI_COACH to "🤖 AI 코치 처방"
                     )
-                } else {
-                    MatchSessionDetailContent(
-                        session = session,
-                        breakdown = state.breakdown,
-                        categories = categories,
-                        onItemClick = { index ->
-                            targetPageIdx = index
-                            viewModel.preloadAllCategories(categories)
-                            showSheet = true
-                        },
-                        modifier = Modifier.padding(innerPadding)
-                    )
+
+                    androidx.compose.material3.TabRow(
+                        selectedTabIndex = tabs.indexOf(state.selectedTab).takeIf { it >= 0 } ?: 0,
+                        containerColor = SwingTheme.colors.background,
+                        contentColor = SwingTheme.colors.onBackground,
+                        divider = { androidx.compose.material3.HorizontalDivider(color = SwingTheme.colors.cardBorder) },
+                        indicator = { tabPositions ->
+                            val index = tabs.indexOf(state.selectedTab).takeIf { it >= 0 } ?: 0
+                            androidx.compose.material3.TabRowDefaults.SecondaryIndicator(
+                                modifier = Modifier.tabIndicatorOffset(tabPositions[index]),
+                                color = androidx.compose.ui.graphics.Color(0xFF2563EB)
+                            )
+                        }
+                    ) {
+                        tabs.forEach { tab ->
+                            androidx.compose.material3.Tab(
+                                selected = state.selectedTab == tab,
+                                onClick = { viewModel.selectTab(tab) },
+                                text = {
+                                    Text(
+                                        text = titles[tab] ?: "",
+                                        fontWeight = if (state.selectedTab == tab) FontWeight.Bold else FontWeight.Medium,
+                                        color = if (state.selectedTab == tab) androidx.compose.ui.graphics.Color(0xFF2563EB) else SwingTheme.colors.subGray
+                                    )
+                                }
+                            )
+                        }
+                    }
+
+                    Box(modifier = Modifier.fillMaxSize().weight(1f)) {
+                        when (state.selectedTab) {
+                            SessionDetailTab.ANALYSIS, SessionDetailTab.REPLAY -> {
+                                if (isLab) {
+                                    LabSessionDetailContent(
+                                        session = session,
+                                        labState = state.labDetailState,
+                                        onNavigateToReplay = { recordId ->
+                                            onNavigateToReplay(session.sessionId, recordId)
+                                        }
+                                    )
+                                } else {
+                                    MatchSessionDetailContent(
+                                        session = session,
+                                        breakdown = state.breakdown,
+                                        categories = categories,
+                                        onItemClick = { index ->
+                                            targetPageIdx = index
+                                            viewModel.preloadAllCategories(categories)
+                                            showSheet = true
+                                        }
+                                    )
+                                }
+                            }
+                            SessionDetailTab.AI_COACH -> {
+                                AiCoachTabContent(
+                                    report = state.aiCoachReport,
+                                    isGenerating = state.isGeneratingAiReport,
+                                    selectedTone = state.selectedTone,
+                                    onToneSelected = { viewModel.selectTone(it) },
+                                    onRequestReport = { viewModel.requestAiCoachReport(state.selectedTone) }
+                                )
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -857,6 +926,88 @@ fun NeonProgressBar(
                 topLeft = Offset(0f, size.height * 0.3f),
                 cornerRadius = CornerRadius(size.height * 0.2f),
             )
+        }
+    }
+}
+
+@Composable
+fun AiCoachTabContent(
+    report: AiCoachReport?,
+    isGenerating: Boolean,
+    selectedTone: CoachTone,
+    onToneSelected: (CoachTone) -> Unit,
+    onRequestReport: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        if (isGenerating) {
+            AiCoachLoadingSkeleton()
+        } else if (report != null) {
+            AiCoachReportCard(report = report)
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(
+                text = "다른 톤으로 분석하기",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = SwingTheme.colors.onBackground
+            )
+            CoachToneSelector(
+                selectedTone = selectedTone,
+                onToneSelected = onToneSelected,
+                modifier = Modifier.fillMaxWidth()
+            )
+            OutlinedButton(
+                onClick = onRequestReport,
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.outlinedButtonColors(
+                    contentColor = androidx.compose.ui.graphics.Color(0xFF2563EB)
+                )
+            ) {
+                Text("🔄 처방 다시 생성하기", fontWeight = FontWeight.Bold)
+            }
+        } else {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp),
+                colors = androidx.compose.material3.CardDefaults.cardColors(
+                    containerColor = androidx.compose.ui.graphics.Color(0xFFF8FAFC)
+                ),
+                border = androidx.compose.foundation.BorderStroke(1.dp, androidx.compose.ui.graphics.Color(0xFFE2E8F0))
+            ) {
+                Column(
+                    modifier = Modifier.padding(24.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    Text(
+                        text = "아직 생성된 AI 코치 처방 리포트가 없습니다.",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = SwingTheme.colors.subGray,
+                        textAlign = TextAlign.Center
+                    )
+                    CoachToneSelector(
+                        selectedTone = selectedTone,
+                        onToneSelected = onToneSelected,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Button(
+                        onClick = onRequestReport,
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = androidx.compose.ui.graphics.Color(0xFF2563EB),
+                            contentColor = androidx.compose.ui.graphics.Color.White
+                        )
+                    ) {
+                        Text("🤖 AI 코치 처방 생성하기", fontWeight = FontWeight.Bold)
+                    }
+                }
+            }
         }
     }
 }

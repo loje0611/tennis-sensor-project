@@ -1,6 +1,8 @@
 package io.github.loje0611.tennisdoc.feature.history
 
 import androidx.lifecycle.SavedStateHandle
+import io.github.loje0611.tennisdoc.core.coach.parser.StructuredReportParser
+import io.github.loje0611.tennisdoc.core.coach.service.CompositeAiCoachService
 import io.github.loje0611.tennisdoc.core.data.db.entity.SwingSessionEntity
 import io.github.loje0611.tennisdoc.core.model.CoachingCommentGenerator
 import io.github.loje0611.tennisdoc.core.model.SwingMetrics
@@ -30,6 +32,10 @@ class SessionDetailViewModelTest {
             globalAverage: SwingMetrics?
         ): String = "Fake comment"
     }
+    
+    private val reportParser = StructuredReportParser()
+    private val compositeAiCoachService = CompositeAiCoachService()
+    
 
     @Before
     fun setup() {
@@ -39,7 +45,7 @@ class SessionDetailViewModelTest {
     @Test
     fun `when sessionId is blank, state is notFound`() = runTest {
         val savedStateHandle = SavedStateHandle(mapOf("sessionId" to ""))
-        val viewModel = SessionDetailViewModel(savedStateHandle, repository, fakeCoachingGenerator)
+        val viewModel = SessionDetailViewModel(savedStateHandle, repository, fakeCoachingGenerator, reportParser, compositeAiCoachService)
         
         val state = viewModel.uiState.first { !it.loading }
         
@@ -51,7 +57,7 @@ class SessionDetailViewModelTest {
     @Test
     fun `when sessionId key is missing from SavedStateHandle, state is notFound`() = runTest {
         val savedStateHandle = SavedStateHandle()
-        val viewModel = SessionDetailViewModel(savedStateHandle, repository, fakeCoachingGenerator)
+        val viewModel = SessionDetailViewModel(savedStateHandle, repository, fakeCoachingGenerator, reportParser, compositeAiCoachService)
 
         val state = viewModel.uiState.first { !it.loading }
 
@@ -63,7 +69,7 @@ class SessionDetailViewModelTest {
     @Test
     fun `when sessionId is unknown, state is notFound`() = runTest {
         val savedStateHandle = SavedStateHandle(mapOf("sessionId" to "missing-session"))
-        val viewModel = SessionDetailViewModel(savedStateHandle, repository, fakeCoachingGenerator)
+        val viewModel = SessionDetailViewModel(savedStateHandle, repository, fakeCoachingGenerator, reportParser, compositeAiCoachService)
 
         val state = viewModel.uiState.first { !it.loading }
 
@@ -88,7 +94,7 @@ class SessionDetailViewModelTest {
         repository.insertProvisionalSession(testSession)
         
         val savedStateHandle = SavedStateHandle(mapOf("sessionId" to testSessionId))
-        val viewModel = SessionDetailViewModel(savedStateHandle, repository, fakeCoachingGenerator)
+        val viewModel = SessionDetailViewModel(savedStateHandle, repository, fakeCoachingGenerator, reportParser, compositeAiCoachService)
         
         val state = viewModel.uiState.first { !it.loading }
         
@@ -113,7 +119,7 @@ class SessionDetailViewModelTest {
         repository.insertProvisionalSession(testSession)
         
         val savedStateHandle = SavedStateHandle(mapOf("sessionId" to testSessionId))
-        val viewModel = SessionDetailViewModel(savedStateHandle, repository, fakeCoachingGenerator)
+        val viewModel = SessionDetailViewModel(savedStateHandle, repository, fakeCoachingGenerator, reportParser, compositeAiCoachService)
         
         // wait for load to finish first
         viewModel.uiState.first { !it.loading }
@@ -166,7 +172,7 @@ class SessionDetailViewModelTest {
         repository.insertLabRawRecord(record2)
 
         val savedStateHandle = SavedStateHandle(mapOf("sessionId" to testSessionId))
-        val viewModel = SessionDetailViewModel(savedStateHandle, repository, fakeCoachingGenerator)
+        val viewModel = SessionDetailViewModel(savedStateHandle, repository, fakeCoachingGenerator, reportParser, compositeAiCoachService)
 
         val state = viewModel.uiState.first { !it.loading && it.labDetailState.swingItems.isNotEmpty() }
 
@@ -197,6 +203,8 @@ class SessionDetailViewModelTest {
             SavedStateHandle(mapOf("sessionId" to testSessionId)),
             repository,
             fakeCoachingGenerator,
+            reportParser,
+            compositeAiCoachService
         )
 
         val state = viewModel.uiState.first { !it.loading && !it.labDetailState.isLoading }

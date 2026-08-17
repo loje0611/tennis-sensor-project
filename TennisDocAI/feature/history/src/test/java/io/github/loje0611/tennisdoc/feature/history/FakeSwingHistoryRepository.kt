@@ -18,6 +18,10 @@ class FakeSwingHistoryRepository : SwingHistoryRepository {
     
     var csvStringResult: String = ""
 
+    override suspend fun saveAiCoachReport(sessionId: String, reportJson: String, generatedAt: Long) {
+        // no-op
+    }
+
     override fun observeSessions(): Flow<List<SwingSessionEntity>> = sessionsFlow
 
     override suspend fun generateCsvString(
