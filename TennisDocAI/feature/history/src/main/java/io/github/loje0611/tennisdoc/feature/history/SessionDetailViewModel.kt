@@ -175,7 +175,8 @@ class SessionDetailViewModel @Inject constructor(
                 faceState = faceState,
                 energyEfficiency = energyEff,
                 coachingFeedback = feedback,
-                fusedSwing = fused
+                fusedSwing = fused,
+                hasVideo = hasExistingVideoFile(record.videoPath)
             )
         }
 
@@ -192,6 +193,15 @@ class SessionDetailViewModel @Inject constructor(
         }
 
         return Triple(items, squareRatePercent, avgEfficiency)
+    }
+
+    private fun hasExistingVideoFile(path: String?): Boolean {
+        if (path.isNullOrBlank()) return false
+        return try {
+            java.io.File(path).exists()
+        } catch (_: Exception) {
+            false
+        }
     }
 
     fun preloadAllCategories(keys: List<String>) {

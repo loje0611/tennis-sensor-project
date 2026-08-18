@@ -26,6 +26,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 @HiltViewModel
 class LabViewModel @Inject constructor(
@@ -207,8 +208,24 @@ class LabViewModel @Inject constructor(
             durationSeconds = durationSec,
             squareRatePercent = squareRate,
             averageEnergyEfficiency = avgEfficiency,
-            latestRecordId = latestId
+            latestRecordId = latestId,
+            hasVideo = false
         )
+
+        val historyRepo = swingHistoryRepository
+        if (historyRepo != null) {
+            viewModelScope.launch {
+                val hasVideo = withContext(kotlinx.coroutines.Dispatchers.IO) {
+                    val record = historyRepo.getLabRawRecordById(latestId)
+                    io.github.loje0611.tennisdoc.feature.lab.replay.isExistingVideoFile(record?.videoPath)
+                }
+                if (hasVideo) {
+                    _completionSummary.update { current ->
+                        current?.copy(hasVideo = true)
+                    }
+                }
+            }
+        }
 
         val port = sessionPort
         if (port != null) {

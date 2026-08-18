@@ -128,15 +128,17 @@ fun SessionCompletionDialog(
             }
         },
         confirmButton = {
-            Button(
-                onClick = {
-                    onDismiss()
-                    onNavigateToReplay(summary.sessionId, summary.latestRecordId)
-                },
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0066FF)),
-                shape = RoundedCornerShape(10.dp)
-            ) {
-                Text(text = "🎬 리플레이 보기", fontWeight = FontWeight.Bold, color = Color.White)
+            if (summary.hasVideo) {
+                Button(
+                    onClick = {
+                        onDismiss()
+                        onNavigateToReplay(summary.sessionId, summary.latestRecordId)
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0066FF)),
+                    shape = RoundedCornerShape(10.dp)
+                ) {
+                    Text(text = "🎬 리플레이 보기", fontWeight = FontWeight.Bold, color = Color.White)
+                }
             }
         },
         dismissButton = {

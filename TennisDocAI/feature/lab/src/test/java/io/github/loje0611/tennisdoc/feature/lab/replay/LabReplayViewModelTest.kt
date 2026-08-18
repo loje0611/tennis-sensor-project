@@ -12,9 +12,11 @@ import io.github.loje0611.tennisdoc.core.fusion.model.SyncAnchor
 import io.github.loje0611.tennisdoc.core.model.DrillType
 import io.github.loje0611.tennisdoc.core.vision.model.PoseFrame
 import io.github.loje0611.tennisdoc.core.vision.model.PoseLandmark
+import java.io.File
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -172,5 +174,31 @@ class LabReplayViewModelTest {
 
         viewModel.togglePlay()
         assertFalse(viewModel.uiState.value.isPlaying)
+    }
+
+    @Test
+    fun setFusedSwing_withoutExistingFile_setsHasVideoFalse() {
+        viewModel.setFusedSwing(sampleSwing, videoPath = "/tmp/missing-swing-${System.nanoTime()}.mp4")
+        val state = viewModel.uiState.value
+        assertFalse(state.hasVideo)
+        assertNull(state.videoPath)
+        assertEquals("🟢 정타 (스퀘어)", state.faceStateLabel)
+        assertTrue(state.swingTrailPoints.isNotEmpty())
+    }
+
+    @Test
+    fun setFusedSwing_withExistingFile_setsHasVideoAndKoreanFaceLabel() {
+        val video = File.createTempFile("replay-vm", ".mp4")
+        try {
+            video.writeBytes(byteArrayOf(0, 0, 0, 24, 0x66, 0x74, 0x79, 0x70))
+            viewModel.setFusedSwing(sampleSwing, videoPath = video.absolutePath)
+            val state = viewModel.uiState.value
+            assertTrue(state.hasVideo)
+            assertEquals(video.absolutePath, state.videoPath)
+            assertEquals("🟢 정타 (스퀘어)", state.faceStateLabel)
+            assertEquals("훌륭한 타이밍입니다. 동일한 템포를 유지하세요.", state.coachingOneLiner)
+        } finally {
+            video.delete()
+        }
     }
 }

@@ -132,4 +132,26 @@ class LabSessionCompletionAiReportUiTest {
         )
         composeTestRule.onNodeWithText("🎬 리플레이 보기").assertIsDisplayed()
     }
+
+    @Test
+    fun replayButtonHiddenWhenSummaryHasNoVideo() {
+        composeTestRule.setContent {
+            MaterialTheme {
+                SessionCompletionDialog(
+                    summary = summary.copy(hasVideo = false),
+                    aiReport = null,
+                    isGeneratingAiReport = false,
+                    onGenerateAiReport = {},
+                    onDismiss = {},
+                    onNavigateToReplay = { _, _ -> }
+                )
+            }
+        }
+        composeTestRule.onNodeWithText("🎯 포핸드 훈련 완료!").assertIsDisplayed()
+        composeTestRule.onNodeWithText("닫기 / 새 훈련").assertIsDisplayed()
+        assertEquals(
+            0,
+            composeTestRule.onAllNodesWithText("🎬 리플레이 보기").fetchSemanticsNodes().size
+        )
+    }
 }

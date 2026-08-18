@@ -427,7 +427,11 @@ private fun LabSessionDetailContent(
             labState.swingItems.forEach { item ->
                 LabSwingSummaryCard(
                     item = item,
-                    onClick = { onNavigateToReplay(item.recordId) }
+                    onClick = {
+                        if (item.hasVideo) {
+                            onNavigateToReplay(item.recordId)
+                        }
+                    }
                 )
             }
         }
@@ -446,13 +450,19 @@ private fun LabSwingSummaryCard(
         "CLOSED" -> Color(0xFF2979FF)
         else -> SwingTheme.colors.subGray
     }
+    val faceLabel = when (item.faceState) {
+        "SQUARE" -> "정타 (스퀘어)"
+        "OPEN" -> "페이스 열림 (공이 뜨는 원인)"
+        "CLOSED" -> "페이스 닫힘 (네트에 걸리는 원인)"
+        else -> item.faceState
+    }
 
     val timeStr = SimpleDateFormat("HH:mm:ss", Locale.US).format(Date(item.timestampMillis))
 
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick),
+            .clickable(enabled = item.hasVideo, onClick = onClick),
         shape = RoundedCornerShape(14.dp),
         colors = CardDefaults.cardColors(containerColor = SwingTheme.colors.cardSurface),
         border = androidx.compose.foundation.BorderStroke(0.5.dp, SwingTheme.colors.cardBorder)
@@ -503,7 +513,7 @@ private fun LabSwingSummaryCard(
                 }
 
                 Text(
-                    text = "체인 효율: ${String.format(Locale.US, "%.0f%%", item.energyEfficiency)} · ${item.coachingFeedback}",
+                    text = "$faceLabel · 체인 효율: ${String.format(Locale.US, "%.0f%%", item.energyEfficiency)} · ${item.coachingFeedback}",
                     style = MaterialTheme.typography.bodySmall.copy(
                         color = SwingTheme.colors.subGray,
                         fontSize = 13.sp
@@ -512,20 +522,39 @@ private fun LabSwingSummaryCard(
                 )
             }
 
-            Spacer(modifier = Modifier.width(8.dp))
-
-            Box(
-                modifier = Modifier
-                    .size(36.dp)
-                    .clip(CircleShape)
-                    .background(SwingTheme.colors.electricCyanSlice.copy(alpha = 0.15f)),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = Icons.Default.KeyboardArrowRight,
-                    contentDescription = "동기 리플레이 보기",
-                    tint = SwingTheme.colors.electricCyanSlice
-                )
+            if (item.hasVideo) {
+                Spacer(modifier = Modifier.width(8.dp))
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(6.dp))
+                        .background(SwingTheme.colors.electricCyanSlice.copy(alpha = 0.15f))
+                        .padding(horizontal = 8.dp, vertical = 4.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                                text = "🎬 영상 보기",
+                        style = MaterialTheme.typography.labelSmall.copy(
+                            color = SwingTheme.colors.electricCyanSlice,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 11.sp
+                        )
+                    )
+                }
+            } else {
+                Spacer(modifier = Modifier.width(8.dp))
+                Box(
+                    modifier = Modifier
+                        .size(36.dp)
+                        .clip(CircleShape)
+                        .background(SwingTheme.colors.electricCyanSlice.copy(alpha = 0.08f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.KeyboardArrowRight,
+                        contentDescription = null,
+                        tint = SwingTheme.colors.subGray
+                    )
+                }
             }
         }
     }

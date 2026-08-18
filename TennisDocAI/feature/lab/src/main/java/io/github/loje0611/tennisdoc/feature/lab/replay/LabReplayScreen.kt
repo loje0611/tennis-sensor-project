@@ -1,13 +1,16 @@
 package io.github.loje0611.tennisdoc.feature.lab.replay
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.IconButton
@@ -20,6 +23,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
@@ -36,7 +41,7 @@ fun LabReplayScreen(
         modifier = modifier.fillMaxSize(),
         topBar = {
             TopAppBar(
-                title = { Text("동기 리플레이 & 정밀 진단") },
+                title = { Text("스윙 비디오 리플레이") },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Text("⟵", style = MaterialTheme.typography.titleLarge)
@@ -48,7 +53,7 @@ fun LabReplayScreen(
             )
         }
     ) { innerPadding ->
-        if (uiState.fusedSwing == null) {
+        if (!uiState.hasVideo) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -62,7 +67,7 @@ fun LabReplayScreen(
                 )
             }
         } else {
-            val swing = uiState.fusedSwing!!
+            val videoPath = uiState.videoPath.orEmpty()
             val scrollState = rememberScrollState()
 
             Column(
@@ -74,19 +79,33 @@ fun LabReplayScreen(
             ) {
                 Spacer(modifier = Modifier.height(8.dp))
 
-                // 1. 포즈 스켈레톤 리플레이 캔버스
-                PoseReplayCanvas(
-                    poseFrame = uiState.currentPoseFrame,
-                    isImpact = uiState.isImpactFrame,
-                    tooltips = uiState.tooltips,
+                BoxWithConstraints(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(280.dp)
-                )
+                        .aspectRatio(3f / 4f)
+                        .clip(RoundedCornerShape(12.dp))
+                ) {
+                    val overlaySize = Size(
+                        constraints.maxWidth.toFloat(),
+                        constraints.maxHeight.toFloat()
+                    )
+                    SwingVideoPlayer(
+                        videoPath = videoPath,
+                        currentTimestampMs = uiState.currentTimestampMs,
+                        isPlaying = uiState.isPlaying,
+                        playbackSpeed = uiState.playbackSpeed,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                    SwingTrailOverlay(
+                        swingTrailPoints = uiState.swingTrailPoints,
+                        isImpact = uiState.isImpactFrame,
+                        canvasSize = overlaySize,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                }
 
                 Spacer(modifier = Modifier.height(12.dp))
 
-                // 2. 동기화 타임라인 컨트롤러
                 SynchronizedTimelineController(
                     currentTimestampMs = uiState.currentTimestampMs,
                     durationMs = uiState.durationMs,
@@ -105,22 +124,10 @@ fun LabReplayScreen(
 
                 Spacer(modifier = Modifier.height(12.dp))
 
-                // 3. IMU 동기 파형 차트
-                ImuWaveformChart(
-                    imuSamples = swing.imuSamples,
-                    kineticChain = swing.kineticChain,
-                    currentTimestampMs = uiState.currentTimestampMs,
-                    timeOffsetMs = if (swing.anchor.isSynchronized) swing.anchor.timeOffsetMs else 0L,
-                    durationMs = uiState.durationMs
-                )
-
-                Spacer(modifier = Modifier.height(12.dp))
-
-                // 4. 5단계 운동 체인 & 인과 진단 요약 카드
-                KineticChainSummaryCard(
-                    kineticChain = swing.kineticChain,
-                    racketImpact = swing.racketImpact,
-                    diagnosis = swing.diagnosis
+                SwingAnalysisSummaryCard(
+                    swingPathType = uiState.swingPathType,
+                    faceStateLabel = uiState.faceStateLabel,
+                    coachingOneLiner = uiState.coachingOneLiner
                 )
 
                 Spacer(modifier = Modifier.height(24.dp))

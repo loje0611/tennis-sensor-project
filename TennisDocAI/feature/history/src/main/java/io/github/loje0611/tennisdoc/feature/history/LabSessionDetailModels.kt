@@ -11,7 +11,8 @@ data class LabSwingSummaryItem(
     val faceState: String,
     val energyEfficiency: Float,
     val coachingFeedback: String,
-    val fusedSwing: FusedSwing? = null
+    val fusedSwing: FusedSwing? = null,
+    val hasVideo: Boolean = false
 )
 
 data class LabSessionDetailUiState(

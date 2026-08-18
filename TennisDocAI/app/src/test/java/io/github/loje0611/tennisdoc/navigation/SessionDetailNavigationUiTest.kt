@@ -16,6 +16,7 @@ import io.github.loje0611.tennisdoc.core.ui.formatDurationMillis
 import io.github.loje0611.tennisdoc.feature.history.SessionDetailScreen
 import io.github.loje0611.tennisdoc.feature.history.SessionDetailViewModel
 import io.github.loje0611.tennisdoc.session.RecordingSwingHistoryRepository
+import java.io.File
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Rule
@@ -42,6 +43,8 @@ class SessionDetailNavigationUiTest {
 
     @Test
     fun ac2AndAc3_labSessionRendersSummarySwingCardsAndTriggersReplayCallback() {
+        val video = File.createTempFile("sess-lab-999", ".mp4")
+        video.writeBytes(byteArrayOf(0, 0, 0, 24, 0x66, 0x74, 0x79, 0x70))
         val repository = RecordingSwingHistoryRepository()
         val testSession = SwingSessionEntity(
             sessionId = "sess-lab-999",
@@ -52,10 +55,11 @@ class SessionDetailNavigationUiTest {
             totalSwingCount = 5,
             durationMillis = 120000L,
         )
+        try {
         runBlocking {
             repository.insertProvisionalSession(testSession)
-            repository.insertLabRawRecord(sampleRecord(555L, "sess-lab-999", 2000L))
-            repository.insertLabRawRecord(sampleRecord(556L, "sess-lab-999", 3000L))
+            repository.insertLabRawRecord(sampleRecord(555L, "sess-lab-999", 2000L, video.absolutePath))
+            repository.insertLabRawRecord(sampleRecord(556L, "sess-lab-999", 3000L, video.absolutePath))
         }
 
         val viewModel = SessionDetailViewModel(
@@ -94,6 +98,10 @@ class SessionDetailNavigationUiTest {
         composeTestRule.onNodeWithText("스윙 #1").assertIsDisplayed()
         composeTestRule.onNodeWithText("스윙 #2").performScrollTo().assertIsDisplayed()
 
+        assertEquals(
+            2,
+            composeTestRule.onAllNodesWithText("🎬 영상 보기").fetchSemanticsNodes().size,
+        )
         composeTestRule.onNodeWithText("스윙 #1").performClick()
 
         assertEquals("sess-lab-999", clickedSessionId)
@@ -102,6 +110,9 @@ class SessionDetailNavigationUiTest {
             "lab_replay/sess-lab-999/555",
             AppRoutes.createLabReplayRoute(clickedSessionId, clickedRecordId),
         )
+        } finally {
+            video.delete()
+        }
     }
 
     @Test
@@ -157,7 +168,12 @@ class SessionDetailNavigationUiTest {
             ): String = "Good"
         }
 
-    private fun sampleRecord(id: Long, sessionId: String, timestampMillis: Long) =
+    private fun sampleRecord(
+        id: Long,
+        sessionId: String,
+        timestampMillis: Long,
+        videoPath: String? = null,
+    ) =
         LabRawRecordEntity(
             id = id,
             sessionId = sessionId,
@@ -165,5 +181,6 @@ class SessionDetailNavigationUiTest {
             timestampMillis = timestampMillis,
             imuRawJson = "[{\"ts\":2000,\"ax\":0.1,\"ay\":0.2,\"az\":0.3,\"gx\":1.0,\"gy\":2.0,\"gz\":3.0}]",
             visionPosesJson = "[{\"landmarks\":[{\"x\":0.1,\"y\":0.2,\"z\":0.3,\"v\":0.9}]}]",
+            videoPath = videoPath,
         )
 }

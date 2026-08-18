@@ -11,6 +11,7 @@ import io.github.loje0611.tennisdoc.core.fusion.engine.LabRawRecordParser
 import io.github.loje0611.tennisdoc.core.fusion.model.FusedSwing
 import io.github.loje0611.tennisdoc.core.fusion.model.ImuDataPoint
 import io.github.loje0611.tennisdoc.core.model.DrillType
+import io.github.loje0611.tennisdoc.core.vision.analyzer.SwingPathClassifier
 import io.github.loje0611.tennisdoc.core.vision.model.PoseFrame
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -94,12 +95,12 @@ class LabReplayViewModel @Inject constructor(
                         fusionEngine = fusionEngine
                     )
                 }
-                setFusedSwing(fused)
+                setFusedSwing(fused, videoPath = record.videoPath)
             }
         }
     }
 
-    fun setFusedSwing(fusedSwing: FusedSwing?) {
+    fun setFusedSwing(fusedSwing: FusedSwing?, videoPath: String? = null) {
         playbackJob?.cancel()
         if (fusedSwing == null) {
             _uiState.value = LabReplayUiState()
@@ -128,13 +129,36 @@ class LabReplayViewModel @Inject constructor(
             durationMs / 2
         }
 
+        val hasVideo = isExistingVideoFile(videoPath)
+        val isRightHand = fusedSwing.drillType != DrillType.BACKHAND &&
+            fusedSwing.drillType != DrillType.BACKHAND_VOLLEY
+        val trailPoints = buildSwingTrailPoints(fusedSwing.visionPoses, isRightHand)
+        val impactFrameIndex = if (fusedSwing.visionPoses.isEmpty() || durationMs <= 0L) {
+            null
+        } else {
+            ((impactTimestampMs.toFloat() / durationMs.toFloat()) * (fusedSwing.visionPoses.size - 1))
+                .toInt()
+                .coerceIn(0, fusedSwing.visionPoses.lastIndex)
+        }
+        val pathType = SwingPathClassifier.classifySwingPath(
+            poseFrames = fusedSwing.visionPoses,
+            impactFrame = impactFrameIndex,
+            isRightHand = isRightHand
+        )
+
         _uiState.value = LabReplayUiState(
             fusedSwing = fusedSwing,
             durationMs = durationMs,
             currentTimestampMs = 0L,
             isPlaying = false,
             playbackSpeed = 1.0f,
-            impactTimestampMs = impactTimestampMs
+            impactTimestampMs = impactTimestampMs,
+            videoPath = videoPath.takeIf { hasVideo },
+            hasVideo = hasVideo,
+            swingTrailPoints = trailPoints,
+            swingPathType = swingPathTypeDisplayLabel(pathType),
+            faceStateLabel = racketFaceStateLabel(fusedSwing.racketImpact.faceState),
+            coachingOneLiner = fusedSwing.diagnosis?.coachingFeedback.orEmpty()
         )
 
         seekTo(0L)

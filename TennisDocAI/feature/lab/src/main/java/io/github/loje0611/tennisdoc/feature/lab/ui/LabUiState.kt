@@ -24,7 +24,8 @@ data class SessionCompletionSummary(
     val durationSeconds: Long,
     val squareRatePercent: Int,
     val averageEnergyEfficiency: Float,
-    val latestRecordId: Long = 1L
+    val latestRecordId: Long = 1L,
+    val hasVideo: Boolean = true
 )
 
 data class LabUiState(

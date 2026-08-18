@@ -22,6 +22,7 @@ import io.github.loje0611.tennisdoc.feature.history.SessionDetailViewModel
 import io.github.loje0611.tennisdoc.feature.lab.replay.LabReplayScreen
 import io.github.loje0611.tennisdoc.feature.lab.replay.LabReplayViewModel
 import io.github.loje0611.tennisdoc.session.RecordingSwingHistoryRepository
+import java.io.File
 import kotlinx.coroutines.runBlocking
 import org.junit.Rule
 import org.junit.Test
@@ -38,7 +39,10 @@ class LabReplayNavigationUiTest {
 
     @Test
     fun ac3AndAc4_swingCardOpensLabReplayRouteAndBackReturnsToSessionDetail() {
+        val video = File.createTempFile("sess-lab-nav", ".mp4")
+        video.writeBytes(byteArrayOf(0, 0, 0, 24, 0x66, 0x74, 0x79, 0x70))
         val repository = RecordingSwingHistoryRepository()
+        try {
         runBlocking {
             repository.insertProvisionalSession(
                 SwingSessionEntity(
@@ -59,6 +63,7 @@ class LabReplayNavigationUiTest {
                     timestampMillis = 2_000L,
                     imuRawJson = SAMPLE_IMU_JSON,
                     visionPosesJson = SAMPLE_POSES_JSON,
+                    videoPath = video.absolutePath,
                 )
             )
         }
@@ -141,11 +146,11 @@ class LabReplayNavigationUiTest {
         composeRule.onNodeWithText("스윙 #1").assertIsDisplayed().performClick()
 
         composeRule.waitUntil(timeoutMillis = 15_000L) {
-            composeRule.onAllNodesWithText("동기 리플레이 & 정밀 진단")
+            composeRule.onAllNodesWithText("스윙 비디오 리플레이")
                 .fetchSemanticsNodes()
                 .isNotEmpty()
         }
-        composeRule.onNodeWithText("동기 리플레이 & 정밀 진단").assertIsDisplayed()
+        composeRule.onNodeWithText("스윙 비디오 리플레이").assertIsDisplayed()
 
         composeRule.onNodeWithText("⟵").performClick()
 
@@ -154,6 +159,9 @@ class LabReplayNavigationUiTest {
         }
         composeRule.onNodeWithText("스윙 #1").assertIsDisplayed()
         composeRule.onNodeWithText("포핸드 훈련").assertIsDisplayed()
+        } finally {
+            video.delete()
+        }
     }
 
     companion object {
