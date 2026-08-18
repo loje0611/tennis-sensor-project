@@ -223,6 +223,9 @@ private fun CameraPreviewWithOverlay(
                                 frameCount = 0
                                 lastTime = currentTime
                             }
+                        },
+                        onFrameAvailable = { bitmap, timestampMs ->
+                            viewModel?.pipeline?.feedVideoFrame(bitmap, timestampMs)
                         }
                     )
                     

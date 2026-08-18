@@ -1,7 +1,10 @@
 package io.github.loje0611.tennisdoc.feature.lab.pipeline
 
+import android.graphics.Bitmap
 import io.github.loje0611.tennisdoc.core.data.db.dao.LabRawRecordDao
 import io.github.loje0611.tennisdoc.core.data.db.entity.LabRawRecordEntity
+import io.github.loje0611.tennisdoc.core.data.repository.VideoFileManager
+import io.github.loje0611.tennisdoc.core.data.repository.VideoPreferencesRepository
 import io.github.loje0611.tennisdoc.core.fusion.anomaly.BaselineComparisonReport
 import io.github.loje0611.tennisdoc.core.fusion.anomaly.PersonalBaseline
 import io.github.loje0611.tennisdoc.core.fusion.anomaly.StatisticalAnomalyDetector
@@ -17,6 +20,7 @@ import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 
 interface LabFusionPipeline {
@@ -27,6 +31,7 @@ interface LabFusionPipeline {
 
     fun feedPoseFrame(frame: PoseFrame)
     fun feedImuSample(sample: ImuDataPoint)
+    fun feedVideoFrame(bitmap: Bitmap, timestampMs: Long)
     suspend fun onSwingTriggered(sessionId: String, drillType: DrillType): FusedSwing?
     fun reset()
 }
@@ -36,7 +41,11 @@ class LabFusionPipelineImpl(
     private val fusionEngine: FusionEngine = FusionEngineImpl(),
     private val anomalyDetector: StatisticalAnomalyDetector = StatisticalAnomalyDetector(),
     private val labRawRecordDao: LabRawRecordDao? = null,
-    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
+    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
+    private val videoPreferencesRepository: VideoPreferencesRepository? = null,
+    private val videoFileManager: VideoFileManager? = null,
+    private val videoEncoder: SwingVideoEncoder = SwingVideoEncoderImpl(),
+    private val videoBuffer: SwingVideoBuffer = SwingVideoBuffer()
 ) : LabFusionPipeline {
 
     private val _latestFusedSwing = MutableStateFlow<FusedSwing?>(null)
@@ -59,6 +68,10 @@ class LabFusionPipelineImpl(
         buffer.addImuSample(sample)
     }
 
+    override fun feedVideoFrame(bitmap: Bitmap, timestampMs: Long) {
+        videoBuffer.addFrame(bitmap, timestampMs)
+    }
+
     override suspend fun onSwingTriggered(sessionId: String, drillType: DrillType): FusedSwing? {
         val (poses, imuSamples) = buffer.snapshot()
         if (poses.isEmpty() && imuSamples.isEmpty()) {
@@ -73,6 +86,23 @@ class LabFusionPipelineImpl(
         _latestFusedSwing.value = fused
         _latestAnomalyReport.value = report
 
+        var videoPath: String? = null
+        if (videoPreferencesRepository != null && videoFileManager != null) {
+            val autoSave = videoPreferencesRepository.autoSaveVideoEnabled.first()
+            if (autoSave) {
+                val videoFrames = videoBuffer.snapshot()
+                if (videoFrames.isNotEmpty()) {
+                    val tempRecordId = System.currentTimeMillis()
+                    val targetFile = videoFileManager.generateVideoFile(sessionId, tempRecordId)
+                    val success = videoEncoder.encodeToMp4(videoFrames, targetFile)
+                    if (success) {
+                        videoPath = targetFile.absolutePath
+                    }
+                }
+                videoFrames.forEach { it.bitmap.recycle() }
+            }
+        }
+
         labRawRecordDao?.let { dao ->
             withContext(ioDispatcher + NonCancellable) {
                 try {
@@ -82,10 +112,16 @@ class LabFusionPipelineImpl(
                         timestampMillis = System.currentTimeMillis(),
                         imuRawJson = serializeImu(imuSamples),
                         visionPosesJson = serializePoses(poses),
-                        impactOffsetMs = fused.anchor.timeOffsetMs
+                        impactOffsetMs = fused.anchor.timeOffsetMs,
+                        videoPath = videoPath
                     )
                     val insertedId = dao.insert(record)
                     _latestRecordedId.value = insertedId
+                    
+                    if (videoPath != null && videoPreferencesRepository != null && videoFileManager != null) {
+                        val option = videoPreferencesRepository.videoRetentionOption.first()
+                        videoFileManager.enforceRetentionPolicy(option.maxCount)
+                    }
                 } catch (_: Exception) {
                     // Fail-safe logging for Room DB insert
                 }
@@ -97,6 +133,7 @@ class LabFusionPipelineImpl(
 
     override fun reset() {
         buffer.clear()
+        videoBuffer.clear()
         _latestFusedSwing.value = null
         _latestAnomalyReport.value = null
         _latestRecordedId.value = null

@@ -16,10 +16,14 @@ object LabModule {
     @Provides
     @Singleton
     fun provideLabFusionPipeline(
-        labRawRecordDao: LabRawRecordDao
+        labRawRecordDao: LabRawRecordDao,
+        videoPreferencesRepository: io.github.loje0611.tennisdoc.core.data.repository.VideoPreferencesRepository,
+        videoFileManager: io.github.loje0611.tennisdoc.core.data.repository.VideoFileManager
     ): LabFusionPipeline {
         return LabFusionPipelineImpl(
-            labRawRecordDao = labRawRecordDao
+            labRawRecordDao = labRawRecordDao,
+            videoPreferencesRepository = videoPreferencesRepository,
+            videoFileManager = videoFileManager
         )
     }
 

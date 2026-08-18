@@ -1,5 +1,6 @@
 package io.github.loje0611.tennisdoc.feature.lab.ui
 
+import android.graphics.Bitmap
 import io.github.loje0611.tennisdoc.core.fusion.anomaly.AnomalyResult
 import io.github.loje0611.tennisdoc.core.fusion.anomaly.AnomalySeverity
 import io.github.loje0611.tennisdoc.core.fusion.anomaly.BaselineComparisonReport
@@ -138,6 +139,8 @@ class LabViewModelTest {
         override fun feedImuSample(sample: ImuDataPoint) {
             fedImu.add(sample)
         }
+
+        override fun feedVideoFrame(bitmap: Bitmap, timestampMs: Long) = Unit
 
         override suspend fun onSwingTriggered(sessionId: String, drillType: DrillType): FusedSwing {
             val stages = listOf(

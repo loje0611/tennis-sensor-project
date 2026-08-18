@@ -87,10 +87,13 @@ class PoseAnalysisAnalyzerTest {
         var closeCalled = false
         val expectedFrame = PoseFrame(emptyList())
         val stubWrapper = StubLandmarkerWrapper(expectedFrame)
-        val analyzer = PoseAnalysisAnalyzer(stubWrapper) { frame ->
-            callbackCalled = true
-            assertEquals(expectedFrame, frame)
-        }
+        val analyzer = PoseAnalysisAnalyzer(
+            landmarkerWrapper = stubWrapper,
+            onPoseExtracted = { frame ->
+                callbackCalled = true
+                assertEquals(expectedFrame, frame)
+            },
+        )
 
         val imageProxy = createMockImageProxy(shouldThrowOnBitmap = false) {
             closeCalled = true
@@ -109,10 +112,13 @@ class PoseAnalysisAnalyzerTest {
         var callbackCalled = false
         var closeCalled = false
         val stubWrapper = StubLandmarkerWrapper(null)
-        val analyzer = PoseAnalysisAnalyzer(stubWrapper) { frame ->
-            callbackCalled = true
-            assertEquals(null, frame)
-        }
+        val analyzer = PoseAnalysisAnalyzer(
+            landmarkerWrapper = stubWrapper,
+            onPoseExtracted = { frame ->
+                callbackCalled = true
+                assertEquals(null, frame)
+            },
+        )
 
         val imageProxy = createMockImageProxy(shouldThrowOnBitmap = true) {
             closeCalled = true
@@ -128,7 +134,10 @@ class PoseAnalysisAnalyzerTest {
     fun testAnalyze_callsClose_whenProcessImageThrows() {
         var closeCalled = false
         val stubWrapper = StubLandmarkerWrapper(null, throwOnProcess = true)
-        val analyzer = PoseAnalysisAnalyzer(stubWrapper) { }
+        val analyzer = PoseAnalysisAnalyzer(
+            landmarkerWrapper = stubWrapper,
+            onPoseExtracted = { },
+        )
 
         val imageProxy = createMockImageProxy(shouldThrowOnBitmap = false) {
             closeCalled = true
@@ -144,7 +153,10 @@ class PoseAnalysisAnalyzerTest {
     @Test
     fun analyze_rotatesBitmap90DegreesBeforeLandmarker() {
         val stubWrapper = StubLandmarkerWrapper(PoseFrame(emptyList()))
-        val analyzer = PoseAnalysisAnalyzer(stubWrapper) { }
+        val analyzer = PoseAnalysisAnalyzer(
+            landmarkerWrapper = stubWrapper,
+            onPoseExtracted = { },
+        )
 
         analyzer.analyze(
             createMockImageProxy(
@@ -164,7 +176,10 @@ class PoseAnalysisAnalyzerTest {
     @Test
     fun analyze_keepsBitmapSizeWhenRotationIsZero() {
         val stubWrapper = StubLandmarkerWrapper(PoseFrame(emptyList()))
-        val analyzer = PoseAnalysisAnalyzer(stubWrapper) { }
+        val analyzer = PoseAnalysisAnalyzer(
+            landmarkerWrapper = stubWrapper,
+            onPoseExtracted = { },
+        )
 
         analyzer.analyze(
             createMockImageProxy(
@@ -178,5 +193,36 @@ class PoseAnalysisAnalyzerTest {
 
         assertEquals(640, stubWrapper.lastBitmapWidth)
         assertEquals(480, stubWrapper.lastBitmapHeight)
+    }
+
+    @Test
+    fun analyze_invokesOnFrameAvailableWithProcessedBitmapAndTimestamp() {
+        val stubWrapper = StubLandmarkerWrapper(PoseFrame(emptyList()))
+        var receivedWidth = -1
+        var receivedHeight = -1
+        var receivedTs: Long? = null
+        val analyzer = PoseAnalysisAnalyzer(
+            landmarkerWrapper = stubWrapper,
+            onPoseExtracted = { },
+            onFrameAvailable = { bitmap, timestampMs ->
+                receivedWidth = bitmap.width
+                receivedHeight = bitmap.height
+                receivedTs = timestampMs
+            },
+        )
+
+        analyzer.analyze(
+            createMockImageProxy(
+                shouldThrowOnBitmap = false,
+                rotationDegrees = 90,
+                bitmapWidth = 640,
+                bitmapHeight = 480,
+                onClose = {},
+            ),
+        )
+
+        assertEquals(480, receivedWidth)
+        assertEquals(640, receivedHeight)
+        assertEquals(123L, receivedTs)
     }
 }

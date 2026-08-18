@@ -9,7 +9,8 @@ import io.github.loje0611.tennisdoc.feature.lab.landmarker.PoseLandmarkerWrapper
 
 class PoseAnalysisAnalyzer(
     private val landmarkerWrapper: PoseLandmarkerWrapper,
-    private val onPoseExtracted: (PoseFrame?) -> Unit
+    private val onPoseExtracted: (PoseFrame?) -> Unit,
+    private val onFrameAvailable: ((Bitmap, Long) -> Unit)? = null
 ) : ImageAnalysis.Analyzer {
     
     private var sequenceNumber = 0L
@@ -45,11 +46,13 @@ class PoseAnalysisAnalyzer(
                     rawBitmap
                 }
 
+                val timestampMs = imageProxy.imageInfo.timestamp / 1_000_000
                 val poseFrame = landmarkerWrapper.processImage(
                     bitmap = processedBitmap,
                     frameIndex = sequenceNumber++,
-                    timestampMs = imageProxy.imageInfo.timestamp / 1_000_000
+                    timestampMs = timestampMs
                 )
+                onFrameAvailable?.invoke(processedBitmap, timestampMs)
                 onPoseExtracted(poseFrame)
             } else {
                 onPoseExtracted(null)
