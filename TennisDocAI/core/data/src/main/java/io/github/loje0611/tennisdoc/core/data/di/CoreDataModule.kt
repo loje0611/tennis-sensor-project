@@ -28,6 +28,18 @@ abstract class CoreDataModule {
         impl: SwingHistoryRepositoryImpl
     ): SwingHistoryRepository
 
+    @Binds
+    @Singleton
+    abstract fun bindVideoPreferencesRepository(
+        impl: io.github.loje0611.tennisdoc.core.data.repository.VideoPreferencesRepositoryImpl
+    ): io.github.loje0611.tennisdoc.core.data.repository.VideoPreferencesRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindVideoFileManager(
+        impl: io.github.loje0611.tennisdoc.core.data.repository.VideoFileManagerImpl
+    ): io.github.loje0611.tennisdoc.core.data.repository.VideoFileManager
+
     companion object {
         @Provides
         @Singleton

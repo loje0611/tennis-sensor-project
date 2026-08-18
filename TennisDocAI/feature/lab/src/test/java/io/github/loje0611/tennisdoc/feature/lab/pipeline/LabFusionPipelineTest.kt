@@ -39,6 +39,16 @@ class LabFusionPipelineTest {
             insertedRecords.removeAll { it.sessionId == sessionId }
             return initialSize - insertedRecords.size
         }
+
+        override suspend fun updateVideoPath(id: Long, videoPath: String?) {}
+
+        override suspend fun getRecordsWithVideoAsc(): List<LabRawRecordEntity> = emptyList()
+
+        override fun observeVideoRecordCount(): Flow<Int> = flowOf(0)
+
+        override suspend fun clearVideoPathByPath(videoPath: String) {}
+
+        override suspend fun clearAllVideoPaths() {}
     }
 
     private fun generateMockPose(yVal: Float): PoseFrame {

@@ -32,6 +32,9 @@ class SettingsViewModel @Inject constructor(
     @ApplicationContext private val appContext: Context,
     private val themePreferences: ThemePreferencesRepository,
     private val aiCoachPreferences: io.github.loje0611.tennisdoc.core.data.repository.AiCoachPreferencesRepository,
+    private val videoPreferences: io.github.loje0611.tennisdoc.core.data.repository.VideoPreferencesRepository,
+    private val videoFileManager: io.github.loje0611.tennisdoc.core.data.repository.VideoFileManager,
+    private val labRawRecordDao: io.github.loje0611.tennisdoc.core.data.db.dao.LabRawRecordDao,
 ) : ViewModel() {
 
     val isDarkMode: StateFlow<Boolean> = themePreferences.isDarkMode
@@ -146,6 +149,47 @@ class SettingsViewModel @Inject constructor(
             } else {
                 _apiKeyTestState.value = ApiKeyTestStatus.Error("유효하지 않은 API Key 형식입니다.")
             }
+        }
+    }
+
+    val autoSaveVideoEnabled: StateFlow<Boolean> = videoPreferences.autoSaveVideoEnabled
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), true)
+
+    val videoRetentionOption: StateFlow<io.github.loje0611.tennisdoc.core.model.VideoRetentionOption> = videoPreferences.videoRetentionOption
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), io.github.loje0611.tennisdoc.core.model.VideoRetentionOption.COUNT_50)
+
+    val savedVideoCount: StateFlow<Int> = labRawRecordDao.observeVideoRecordCount()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), 0)
+
+    private val _usedStorageText = MutableStateFlow("0 MB")
+    val usedStorageText: StateFlow<String> = _usedStorageText.asStateFlow()
+
+    init {
+        viewModelScope.launch {
+            savedVideoCount.collect {
+                val bytes = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { videoFileManager.getUsedStorageBytes() }
+                _usedStorageText.value = videoFileManager.formatStorageSize(bytes)
+            }
+        }
+    }
+
+    fun toggleAutoSaveVideo(enabled: Boolean) {
+        viewModelScope.launch {
+            videoPreferences.setAutoSaveVideoEnabled(enabled)
+        }
+    }
+
+    fun selectVideoRetentionOption(option: io.github.loje0611.tennisdoc.core.model.VideoRetentionOption) {
+        viewModelScope.launch {
+            videoPreferences.setVideoRetentionOption(option)
+            videoFileManager.enforceRetentionPolicy(option.maxCount)
+        }
+    }
+
+    fun clearVideoCache(onComplete: () -> Unit) {
+        viewModelScope.launch {
+            videoFileManager.clearAllVideos()
+            onComplete()
         }
     }
 }

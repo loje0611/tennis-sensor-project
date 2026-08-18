@@ -24,5 +24,6 @@ data class LabRawRecordEntity(
     val timestampMillis: Long,
     val imuRawJson: String,
     val visionPosesJson: String,
-    val impactOffsetMs: Long = 0L
+    val impactOffsetMs: Long = 0L,
+    val videoPath: String? = null
 )

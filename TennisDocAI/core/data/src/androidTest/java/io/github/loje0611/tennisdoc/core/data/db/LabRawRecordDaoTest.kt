@@ -47,8 +47,8 @@ class LabRawRecordDaoTest {
     }
 
     @Test
-    fun databaseVersionIs9() {
-        assertEquals(9, database.openHelper.writableDatabase.version)
+    fun databaseVersionIs10() {
+        assertEquals(10, database.openHelper.writableDatabase.version)
     }
 
     @Test
@@ -148,5 +148,88 @@ class LabRawRecordDaoTest {
         } catch (e: SQLiteConstraintException) {
             assertTrue(e.message?.contains("FOREIGN KEY") == true || e.message != null)
         }
+    }
+
+    @Test
+    fun videoPathDefaultsNullAndUpdateVideoPathPreservesPoseJson() = runTest {
+        val sessionId = UUID.randomUUID().toString()
+        sessionDao.insertSession(
+            SwingSessionEntity(
+                sessionId = sessionId,
+                sessionName = "Lab video",
+                startTime = 1L,
+                sessionType = SessionType.LAB.name,
+                drillType = DrillType.FOREHAND.name,
+            ),
+        )
+        val rowId = labDao.insert(
+            LabRawRecordEntity(
+                sessionId = sessionId,
+                drillType = DrillType.FOREHAND.name,
+                timestampMillis = 10L,
+                imuRawJson = "[imu]",
+                visionPosesJson = "[pose]",
+            ),
+        )
+        val inserted = labDao.getRecordById(rowId)!!
+        assertNull(inserted.videoPath)
+
+        labDao.updateVideoPath(rowId, "/tmp/swing.mp4")
+        val withPath = labDao.getRecordById(rowId)!!
+        assertEquals("/tmp/swing.mp4", withPath.videoPath)
+        assertEquals("[pose]", withPath.visionPosesJson)
+        assertEquals("[imu]", withPath.imuRawJson)
+
+        labDao.updateVideoPath(rowId, null)
+        val cleared = labDao.getRecordById(rowId)!!
+        assertNull(cleared.videoPath)
+        assertEquals("[pose]", cleared.visionPosesJson)
+    }
+
+    @Test
+    fun getRecordsWithVideoAscOrdersOldestFirstAndSkipsNullPaths() = runTest {
+        val sessionId = UUID.randomUUID().toString()
+        sessionDao.insertSession(
+            SwingSessionEntity(
+                sessionId = sessionId,
+                sessionName = "Lab video order",
+                startTime = 1L,
+                sessionType = SessionType.LAB.name,
+                drillType = DrillType.FOREHAND.name,
+            ),
+        )
+        val newer = labDao.insert(
+            LabRawRecordEntity(
+                sessionId = sessionId,
+                drillType = DrillType.FOREHAND.name,
+                timestampMillis = 300L,
+                imuRawJson = "[]",
+                visionPosesJson = "[]",
+                videoPath = "/tmp/new.mp4",
+            ),
+        )
+        labDao.insert(
+            LabRawRecordEntity(
+                sessionId = sessionId,
+                drillType = DrillType.FOREHAND.name,
+                timestampMillis = 100L,
+                imuRawJson = "[]",
+                visionPosesJson = "[]",
+            ),
+        )
+        val older = labDao.insert(
+            LabRawRecordEntity(
+                sessionId = sessionId,
+                drillType = DrillType.FOREHAND.name,
+                timestampMillis = 200L,
+                imuRawJson = "[]",
+                visionPosesJson = "[]",
+                videoPath = "/tmp/old.mp4",
+            ),
+        )
+
+        val withVideo = labDao.getRecordsWithVideoAsc()
+        assertEquals(listOf(older, newer), withVideo.map { it.id })
+        assertEquals(2, labDao.observeVideoRecordCount().first())
     }
 }

@@ -21,4 +21,19 @@ interface LabRawRecordDao {
 
     @Query("DELETE FROM lab_raw_records WHERE sessionId = :sessionId")
     suspend fun deleteRecordsBySessionId(sessionId: String): Int
+
+    @Query("UPDATE lab_raw_records SET videoPath = :videoPath WHERE id = :id")
+    suspend fun updateVideoPath(id: Long, videoPath: String?)
+
+    @Query("SELECT * FROM lab_raw_records WHERE videoPath IS NOT NULL ORDER BY timestampMillis ASC")
+    suspend fun getRecordsWithVideoAsc(): List<LabRawRecordEntity>
+
+    @Query("SELECT COUNT(*) FROM lab_raw_records WHERE videoPath IS NOT NULL")
+    fun observeVideoRecordCount(): Flow<Int>
+
+    @Query("UPDATE lab_raw_records SET videoPath = null WHERE videoPath = :videoPath")
+    suspend fun clearVideoPathByPath(videoPath: String)
+
+    @Query("UPDATE lab_raw_records SET videoPath = null")
+    suspend fun clearAllVideoPaths()
 }

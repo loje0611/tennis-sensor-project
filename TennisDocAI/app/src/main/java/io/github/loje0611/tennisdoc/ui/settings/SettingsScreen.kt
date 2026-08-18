@@ -396,6 +396,7 @@ fun SettingsScreen(
         }
         
         AiCoachSettingsSection(viewModel)
+        VideoStorageSettingsSection(viewModel)
     }
 }
 
@@ -611,6 +612,175 @@ fun AiCoachSettingsSection(viewModel: SettingsViewModel) {
                 onToneSelected = { viewModel.saveDefaultCoachTone(it) },
                 modifier = Modifier.fillMaxWidth()
             )
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun VideoStorageSettingsSection(viewModel: SettingsViewModel) {
+    val autoSaveVideoEnabled by viewModel.autoSaveVideoEnabled.collectAsStateWithLifecycle()
+    val videoRetentionOption by viewModel.videoRetentionOption.collectAsStateWithLifecycle()
+    val savedVideoCount by viewModel.savedVideoCount.collectAsStateWithLifecycle()
+    val usedStorageText by viewModel.usedStorageText.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+
+    var showClearDialog by remember { mutableStateOf(false) }
+    var retentionExpanded by remember { mutableStateOf(false) }
+
+    if (showClearDialog) {
+        AlertDialog(
+            onDismissRequest = { showClearDialog = false },
+            containerColor = SwingTheme.colors.cardSurface,
+            titleContentColor = SwingTheme.colors.onBackground,
+            textContentColor = SwingTheme.colors.onBackgroundVariant,
+            title = {
+                Text("비디오 캐시 삭제", fontWeight = FontWeight.Bold)
+            },
+            text = {
+                Text("저장된 모든 스윙 영상($savedVideoCount 개)을 삭제하시겠습니까? 삭제된 영상은 복구할 수 없으며, 기존 세션 기록에는 텍스트와 데이터만 남게 됩니다.")
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        viewModel.clearVideoCache {
+                            Toast.makeText(context, "스윙 영상 캐시가 모두 삭제되었습니다.", Toast.LENGTH_SHORT).show()
+                        }
+                        showClearDialog = false
+                    }
+                ) {
+                    Text("삭제", color = SwingTheme.colors.danger, fontWeight = FontWeight.Bold)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showClearDialog = false }) {
+                    Text("취소", color = SwingTheme.colors.subGray)
+                }
+            }
+        )
+    }
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .shadow(
+                elevation = 8.dp,
+                shape = RoundedCornerShape(16.dp),
+                ambientColor = SwingTheme.colors.cardBorder.copy(alpha = 0.5f),
+                spotColor = SwingTheme.colors.cardBorder.copy(alpha = 0.5f)
+            )
+            .clip(RoundedCornerShape(16.dp))
+            .background(SwingTheme.colors.cardSurface)
+            .border(
+                width = 0.5.dp,
+                color = SwingTheme.colors.cardBorder,
+                shape = RoundedCornerShape(16.dp)
+            )
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            Text(
+                text = "📹 스윙 영상 & 저장소 설정",
+                style = MaterialTheme.typography.titleMedium.copy(
+                    fontWeight = FontWeight.Bold,
+                    color = SwingTheme.colors.onBackground
+                )
+            )
+
+            // Auto Save Switch
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = "스윙 영상 자동 저장",
+                        style = MaterialTheme.typography.bodyLarge.copy(
+                            fontWeight = FontWeight.Bold,
+                            color = SwingTheme.colors.onBackground
+                        )
+                    )
+                    Text(
+                        text = "스윙 감지 시 2초 비디오 클립을 저장합니다.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = SwingTheme.colors.subGray
+                    )
+                }
+                Switch(
+                    checked = autoSaveVideoEnabled,
+                    onCheckedChange = { viewModel.toggleAutoSaveVideo(it) },
+                    colors = SwitchDefaults.colors(
+                        checkedThumbColor = SwingTheme.colors.neonPurpleSettings,
+                        checkedTrackColor = SwingTheme.colors.neonPurpleSettings.copy(alpha = 0.2f)
+                    )
+                )
+            }
+
+            // Retention Option Selector
+            Column(
+                modifier = Modifier.fillMaxWidth().then(
+                    if (autoSaveVideoEnabled) Modifier else Modifier.background(SwingTheme.colors.cardSurface.copy(alpha = 0.5f))
+                )
+            ) {
+                ExposedDropdownMenuBox(
+                    expanded = retentionExpanded && autoSaveVideoEnabled,
+                    onExpandedChange = { if (autoSaveVideoEnabled) retentionExpanded = !retentionExpanded },
+                ) {
+                    OutlinedTextField(
+                        modifier = Modifier.menuAnchor().fillMaxWidth(),
+                        readOnly = true,
+                        value = "${videoRetentionOption.displayName} (${videoRetentionOption.approximateSize})",
+                        onValueChange = {},
+                        label = { Text("최대 보관 클립 수") },
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = retentionExpanded) },
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = SwingTheme.colors.neonPurpleSettings,
+                            focusedLabelColor = SwingTheme.colors.neonPurpleSettings
+                        ),
+                        shape = RoundedCornerShape(12.dp),
+                        enabled = autoSaveVideoEnabled
+                    )
+                    ExposedDropdownMenu(
+                        expanded = retentionExpanded,
+                        onDismissRequest = { retentionExpanded = false },
+                    ) {
+                        io.github.loje0611.tennisdoc.core.model.VideoRetentionOption.entries.forEach { option ->
+                            DropdownMenuItem(
+                                text = { Text("${option.displayName} (${option.approximateSize})") },
+                                onClick = {
+                                    viewModel.selectVideoRetentionOption(option)
+                                    retentionExpanded = false
+                                }
+                            )
+                        }
+                    }
+                }
+            }
+
+            // Storage Info & Clear Cache
+            Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(
+                    text = "저장된 비디오: $savedVideoCount 개 / $usedStorageText",
+                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
+                    color = SwingTheme.colors.onBackground
+                )
+
+                androidx.compose.material3.OutlinedButton(
+                    onClick = { showClearDialog = true },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = SwingTheme.colors.danger),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, SwingTheme.colors.danger)
+                ) {
+                    Text("🗑️ 비디오 캐시 전체 삭제")
+                }
+            }
         }
     }
 }

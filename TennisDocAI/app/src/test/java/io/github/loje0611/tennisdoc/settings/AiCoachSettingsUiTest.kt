@@ -67,12 +67,44 @@ class AiCoachSettingsUiTest {
         Dispatchers.resetMain()
     }
 
+    private val fakeVideoPrefs = object : io.github.loje0611.tennisdoc.core.data.repository.VideoPreferencesRepository {
+        override val autoSaveVideoEnabled = MutableStateFlow(true)
+        override val videoRetentionOption = MutableStateFlow(io.github.loje0611.tennisdoc.core.model.VideoRetentionOption.COUNT_50)
+        override suspend fun setAutoSaveVideoEnabled(enabled: Boolean) {}
+        override suspend fun setVideoRetentionOption(option: io.github.loje0611.tennisdoc.core.model.VideoRetentionOption) {}
+    }
+
+    private val fakeVideoFileManager = object : io.github.loje0611.tennisdoc.core.data.repository.VideoFileManager {
+        override fun getVideoDirectory() = java.io.File("")
+        override fun generateVideoFile(sessionId: String, recordId: Long) = java.io.File("")
+        override fun getUsedStorageBytes() = 0L
+        override fun formatStorageSize(bytes: Long) = "0 MB"
+        override suspend fun deleteVideoFile(filePath: String) = true
+        override suspend fun clearAllVideos() = 0
+        override suspend fun enforceRetentionPolicy(maxCount: Int) = 0
+    }
+
+    private val fakeLabRawRecordDao = object : io.github.loje0611.tennisdoc.core.data.db.dao.LabRawRecordDao {
+        override suspend fun insert(record: io.github.loje0611.tennisdoc.core.data.db.entity.LabRawRecordEntity) = 0L
+        override fun getRecordsBySessionId(sessionId: String) = kotlinx.coroutines.flow.flowOf(emptyList<io.github.loje0611.tennisdoc.core.data.db.entity.LabRawRecordEntity>())
+        override suspend fun getRecordById(id: Long) = null
+        override suspend fun deleteRecordsBySessionId(sessionId: String) = 0
+        override suspend fun updateVideoPath(id: Long, videoPath: String?) {}
+        override suspend fun getRecordsWithVideoAsc() = emptyList<io.github.loje0611.tennisdoc.core.data.db.entity.LabRawRecordEntity>()
+        override fun observeVideoRecordCount() = kotlinx.coroutines.flow.flowOf(0)
+        override suspend fun clearVideoPathByPath(videoPath: String) {}
+        override suspend fun clearAllVideoPaths() {}
+    }
+
     private fun createViewModel(): SettingsViewModel {
         val app = RuntimeEnvironment.getApplication()
         return SettingsViewModel(
             app,
             ThemePreferencesRepository(app),
             fakePrefs,
+            fakeVideoPrefs,
+            fakeVideoFileManager,
+            fakeLabRawRecordDao,
         )
     }
 
